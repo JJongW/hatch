@@ -74,4 +74,4 @@ spec(docs/specs) → plan(docs/plans) → 이슈 → 브랜치 → 구현(영역
 ## 8. 범위 밖 (이번 작업에서 안 함)
 
 - 기능 화면 구현, 저장 로직, 체인, 중계 서버 코드 — 각 단계 spec에서.
-- Vercel 프로젝트 연결 — A 단계 첫 PR에서.
+- Vercel 프로젝트 연결 — B 단계(bridge)에서. A는 로컬 전용 (A spec §1).
