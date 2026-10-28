@@ -1,0 +1,84 @@
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { z } from 'zod';
+
+import { createIdea, getToolResult, hashOf, listToolResults, saveDoc } from '@/lib/storage';
+
+import { runTool } from './run';
+import type { ToolDef } from './types';
+
+const here = path.dirname(fileURLToPath(import.meta.url));
+let dir: string;
+beforeEach(async () => {
+  dir = await fs.mkdtemp(path.join(os.tmpdir(), 'hatch-test-'));
+  process.env.HATCH_DATA_DIR = dir;
+  process.env.HATCH_CLAUDE_BIN = path.join(here, '../claude/fake-claude.mjs');
+  process.env.FAKE_CLAUDE = 'ok';
+});
+afterEach(async () => {
+  await fs.rm(dir, { recursive: true, force: true });
+  delete process.env.HATCH_DATA_DIR;
+  delete process.env.HATCH_CLAUDE_BIN;
+  delete process.env.FAKE_CLAUDE;
+});
+
+// fake-claude ok 모드 출력 { echo, args } 를 그대로 받는 시험용 도구
+const echoTool: ToolDef<{ note: string }, { echo: string }, { echo: string; prevEcho: string | null }> = {
+  key: 'prd-review',
+  label: '시험',
+  description: '시험',
+  accepts: ['prd', 'plan'],
+  inputSchema: z.object({ note: z.string().max(5, '메모는 5자까지예요.').default('') }),
+  outputSchema: z.object({ echo: z.string() }),
+  prompt: '## 할 일\n시험',
+  promptInput: (i, prev) => `### 메모\n${i.note}${prev ? '\n이전 있음' : ''}`,
+  compute: (o, _i, prev) => ({ echo: o.echo, prevEcho: prev?.echo ?? null }),
+  render: (r) => `## 결과\n${r.echo.length}자`,
+};
+
+describe('runTool', () => {
+  it('아이디어 문서를 입력으로 실행해 결과를 저장한다', async () => {
+    const idea = await createIdea({ title: 'x', memo: '' });
+    await saveDoc(idea.id, 'prd', '## 배경\nPRD 본문', { sourceHash: hashOf('x') });
+    const { resultId, ideaId } = await runTool(echoTool, { source: { ideaId: idea.id, docKey: 'prd' }, input: { note: 'hi' } });
+    expect(ideaId).toBe(idea.id);
+    const r = await getToolResult(idea.id, resultId);
+    expect(r?.source).toBe('prd');
+    expect(r?.sourceHash).toBe(hashOf('## 배경\nPRD 본문'));
+    const prompt = (r?.data as { echo: string }).echo;
+    expect(prompt).toContain('PRD 본문');
+    expect(prompt).toContain('### 메모\nhi');
+    expect(prompt.indexOf('## 할 일')).toBeLessThan(prompt.indexOf('PRD 본문'));
+  });
+  it('붙여넣기 입력은 전역 tools 폴더에, prevId로 이전 결과를 넘긴다', async () => {
+    const first = await runTool(echoTool, { source: { pasted: '회사 PRD' }, input: {} });
+    expect(first.ideaId).toBeNull();
+    const second = await runTool(echoTool, { source: { pasted: '고친 PRD' }, input: {}, prevId: first.resultId });
+    const r = await getToolResult(null, second.resultId);
+    expect(r?.prevId).toBe(first.resultId);
+    expect((r?.data as { prevEcho: string | null }).prevEcho).toContain('회사 PRD');
+    expect(await listToolResults('prd-review', null)).toHaveLength(2);
+  });
+  it('입력 문서가 없거나 비면 거절', async () => {
+    const idea = await createIdea({ title: 'x', memo: '' });
+    await expect(runTool(echoTool, { source: { ideaId: idea.id, docKey: 'prd' }, input: {} })).rejects.toThrow('입력 문서를 골라 주세요.');
+    await expect(runTool(echoTool, { source: { pasted: '   ' }, input: {} })).rejects.toThrow('입력 문서를 골라 주세요.');
+  });
+  it('받지 않는 문서 종류는 거절', async () => {
+    const idea = await createIdea({ title: 'x', memo: '' });
+    await expect(runTool(echoTool, { source: { ideaId: idea.id, docKey: 'spec' }, input: {} })).rejects.toThrow('입력 문서를 골라 주세요.');
+  });
+  it('너무 긴 입력 · 잘못된 입력 칸 · 없는 이전 결과', async () => {
+    await expect(runTool(echoTool, { source: { pasted: 'a'.repeat(30_001) }, input: {} })).rejects.toThrow('입력이 너무 길어요 (최대 30,000자).');
+    await expect(runTool(echoTool, { source: { pasted: 'a' }, input: { note: '여섯글자입니다' } })).rejects.toThrow('메모는 5자까지예요.');
+    await expect(runTool(echoTool, { source: { pasted: 'a' }, input: {}, prevId: 'prd-review-20261028T000000-abcd' })).rejects.toThrow('이전 결과를 찾을 수 없어요.');
+  });
+  it('AI 출력 형식이 틀리면 저장하지 않는다', async () => {
+    process.env.FAKE_CLAUDE = 'plan'; // echo 칸이 없는 출력
+    await expect(runTool(echoTool, { source: { pasted: 'a' }, input: {} })).rejects.toThrow('결과 형식이 맞지 않아요');
+    expect(await listToolResults('prd-review', null)).toEqual([]);
+  });
+});

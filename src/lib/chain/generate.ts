@@ -1,7 +1,6 @@
 import 'server-only';
 
-import { z } from 'zod';
-
+import { toClaudeSchema } from '@/lib/claude/schema';
 import { BUSY_MESSAGE, ChainError, isClaudeBusy, runClaude } from '@/lib/claude/run';
 import {
   clearRunning, DOC_STEPS, getDocs, getIdea, hashOf, ideaSource, markRunning, saveDoc, type DocKey,
@@ -10,12 +9,7 @@ import {
 import { buildPrompt } from './build-prompt';
 import { CHAIN } from './registry';
 
-/** claude --json-schema는 $schema 키(draft URL)를 못 풀어 실패한다. 최상위 $schema만 뺀다 */
-export function toClaudeSchema(schema: z.ZodType): object {
-  const json = z.toJSONSchema(schema) as Record<string, unknown>;
-  delete json.$schema;
-  return json;
-}
+export { toClaudeSchema };
 
 /** 앞 문서 읽기 → 프롬프트 → claude → 형식 검사 → md 저장 */
 export async function generateDoc(id: string, key: DocKey) {
