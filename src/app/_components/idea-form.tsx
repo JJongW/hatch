@@ -29,7 +29,7 @@ export default function IdeaForm({ action, submitLabel, initial, resetOnSave = f
           aria-label="아이디어 제목"
           autoFocus={resetOnSave}
         />
-        <TextArea name="memo" placeholder="메모 (선택)" defaultValue={values?.memo} minRows={3} aria-label="메모" />
+        <TextArea name="memo" placeholder="메모 (선택)" defaultValue={values?.memo} minRows={3} width="100%" aria-label="메모" />
         {state.error && <SectionMessage variant="negative">{state.error}</SectionMessage>}
         {!state.error && state.savedAt && !resetOnSave && (
           <Typography variant="caption1" color="semantic.foreground.positive.primary">
