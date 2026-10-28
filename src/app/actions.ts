@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
-import { createIdea, trashIdea, updateIdea } from '@/lib/storage';
+import { createIdea, StorageError, trashIdea, updateIdea } from '@/lib/storage';
 
 export type FormState = {
   error?: string;
@@ -18,10 +18,10 @@ const readForm = (formData: FormData) => ({
   memo: String(formData.get('memo') ?? ''),
 });
 
-// storage가 던진 한국어 메시지는 그대로, 파일 시스템 오류는 한 줄 안내로
+// storage가 사용자용으로 던진 문구만 그대로, 나머지(파일 시스템 · 파서)는 한 줄 안내로
 function toMessage(e: unknown) {
-  if (e instanceof Error && !('code' in e)) return e.message;
-  return '저장하지 못했어요. 데이터 폴더(HATCH_DATA_DIR) 권한을 확인해 주세요.';
+  if (e instanceof StorageError) return e.message;
+  return '저장하지 못했어요. 데이터 폴더(HATCH_DATA_DIR)와 idea.md 형식을 확인해 주세요.';
 }
 
 function revalidateIdeas() {

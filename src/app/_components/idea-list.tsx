@@ -20,7 +20,7 @@ export default function IdeaList({ cards, unreadable = 0, emptyAction = false }:
     <FlexBox flexDirection="column" gap="12px">
       {unreadable > 0 && (
         <Typography variant="caption1" color="semantic.foreground.cautionary.primary">
-          읽지 못한 파일 {unreadable}개 — idea.md 머리말을 확인해 주세요.
+          읽지 못한 폴더 {unreadable}개 — 폴더 이름(id 형식)과 idea.md 머리말을 확인해 주세요.
         </Typography>
       )}
       {cards.length === 0 ? (

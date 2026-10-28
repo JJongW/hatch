@@ -3,7 +3,17 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { createIdea, getDocs, getIdea, isValidId, listIdeas, listIdeasWithProgress, trashIdea, updateIdea } from '.';
+import {
+  createIdea,
+  getDocs,
+  getIdea,
+  isValidId,
+  listIdeas,
+  listIdeasWithProgress,
+  StorageError,
+  trashIdea,
+  updateIdea,
+} from '.';
 
 let dir: string;
 
@@ -31,7 +41,8 @@ describe('createIdea', () => {
     expect(raw).toContain('version: 1');
   });
 
-  it('빈 제목은 거부한다', async () => {
+  it('빈 제목은 화면에 보여 줄 StorageError로 거부한다', async () => {
+    await expect(createIdea({ title: '   ', memo: '' })).rejects.toThrow(StorageError);
     await expect(createIdea({ title: '   ', memo: '' })).rejects.toThrow('제목');
   });
 });
@@ -53,6 +64,21 @@ describe('listIdeas', () => {
     const { ideas, unreadable } = await listIdeas();
     expect(unreadable).toBe(0);
     expect(ideas[0]).toMatchObject({ title: '손으로 씀', memo: '메모', createdAt: '2026-10-28T09:00:00.000Z' });
+  });
+
+  it('이름이 id 형식이 아닌 폴더는 건너뛰고 개수를 센다 (목록 · 진행 배지 모두)', async () => {
+    await createIdea({ title: '정상', memo: '' });
+    const odd = path.join(dir, 'ideas', 'my-idea');
+    await fs.mkdir(odd, { recursive: true });
+    await fs.writeFile(
+      path.join(odd, 'idea.md'),
+      "---\ntitle: 손으로 만든 폴더\ncreatedAt: '2026-10-28T09:00:00.000Z'\nupdatedAt: '2026-10-28T09:00:00.000Z'\n---\n",
+    );
+
+    expect(await listIdeas()).toMatchObject({ unreadable: 1 });
+    const { items, unreadable } = await listIdeasWithProgress();
+    expect(items).toHaveLength(1);
+    expect(unreadable).toBe(1);
   });
 
   it('최신순으로 돌려준다', async () => {
@@ -110,6 +136,10 @@ describe('trashIdea', () => {
 
     expect((await listIdeas()).ideas).toHaveLength(0);
     await expect(fs.stat(path.join(dir, '.trash', idea.id, 'idea.md'))).resolves.toBeTruthy();
+  });
+
+  it('이미 없는 아이디어는 조용히 넘어간다 (다른 탭에서 지운 경우)', async () => {
+    await expect(trashIdea('20261028-0000-gone')).resolves.toBeUndefined();
   });
 
   it('휴지통에 같은 id가 있으면 뒤에 번호를 붙인다', async () => {

@@ -5,14 +5,17 @@ import os from 'node:os';
 import path from 'node:path';
 import matter from 'gray-matter';
 
-import { assertValidId, newId } from './ids';
+import { assertValidId, isValidId, newId } from './ids';
 import { progressOf } from './progress';
 import { DOC_STEPS, IDEA_FILE_VERSION, type Doc, type Idea } from './types';
 
-/** 매 호출마다 읽는다 (테스트 · .env 변경 반영). */
+/** 사용자에게 그대로 보여 줘도 되는 오류 (한국어 한 줄). 나머지 오류는 화면에서 일반 안내로 바꾼다. */
+export class StorageError extends Error {}
+
+/** 매 호출마다 읽는다 (테스트 · .env 변경 반영). `~` · `~/…` 만 홈으로 푼다. */
 function dataDir() {
   const dir = process.env.HATCH_DATA_DIR?.trim() || '~/Hatch';
-  return dir.startsWith('~') ? path.join(os.homedir(), dir.slice(1)) : dir;
+  return dir === '~' || dir.startsWith('~/') ? path.join(os.homedir(), dir.slice(1)) : dir;
 }
 
 const ideasDir = () => path.join(dataDir(), 'ideas');
@@ -23,7 +26,7 @@ const isMissing = (e: unknown) => (e as NodeJS.ErrnoException).code === 'ENOENT'
 
 function cleanTitle(title: string) {
   const t = title.trim();
-  if (!t) throw new Error('제목을 적어 주세요.');
+  if (!t) throw new StorageError('제목을 적어 주세요.');
   return t;
 }
 
@@ -46,18 +49,20 @@ async function readIdea(id: string): Promise<Idea> {
 }
 
 export async function listIdeas(): Promise<{ ideas: Idea[]; unreadable: number }> {
-  let ids: string[];
+  let dirs: string[];
   try {
-    ids = (await fs.readdir(ideasDir(), { withFileTypes: true })).filter((e) => e.isDirectory()).map((e) => e.name);
+    dirs = (await fs.readdir(ideasDir(), { withFileTypes: true })).filter((e) => e.isDirectory()).map((e) => e.name);
   } catch (e) {
     if (isMissing(e)) return { ideas: [], unreadable: 0 };
     throw e;
   }
 
+  // 손으로 만든 폴더(이름이 id 형식 밖)는 읽지 않고 개수만 센다 — 다른 함수들이 id 검사에서 throw하기 때문
+  const ids = dirs.filter(isValidId);
   const results = await Promise.allSettled(ids.map(readIdea));
   const ideas = results.flatMap((r) => (r.status === 'fulfilled' ? [r.value] : []));
   ideas.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-  return { ideas, unreadable: results.length - ideas.length };
+  return { ideas, unreadable: dirs.length - ideas.length };
 }
 
 export async function getIdea(id: string): Promise<Idea | null> {
@@ -80,7 +85,7 @@ export async function createIdea(input: { title: string; memo: string }): Promis
 
 export async function updateIdea(id: string, patch: { title?: string; memo?: string }): Promise<Idea> {
   const current = await getIdea(id);
-  if (!current) throw new Error('아이디어를 찾을 수 없어요.');
+  if (!current) throw new StorageError('아이디어를 찾을 수 없어요. 이미 휴지통으로 옮겼을 수 있어요.');
   const next: Idea = {
     ...current,
     title: patch.title === undefined ? current.title : cleanTitle(patch.title),
@@ -91,9 +96,12 @@ export async function updateIdea(id: string, patch: { title?: string; memo?: str
   return next;
 }
 
-/** 지우지 않고 `.trash/`로 옮긴다. 같은 이름이 있으면 `-1`, `-2`… */
+/** 지우지 않고 `.trash/`로 옮긴다. 같은 이름이 있으면 `-1`, `-2`… 이미 없으면 아무것도 안 한다. */
 export async function trashIdea(id: string): Promise<void> {
   assertValidId(id);
+  const exists = await fs.stat(ideaDir(id)).then(() => true, () => false);
+  if (!exists) return;
+
   const trash = path.join(dataDir(), '.trash');
   await fs.mkdir(trash, { recursive: true });
 
