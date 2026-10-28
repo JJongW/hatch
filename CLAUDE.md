@@ -1,11 +1,11 @@
 # Hatch
 
-아이디어 한 줄 → 기획안 · 커리큘럼 · PRD · 기능명세 · 개발/디자인 프롬프트로 이어 주는 PO용 아이디어 뱅크.
-Next.js(App Router) · Montage(원티드 디자인 시스템) · 생성은 로컬 Claude Code(`bridge/`).
+아이디어 한 줄 → 기획안 · 개발 로드맵 · PRD · 기능명세 · 개발/디자인 프롬프트로 이어 주는 PO용 아이디어 뱅크.
+Next.js(App Router) · Montage(원티드 디자인 시스템) · 생성은 로컬 `claude -p`(`src/lib/claude/`).
 
 ## 지금 단계
 **A 완료 · B-1 진행 중** — 체인 바탕(`src/lib/chain` · `src/lib/claude`)과 기획안 생성. 다음: B-2 나머지 5단계(로드맵 · PRD · 기능명세 · 개발/디자인 프롬프트).
-실행: `cp .env.example .env.local` → `npm run dev`. Vercel에선 저장이 안 된다 (B에서 bridge로).
+실행: `cp .env.example .env.local` → `npm run dev`. 앱은 Mac에서 돌린다 (생성은 로컬 `claude -p`). `bridge/`는 보류 (spec §1).
 
 ## 폴더 지도 — 일할 폴더의 CLAUDE.md를 먼저 읽는다
 | 경로 | 역할 | 단계 | 에이전트 |
