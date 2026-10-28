@@ -4,7 +4,8 @@
 Next.js(App Router) · Montage(원티드 디자인 시스템) · 생성은 로컬 Claude Code(`bridge/`).
 
 ## 지금 단계
-**A 시작 전** — 작업 체계 세팅 완료. 다음: A(아이디어 뱅크) spec.
+**A 완료 (리뷰 중)** — 로컬 앱으로 쓰기 · 모음 · 상세, `~/Hatch` md 저장. 다음: B(문서 생성 체인 + bridge) spec.
+실행: `cp .env.example .env.local` → `npm run dev`. Vercel에선 저장이 안 된다 (B에서 bridge로).
 
 ## 폴더 지도 — 일할 폴더의 CLAUDE.md를 먼저 읽는다
 | 경로 | 역할 | 단계 | 에이전트 |
@@ -26,8 +27,9 @@ Git 규칙 자세히: [docs/CLAUDE.md](docs/CLAUDE.md)
 
 ## 검증 (완료라고 말하기 전에 실제로 돌린다)
 ```bash
-npm run lint && npm run typecheck && npm run build
+npm run lint && npm run typecheck && npm test && npm run build
 ```
+UI를 바꿨으면 dev 서버로 실제 흐름을 눌러 보고 콘솔 오류까지 확인한다. 테스트 데이터는 `.env.local`의 `HATCH_DATA_DIR`를 임시 폴더로.
 
 ## 공통 규칙
 - Next.js 코드 쓰기 전 `node_modules/next/dist/docs/`에서 해당 가이드 확인 (AGENTS.md: 학습 데이터와 API가 다름)

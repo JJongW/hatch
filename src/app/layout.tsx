@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import type { PropsWithChildren } from 'react';
 
+import AppShell from './_components/app-shell';
 import Providers from './providers';
 
 import '@montage-ui/core/global.css';
@@ -22,7 +23,9 @@ export default function RootLayout({ children }: PropsWithChildren) {
         />
       </head>
       <body>
-        <Providers>{children}</Providers>
+        <Providers>
+          <AppShell>{children}</AppShell>
+        </Providers>
       </body>
     </html>
   );
