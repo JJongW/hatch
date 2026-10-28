@@ -6,6 +6,7 @@ import path from 'node:path';
 import matter from 'gray-matter';
 
 import { assertValidId, newId } from './ids';
+import { progressOf } from './progress';
 import { DOC_STEPS, IDEA_FILE_VERSION, type Doc, type Idea } from './types';
 
 /** 매 호출마다 읽는다 (테스트 · .env 변경 반영). */
@@ -101,6 +102,13 @@ export async function trashIdea(id: string): Promise<void> {
     target = path.join(trash, `${id}-${n}`);
   }
   await fs.rename(ideaDir(id), target);
+}
+
+/** 목록 화면용: 아이디어 + 진행 배지 문구 */
+export async function listIdeasWithProgress() {
+  const { ideas, unreadable } = await listIdeas();
+  const items = await Promise.all(ideas.map(async (idea) => ({ idea, progress: progressOf(await getDocs(idea.id)) })));
+  return { items, unreadable };
 }
 
 export async function getDocs(id: string): Promise<Doc[]> {

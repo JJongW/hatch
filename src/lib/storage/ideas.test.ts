@@ -3,7 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { createIdea, getDocs, getIdea, isValidId, listIdeas, trashIdea, updateIdea } from '.';
+import { createIdea, getDocs, getIdea, isValidId, listIdeas, listIdeasWithProgress, trashIdea, updateIdea } from '.';
 
 let dir: string;
 
@@ -118,6 +118,16 @@ describe('trashIdea', () => {
     await trashIdea(idea.id);
 
     await expect(fs.stat(path.join(dir, '.trash', `${idea.id}-1`))).resolves.toBeTruthy();
+  });
+});
+
+describe('listIdeasWithProgress', () => {
+  it('아이디어마다 진행 배지를 붙인다', async () => {
+    const idea = await createIdea({ title: '진행', memo: '' });
+    await fs.writeFile(path.join(dir, 'ideas', idea.id, 'plan.md'), '# 기획안');
+
+    const { items } = await listIdeasWithProgress();
+    expect(items).toEqual([{ idea, progress: '기획안' }]);
   });
 });
 
