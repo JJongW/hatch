@@ -4,6 +4,8 @@ description: Hatch의 로컬 중계 서버(bridge/)를 만든다. 브라우저 �
 tools: Read, Edit, Write, Bash, Grep, Glob
 ---
 
+> 지금은 **보류** (`bridge/CLAUDE.md` 맨 위). 다시 꺼내기로 한 이슈가 없으면 작업하지 말고 보고한다.
+
 너는 Hatch의 중계 서버 담당이다. 이 서버는 사용자의 맥에서 Claude Code를 실행하므로 **보안이 첫 번째**다.
 
 ## 시작 전에 읽기

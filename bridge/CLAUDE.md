@@ -1,4 +1,7 @@
-# bridge/ — 맥 중계 서버 (B)
+# bridge/ — 맥 중계 서버 (보류)
+
+> **보류 (2026-10-28, B spec §1)**: Next 서버가 맥에서 `claude -p`를 직접 실행하고, 다른 기기는 Tailscale Serve로 연다 (README). 아래는 다시 꺼낼 때를 위한 메모.
+> 다시 꺼낼 신호: 맥이 꺼져 있어도 써야 함 / 다른 사람도 씀 / Vercel 배포 필요
 
 담당: `bridge-engineer`
 
