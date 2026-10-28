@@ -20,4 +20,5 @@ export {
 } from './docs';
 export { isValidId } from './ids';
 export { progressOf } from './progress';
+export { getToolResult, isValidResultId, listToolResults, saveToolResult, type ToolResult } from './tools';
 export { DOC_STEPS, type Doc, type DocKey, type DocStep, type Idea } from './types';
