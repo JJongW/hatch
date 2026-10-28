@@ -2,7 +2,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { ChainError, runClaude } from './run';
+import { ChainError, isClaudeBusy, runClaude } from './run';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const schema = { type: 'object' };
@@ -20,7 +20,9 @@ describe('runClaude', () => {
   it('프롬프트는 stdin, 도구 없음 · 스키마 인자를 넘기고 structured_output을 돌려준다', async () => {
     const out = (await runClaude({ prompt: '안녕', jsonSchema: schema })) as { echo: string; args: string[] };
     expect(out.echo).toBe('안녕');
-    expect(out.args).toEqual(expect.arrayContaining(['-p', '--tools', '', '--no-session-persistence', '--json-schema']));
+    expect(out.args).toEqual(expect.arrayContaining(['-p', '--no-session-persistence']));
+    expect(out.args[out.args.indexOf('--tools') + 1]).toBe('');
+    expect(JSON.parse(out.args[out.args.indexOf('--json-schema') + 1])).toEqual(schema);
   });
 
   it('HATCH_CLAUDE_MODEL이 있으면 --model', async () => {
@@ -54,5 +56,27 @@ describe('runClaude', () => {
     const first = runClaude({ prompt: 'x', jsonSchema: schema, timeoutMs: 500 });
     await expect(runClaude({ prompt: 'y', jsonSchema: schema })).rejects.toThrow('다른 문서를 만드는 중');
     await expect(first).rejects.toThrow();
+  });
+
+  it('시간 초과 뒤 자식이 끝나면 잠금이 풀려 다음 실행이 된다', async () => {
+    process.env.FAKE_CLAUDE = 'slow';
+    await expect(runClaude({ prompt: 'x', jsonSchema: schema, timeoutMs: 200 })).rejects.toThrow('5분 안에');
+    expect(isClaudeBusy()).toBe(false);
+    process.env.FAKE_CLAUDE = 'ok';
+    await expect(runClaude({ prompt: 'x', jsonSchema: schema })).resolves.toBeDefined();
+  });
+
+  it('SIGTERM을 무시해도 유예 뒤 SIGKILL로 끝낸다', async () => {
+    process.env.FAKE_CLAUDE = 'stubborn';
+    await expect(
+      runClaude({ prompt: 'x', jsonSchema: schema, timeoutMs: 300, killGraceMs: 200 }),
+    ).rejects.toThrow('5분 안에');
+    expect(isClaudeBusy()).toBe(false);
+  });
+
+  it('큰 한글 출력이 청크로 나뉘어도 그대로 온다', async () => {
+    process.env.FAKE_CLAUDE = 'korean';
+    const out = (await runClaude({ prompt: 'x', jsonSchema: schema })) as { text: string };
+    expect(out.text).toBe('가'.repeat(100000));
   });
 });

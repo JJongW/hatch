@@ -14,5 +14,12 @@ process.stdin.on('end', () => {
     process.exit(2);
   } else if (mode === 'slow') {
     setTimeout(() => {}, 60_000);
+  } else if (mode === 'stubborn') {
+    process.on('SIGTERM', () => {}); // SIGTERM 무시 -> SIGKILL 경로
+    setTimeout(() => {}, 60_000);
+  } else if (mode === 'korean') {
+    // 멀티바이트 문자가 청크 경계에서 잘리도록 큰 한글 출력을 나눠 쓴다
+    const buf = Buffer.from(JSON.stringify({ is_error: false, structured_output: { text: '가'.repeat(100000) } }));
+    for (let i = 0; i < buf.length; i += 4999) process.stdout.write(buf.subarray(i, i + 4999));
   }
 });
