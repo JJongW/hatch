@@ -4,7 +4,8 @@
 Next.js(App Router) · Montage(원티드 디자인 시스템) · 생성은 로컬 `claude -p`(`src/lib/claude/`).
 
 ## 지금 단계
-**A · B 완료** — 아이디어 → 기획안 → 로드맵 → PRD → 기능명세 → 개발/디자인 프롬프트 생성. 다음: C PO 도구.
+**A · B 완료** — 아이디어 → 기획안 → 로드맵 → PRD → 기능명세 → 개발/디자인 프롬프트 생성.
+**C-1 진행: 공통 틀 + PRD 리뷰 위원회.** 다음: VOC · 지표 · 협상 도구 (`new-po-tool`).
 실행: `cp .env.example .env.local` → `npm run dev`. 앱은 Mac에서 돌린다 (생성은 로컬 `claude -p`). 다른 기기는 Tailscale Serve (README). `bridge/`는 보류 (spec §1).
 
 ## 폴더 지도 — 일할 폴더의 CLAUDE.md를 먼저 읽는다
@@ -12,7 +13,7 @@ Next.js(App Router) · Montage(원티드 디자인 시스템) · 생성은 로�
 | --- | --- | --- | --- |
 | `docs/` | spec · plan · Git 규칙 | 전체 | — |
 | `src/app/` | 라우트 · 레이아웃 · 좌측 네비바 | A | `ui-builder` |
-| `src/app/tools/` | PO 도구 공통 틀 + 도구 4종 | C | `tool-builder` |
+| `src/app/tools/` · `src/lib/tools/` | PO 도구 공통 틀 + 도구 4종 | C | `tool-builder` |
 | `src/components/` | 공용 UI (Montage 기반) | D | `ui-builder` |
 | `src/lib/storage/` | 아이디어 · 문서 저장 | A | `ui-builder` |
 | `src/lib/claude/` | claude -p 실행기 | B | `chain-author` |
