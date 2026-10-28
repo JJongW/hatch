@@ -49,13 +49,29 @@ Hatch는 **적기만 하면 다음 문서가 이어서 나오고**, 그 문서�
 
 ## 실행
 
+준비물: macOS · Node.js 20.9 이상 · [Claude Code](https://claude.com/claude-code) 설치 후 `claude` 로그인 (터미널에서 `claude -p "안녕"`이 답하면 준비 끝)
+
 ```bash
+git clone https://github.com/JJongW/hatch.git && cd hatch
 cp .env.example .env.local
 npm install
 npm run dev
 ```
 
-http://localhost:3000 에서 연다. `claude`가 설치돼 있고 로그인돼 있어야 문서를 만들 수 있다.
+http://localhost:3000 에서 연다. 데이터는 `~/Hatch`에 쌓인다 (`.env.local`의 `HATCH_DATA_DIR`로 바꿀 수 있다).
+
+따라 하기 (약 10분):
+1. **아이디어 쓰기**에 한 줄 적고 Enter → **아이디어 모음**에서 연다
+2. 상세 화면에서 기획안 → 로드맵 → PRD … 순서로 "만들기" (단계마다 30초~1분 30초)
+3. 좌측 **PO 도구 → PRD 리뷰 위원회** → 방금 만든 아이디어의 PRD로 실행 → PRD를 고치고 "고친 판 다시 리뷰"로 점수 전후 비교
+4. Hatch 밖 문서는 "직접 붙여넣기" 탭으로
+
+검증: `npm run lint && npm run typecheck && npm test && npm run build` (테스트는 가짜 claude로 돈다 — 로그인 없이도 통과)
+
+## 문서
+- 설계 · 계획: [`docs/specs`](docs/specs) · [`docs/plans`](docs/plans)
+- 결정마다 왜: [`docs/decisions`](docs/decisions)
+- **AI 활용 과정** (프롬프트 · CLAUDE.md · 스킬 · 토큰 관리 · AI 실수 수정): [`docs/ai-usage`](docs/ai-usage)
 
 ## 다른 기기에서 열기 (Tailscale Serve)
 

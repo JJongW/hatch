@@ -23,7 +23,8 @@ export async function runTool(
   { source, input, prevId = null }: { source: ToolSource; input: Record<string, string>; prevId?: string | null },
 ) {
   const { text, label, ideaId } = await readSource(tool, source);
-  if (!text && !tool.sourceOptional) throw new ChainError('입력 문서를 골라 주세요.');
+  // 문서 없이 실행하는 길은 { none: true } 하나뿐. 아이디어 문서를 못 읽으면 sourceOptional이어도 막는다
+  if (!text && !('none' in source && tool.sourceOptional)) throw new ChainError('입력 문서를 골라 주세요.');
   if (text.length > MAX_SOURCE_CHARS) throw new ChainError('입력이 너무 길어요 (최대 30,000자).');
 
   const parsed = tool.inputSchema.safeParse(input);

@@ -24,7 +24,7 @@ Next.js(App Router) · Montage(원티드 디자인 시스템) · 생성은 로�
 검사는 `hatch-reviewer`(읽기 전용). 스킬: `montage-ui` · `new-po-tool` · `chain-step` (`.claude/skills/`).
 
 ## 작업 흐름
-spec(`docs/specs`) → plan(`docs/plans`) → 이슈 → 브랜치 → 구현 → `hatch-reviewer` → 검증 → PR → **사용자 승인 후** squash 머지.
+spec(`docs/specs`) → plan(`docs/plans`) → 이슈 → 브랜치 → 구현 → `hatch-reviewer` → 검증 → why 기록(`docs/decisions` · `docs/ai-usage`) → PR → **사용자 승인 후** squash 머지.
 Git 규칙 자세히: [docs/CLAUDE.md](docs/CLAUDE.md)
 
 ## 검증 (완료라고 말하기 전에 실제로 돌린다)

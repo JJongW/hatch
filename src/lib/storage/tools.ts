@@ -87,7 +87,8 @@ export async function getToolResult(ideaId: string | null, id: string): Promise<
   return raw === null ? null : parse(raw, id, ideaId);
 }
 
-export async function listToolResults(tool: string, ideaId: string | null): Promise<ToolResult[]> {
+/** source를 주면 그 입력으로 실행한 결과만 (붙여넣기 · 문서 없이는 같은 tools/ 폴더라 여기서 나눈다) */
+export async function listToolResults(tool: string, ideaId: string | null, source?: string): Promise<ToolResult[]> {
   assertTool(tool);
   let files: string[];
   try {
@@ -103,5 +104,5 @@ export async function listToolResults(tool: string, ideaId: string | null): Prom
     .sort()
     .reverse(); // id에 시각이 들어 있어 이름순 = 시간순
   const results = await Promise.all(ids.map((id) => getToolResult(ideaId, id)));
-  return results.filter((r): r is ToolResult => r !== null);
+  return results.filter((r): r is ToolResult => r !== null && (source === undefined || r.source === source));
 }
