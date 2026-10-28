@@ -59,11 +59,11 @@ spec(docs/specs) → plan(docs/plans) → 이슈 → 브랜치 → 구현(영역
 - **커밋**: `<type>(<area>): 내용 (#이슈)` (예: `feat(bank): 아이디어 저장 (#12)`).
 - **PR**: 템플릿 = 개요 · `closes #n` · 변경 · 검증(명령 → 결과) · 화면 캡처(UI) · 리뷰어 결과.
   PR 하나 = 영역 하나. 400줄 / 15파일 넘으면 쪼갠다.
-- **머지**: squash만. 조건 = 검증 통과 + CI 통과 + 리뷰어 지적 0(남기면 이유) + UI PR은 Vercel 미리보기 확인.
+- **머지**: squash만. 조건 = 검증 통과 + 리뷰어 지적 0(남기면 이유) + UI PR은 Vercel 미리보기 확인.
   **머지는 사용자 승인 후.** 머지 후 브랜치 자동 삭제.
 - **강제 장치**: 무료 플랜 비공개 레포라 GitHub 브랜치 보호 불가 →
   로컬 `pre-push` 훅(`.githooks/`, `core.hooksPath`)이 `main` push 차단 · 레포 설정(squash만, 머지 후 삭제) ·
-  GitHub Actions로 PR마다 lint · typecheck.
+  CI(GitHub Actions)는 쓰지 않는다 — 검증은 로컬 명령으로.
 
 ## 7. 기술 결정
 

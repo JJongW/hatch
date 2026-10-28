@@ -4,7 +4,7 @@
 
 **Goal:** 기능 구현 전에 Next.js 뼈대 · 폴더별 CLAUDE.md · 에이전트 · 스킬 · GitHub 규칙을 갖춘다.
 
-**Tech Stack:** Next.js(App Router) · TypeScript · npm · Montage 4.1.5 · GitHub(gh) · GitHub Actions
+**Tech Stack:** Next.js(App Router) · TypeScript · npm · Montage 4.1.5 · GitHub(gh)
 
 ## Global Constraints
 
@@ -51,10 +51,10 @@ Create `src/app/providers.tsx` · Modify `src/app/layout.tsx`, `src/app/page.tsx
 
 ### Task 4: GitHub 규칙
 
-**Files:** Create `.github/ISSUE_TEMPLATE/task.md`, `.github/pull_request_template.md`, `.github/workflows/ci.yml`, `.githooks/pre-push`, `docs/CLAUDE.md`(Git 규칙 절)
+**Files:** Create `.github/ISSUE_TEMPLATE/task.md`, `.github/pull_request_template.md`, `.githooks/pre-push`, `docs/CLAUDE.md`(Git 규칙 절)
 
 - [ ] 이슈 · PR 템플릿 (spec §6)
-- [ ] `ci.yml`: PR · main push → `npm ci && npm run lint && npm run typecheck`
+- [x] CI는 쓰지 않음 (사용자 결정, 2026-10-28)
 - [ ] `pre-push`: 대상 ref가 `refs/heads/main` 이면 거부. `git config core.hooksPath .githooks`
 - [ ] gh: 라벨 10개, 마일스톤 A~D, 레포 설정(squash만 · 머지 후 브랜치 삭제), 이슈 #1 생성
 - [ ] 검증: `git push origin HEAD:main --dry-run` 이 훅에 막힘 · `gh label list` · `gh api repos/JJongW/hatch` 설정값
@@ -64,4 +64,4 @@ Create `src/app/providers.tsx` · Modify `src/app/layout.tsx`, `src/app/page.tsx
 
 - [ ] `npm run lint && npm run typecheck && npm run build`
 - [ ] `hatch-reviewer` 에이전트로 전체 검사 → 지적 반영
-- [ ] push → `gh pr create` (closes #1) → CI 결과 확인 → 사용자에게 머지 승인 요청
+- [ ] push → `gh pr create` (closes #1) → 사용자에게 머지 승인 요청
