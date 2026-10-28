@@ -62,6 +62,7 @@ function spawnClaude(prompt: string, jsonSchema: object, cwd: string, timeoutMs:
     '--json-schema', JSON.stringify(jsonSchema),
     '--tools', '',
     '--no-session-persistence',
+    '--setting-sources', 'project', // 전역 ~/.claude/CLAUDE.md가 섞이지 않게
     ...(model ? ['--model', model] : []),
   ];
 

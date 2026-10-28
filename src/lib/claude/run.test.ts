@@ -23,6 +23,7 @@ describe('runClaude', () => {
     expect(out.echo).toBe('안녕');
     expect(out.args).toEqual(expect.arrayContaining(['-p', '--no-session-persistence']));
     expect(out.args[out.args.indexOf('--tools') + 1]).toBe('');
+    expect(out.args[out.args.indexOf('--setting-sources') + 1]).toBe('project');
     expect(JSON.parse(out.args[out.args.indexOf('--json-schema') + 1])).toEqual(schema);
   });
 
