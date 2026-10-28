@@ -3,10 +3,8 @@
 import { useState } from 'react';
 import { FlexBox, TextArea, Typography } from '@montage-ui/core';
 
-import { MAX_ANSWER_CHARS } from '@/lib/tools/negotiation/compute';
-
 /** 내 답 칸. 새 라운드 결과로 바뀌면 비운다 (프레임은 실행 뒤 입력을 남긴다) */
-export default function NegotiationInputs({ resultId }: { resultId: string | null }) {
+export default function NegotiationInputs({ resultId, maxChars }: { resultId: string | null; maxChars: number }) {
   const [answer, setAnswer] = useState('');
   const [seen, setSeen] = useState(resultId);
   if (seen !== resultId) {
@@ -26,7 +24,7 @@ export default function NegotiationInputs({ resultId }: { resultId: string | nul
         placeholder={resultId ? '상대 요청에 대한 내 답을 적어 주세요.' : "1라운드는 비워 두고 '실행'을 눌러 상대 요청을 받아요."}
       />
       <Typography variant="caption1" color="semantic.foreground.neutral.tertiary">
-        새 협상은 비워 두고 &apos;실행&apos; · 답은 결과 아래 &apos;내 답 보내기&apos; · 최대 {MAX_ANSWER_CHARS.toLocaleString('ko-KR')}자 · {answer.length.toLocaleString('ko-KR')}자
+        새 협상은 비워 두고 &apos;실행&apos; · 답은 결과 아래 &apos;내 답 보내기&apos; · 최대 {maxChars.toLocaleString('ko-KR')}자 · {answer.length.toLocaleString('ko-KR')}자
       </Typography>
     </FlexBox>
   );

@@ -33,7 +33,7 @@ export const negotiationInputSchema = z
     answer: z
       .string({ error: '내 답을 확인해 주세요.' })
       .trim()
-      .max(MAX_ANSWER_CHARS, { error: '입력이 너무 길어요 (최대 2,000자).' })
+      .max(MAX_ANSWER_CHARS, { error: `입력이 너무 길어요 (최대 ${MAX_ANSWER_CHARS.toLocaleString('ko-KR')}자).` })
       .default(''),
   })
   .strip();

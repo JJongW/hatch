@@ -1,5 +1,7 @@
 import { connection } from 'next/server';
 
+import { MAX_ANSWER_CHARS } from '@/lib/tools/negotiation/compute';
+
 import { runToolAction } from '../../actions';
 import { loadToolPage } from '../_frame/load';
 import ToolFrame from '../_frame/tool-frame';
@@ -16,7 +18,7 @@ export default async function NegotiationPage({ searchParams }: { searchParams: 
     <ToolFrame
       {...data}
       run={runToolAction.bind(null, 'negotiation')}
-      inputFields={<NegotiationInputs resultId={data.current?.id ?? null} />}
+      inputFields={<NegotiationInputs resultId={data.current?.id ?? null} maxChars={MAX_ANSWER_CHARS} />}
     />
   );
 }
