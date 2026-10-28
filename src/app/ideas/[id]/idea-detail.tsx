@@ -39,6 +39,8 @@ export default function IdeaDetail({
   const [busy, setBusy] = useState<DocKey | null>(null);
   // 다른 탭 · 새로고침 뒤의 생성 중 표시는 서버 값을 3초마다 다시 받아 맞춘다
   useRefreshWhile(running !== null && busy === null);
+  // Server Action은 클라이언트에서 하나씩 실행되므로 생성 중엔 다른 저장 버튼을 막는다
+  const generating = (busy ?? running) !== null;
   const confirmTrash = (e: React.FormEvent) => {
     if (!window.confirm('휴지통(~/Hatch/.trash)으로 옮길까요? 파일은 지워지지 않아요.')) e.preventDefault();
   };
@@ -46,11 +48,11 @@ export default function IdeaDetail({
   return (
     <>
       <PageHeader title={idea.title} description="아이디어를 고치고, 아래에서 이어지는 문서를 확인해요." />
-      <IdeaForm action={updateAction} submitLabel="수정 저장" initial={idea} />
+      <IdeaForm action={updateAction} submitLabel="수정 저장" initial={idea} disabled={generating} />
 
       <form action={trashAction} onSubmit={confirmTrash}>
         <FlexBox justifyContent="flex-end" sx={{ marginTop: '8px' }}>
-          <Button type="submit" variant="outlined" color="assistive" size="small">
+          <Button type="submit" variant="outlined" color="assistive" size="small" disabled={generating}>
             휴지통으로
           </Button>
         </FlexBox>

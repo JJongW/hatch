@@ -110,7 +110,7 @@ export default function DocCard({ doc, index, ready, hasSource, running, onBusy,
               <Button type="button" size="small" variant="outlined" color="assistive" onClick={() => setEditing(false)}>
                 취소
               </Button>
-              <Button type="submit" size="small" loading={savePending}>
+              <Button type="submit" size="small" loading={savePending} disabled={blocked}>
                 저장
               </Button>
             </FlexBox>
@@ -122,7 +122,7 @@ export default function DocCard({ doc, index, ready, hasSource, running, onBusy,
             <DocMarkdown>{doc.content}</DocMarkdown>
           </Typography>
           <FlexBox justifyContent="flex-end" gap="8px" sx={{ marginTop: '12px' }}>
-            <Button type="button" size="small" variant="outlined" color="assistive" onClick={() => setEditing(true)}>
+            <Button type="button" size="small" variant="outlined" color="assistive" onClick={() => setEditing(true)} disabled={blocked}>
               편집
             </Button>
             {ready && generateForm('다시 만들기', 'outlined', confirmRegenerate)}

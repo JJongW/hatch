@@ -11,9 +11,11 @@ type Props = {
   initial?: { title: string; memo: string };
   /** 저장 후 입력을 비울지 (쓰기 화면) */
   resetOnSave?: boolean;
+  /** 다른 긴 작업 중 제출을 막는다 */
+  disabled?: boolean;
 };
 
-export default function IdeaForm({ action, submitLabel, initial, resetOnSave = false }: Props) {
+export default function IdeaForm({ action, submitLabel, initial, resetOnSave = false, disabled = false }: Props) {
   const [state, formAction, pending] = useActionState(action, {});
   const values = state.values ?? (resetOnSave ? undefined : initial);
 
@@ -37,7 +39,7 @@ export default function IdeaForm({ action, submitLabel, initial, resetOnSave = f
           </Typography>
         )}
         <FlexBox justifyContent="flex-end">
-          <Button type="submit" loading={pending}>
+          <Button type="submit" loading={pending} disabled={disabled}>
             {submitLabel}
           </Button>
         </FlexBox>

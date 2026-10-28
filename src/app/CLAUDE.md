@@ -15,6 +15,7 @@
   없으면 build 실패 / 이동 시 dev 경고. `usePathname`도 Suspense 안에서 (`app-shell.tsx` 참고)
 - 항상 요청 시 렌더하는 로컬 페이지는 `export const instant = false` — dev 콘솔의 blocking-route 검증 오류를 끈다 (docs: instant 'Disabling instant')
 - 동적 경로 `params`는 Promise (`await params`)
+- Server Action은 클라이언트에서 한 번에 하나씩 실행된다 — 긴 작업(문서 생성) 중엔 다른 제출 버튼을 `disabled`로 막는다
 
 ## 하지 말 것
 - 페이지 안에 프롬프트 문자열 (→ `src/lib/prompts/`)
