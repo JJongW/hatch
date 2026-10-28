@@ -13,6 +13,7 @@
 - Montage 컴포넌트는 Emotion이라 `'use client'`. 날짜 포맷은 서버에서 (hydration 차이)
 - **Next 16**: 파일을 읽는 페이지는 `await connection()` + 그 경로에 `loading.tsx` (Suspense 경계).
   없으면 build 실패 / 이동 시 dev 경고. `usePathname`도 Suspense 안에서 (`app-shell.tsx` 참고)
+- 항상 요청 시 렌더하는 로컬 페이지는 `export const instant = false` — dev 콘솔의 blocking-route 검증 오류를 끈다 (docs: instant 'Disabling instant')
 - 동적 경로 `params`는 Promise (`await params`)
 
 ## 하지 말 것

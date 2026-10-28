@@ -1,8 +1,9 @@
 'use client';
 
 import { useActionState, useState } from 'react';
-import ReactMarkdown from 'react-markdown';
 import { Box, Button, ContentBadge, FlexBox, Loading, SectionMessage, TextArea, Typography } from '@montage-ui/core';
+
+import DocMarkdown from './doc-markdown';
 
 import type { Theme } from '@montage-ui/core';
 
@@ -118,7 +119,7 @@ export default function DocCard({ doc, index, ready, hasSource, running, onBusy,
       ) : (
         <>
           <Typography as="div" variant="body2" sx={bodyStyle}>
-            <ReactMarkdown>{doc.content}</ReactMarkdown>
+            <DocMarkdown>{doc.content}</DocMarkdown>
           </Typography>
           <FlexBox justifyContent="flex-end" gap="8px" sx={{ marginTop: '12px' }}>
             <Button type="button" size="small" variant="outlined" color="assistive" onClick={() => setEditing(true)}>
