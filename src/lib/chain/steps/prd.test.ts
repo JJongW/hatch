@@ -35,7 +35,8 @@ describe('prdStep', () => {
     for (const h of ['## 배경', '## 목표', '## 비목표', '## 사용자 스토리', '## 요구사항', '## 지표', '## 출시 범위', '## 확인 필요']) {
       expect(md).toContain(h);
     }
-    expect(md).toContain('- **직장인**로서 근처 클래스를 보고 싶다 — 퇴근 후 바로 갈 수 있다');
+    expect(md).toContain('- **직장인**으로서 근처 클래스를 보고 싶다 — 퇴근 후 바로 갈 수 있다');
+    expect(prdStep.render({ ...ok, userStories: [{ as: '디자이너', want: 'a', soThat: 'b' }] })).toContain('- **디자이너**로서 a — b');
     expect(md).toContain('- **R1** `P0` 위치 기반 추천 목록을 보여준다');
     expect(md).toContain('- **R2** `P2` 찜 목록을 저장한다');
     expect(md.indexOf('R1')).toBeLessThan(md.indexOf('R2'));
