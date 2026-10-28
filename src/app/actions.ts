@@ -3,7 +3,8 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
-import { createIdea, StorageError, trashIdea, updateIdea } from '@/lib/storage';
+import { ChainError, generateDoc } from '@/lib/chain';
+import { createIdea, StorageError, trashIdea, updateDocBody, updateIdea, type DocKey } from '@/lib/storage';
 
 export type FormState = {
   error?: string;
@@ -55,4 +56,39 @@ export async function trashIdeaAction(id: string) {
   await trashIdea(id);
   revalidateIdeas();
   redirect('/ideas');
+}
+
+export type DocActionState = { error?: string; savedAt?: number };
+
+// 체인 · storage가 사용자용으로 던진 문구만 그대로, 나머지는 한 줄 안내로
+const chainMessage = (e: unknown) =>
+  e instanceof ChainError || e instanceof StorageError
+    ? e.message
+    : '문서를 만들지 못했어요. 서버 로그를 확인해 주세요.';
+
+// 1~2분 걸리는 긴 Server Action. 끝날 때까지 클라이언트가 pending 상태로 기다린다
+export async function generateDocAction(id: string, key: DocKey): Promise<DocActionState> {
+  try {
+    await generateDoc(id, key);
+  } catch (e) {
+    if (!(e instanceof ChainError)) console.error('[hatch] generateDoc', e);
+    return { error: chainMessage(e) };
+  }
+  revalidateIdeas();
+  return { savedAt: Date.now() };
+}
+
+export async function updateDocAction(
+  id: string,
+  key: DocKey,
+  _prev: DocActionState,
+  formData: FormData,
+): Promise<DocActionState> {
+  try {
+    await updateDocBody(id, key, String(formData.get('body') ?? ''));
+  } catch (e) {
+    return { error: toMessage(e) };
+  }
+  revalidateIdeas();
+  return { savedAt: Date.now() };
 }

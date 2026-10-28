@@ -70,7 +70,7 @@ function spawnClaude(prompt: string, jsonSchema: object, cwd: string, timeoutMs:
   ];
 
   return new Promise<string>((resolve, reject) => {
-    const child = spawn(bin, args, { cwd, stdio: ['pipe', 'pipe', 'pipe'] });
+    const child = spawn(/*turbopackIgnore: true*/ bin, args, { cwd, stdio: ['pipe', 'pipe', 'pipe'] });
     let out = '';
     let err = '';
     let timedOut = false;
