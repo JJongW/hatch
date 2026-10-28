@@ -102,8 +102,13 @@ export async function runToolAction(key: ToolKey, _prev: ToolActionState, formDa
   const tool = TOOLS[key];
   if (!tool) return { error: '아직 쓸 수 없는 도구예요.' };
   const get = (k: string) => String(formData.get(k) ?? '');
+  const mode = get('mode');
   const source: ToolSource =
-    get('mode') === 'pasted' ? { pasted: get('pasted') } : { ideaId: get('ideaId'), docKey: get('docKey') as DocKey };
+    mode === 'none'
+      ? { none: true }
+      : mode === 'pasted'
+        ? { pasted: get('pasted') }
+        : { ideaId: get('ideaId'), docKey: get('docKey') as DocKey };
   if ('ideaId' in source && !isValidId(source.ideaId)) return { error: '입력 문서를 골라 주세요.' };
   const input: Record<string, string> = {};
   formData.forEach((v, k) => {

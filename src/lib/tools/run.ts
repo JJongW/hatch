@@ -10,6 +10,7 @@ import type { AnyToolDef, ToolSource } from './types';
 export const MAX_SOURCE_CHARS = 30_000;
 
 async function readSource(tool: AnyToolDef, source: ToolSource) {
+  if ('none' in source) return { text: '', label: 'none', ideaId: null };
   if ('pasted' in source) return { text: source.pasted.trim(), label: 'pasted', ideaId: null };
   if (!tool.accepts.includes(source.docKey)) return { text: '', label: source.docKey, ideaId: source.ideaId };
   const doc = (await getDocs(source.ideaId)).find((d) => d.key === source.docKey);
@@ -22,7 +23,7 @@ export async function runTool(
   { source, input, prevId = null }: { source: ToolSource; input: Record<string, string>; prevId?: string | null },
 ) {
   const { text, label, ideaId } = await readSource(tool, source);
-  if (!text) throw new ChainError('입력 문서를 골라 주세요.');
+  if (!text && !tool.sourceOptional) throw new ChainError('입력 문서를 골라 주세요.');
   if (text.length > MAX_SOURCE_CHARS) throw new ChainError('입력이 너무 길어요 (최대 30,000자).');
 
   const parsed = tool.inputSchema.safeParse(input);
@@ -35,8 +36,11 @@ export async function runTool(
     prev = r.data;
   }
 
+  const invalid = tool.validate?.(parsed.data, prev);
+  if (invalid) throw new ChainError(invalid);
+
   if (isClaudeBusy()) throw new ChainError(BUSY_MESSAGE);
-  const prompt = [TOOL_RULES, tool.prompt, INPUT_HEADING, `${SOURCE_HEADING}\n${text}`, tool.promptInput(parsed.data, prev)]
+  const prompt = [TOOL_RULES, tool.prompt, INPUT_HEADING, text && `${SOURCE_HEADING}\n${text}`, tool.promptInput(parsed.data, prev)]
     .filter(Boolean)
     .join('\n\n');
   const raw = await runClaude({ prompt, jsonSchema: toClaudeSchema(tool.outputSchema) });

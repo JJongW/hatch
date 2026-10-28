@@ -60,7 +60,7 @@ const fmt = (n: number | null) => (n === null ? '응답 없음' : String(n));
 const diff = (now: number | null, before: number | null | undefined) => {
   if (before === undefined || now === null || before === null) return '';
   const d = round1(now - before);
-  return ` (이전 ${before} → ${d >= 0 ? '+' : ''}${d})`;
+  return ` (이전 ${before} → ${d === 0 ? '±0' : d > 0 ? `+${d}` : d})`;
 };
 
 export function renderPrdReview(r: PrdReviewResult) {

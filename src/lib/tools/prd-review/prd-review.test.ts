@@ -1,8 +1,17 @@
-import { describe, expect, it } from 'vitest';
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
+import { getToolResult } from '@/lib/storage';
+
+import { runTool } from '../run';
 import { computePrdReview, renderPrdReview } from './compute';
 import { prdReviewTool } from './index';
+
+const here = path.dirname(fileURLToPath(import.meta.url));
 
 const scores = (s: number) =>
   ['명확성', '실현 가능성', '측정 가능성', '사용자 가치', '위험 대응'].map((criterion) => ({ criterion, score: s, reason: '이유' }));
@@ -59,5 +68,40 @@ describe('prdReviewTool', () => {
     const before = computePrdReview(prdReviewTool.outputSchema.parse(out), null);
     expect(prdReviewTool.promptInput({}, null)).toBe('');
     expect(prdReviewTool.promptInput({}, before)).toContain('- [개발] API 미정');
+  });
+});
+
+// 새 도구의 run 테스트 예시 (fake-claude 모드 + 붙여넣기 → 이어 실행). C-2~4는 이 모양을 복사한다
+describe('runTool + FAKE_CLAUDE=prd-review', () => {
+  let dir: string;
+  beforeEach(async () => {
+    dir = await fs.mkdtemp(path.join(os.tmpdir(), 'hatch-test-'));
+    process.env.HATCH_DATA_DIR = dir;
+    process.env.HATCH_CLAUDE_BIN = path.join(here, '../../claude/fake-claude.mjs');
+    process.env.FAKE_CLAUDE = 'prd-review';
+  });
+  afterEach(async () => {
+    await fs.rm(dir, { recursive: true, force: true });
+    delete process.env.HATCH_DATA_DIR;
+    delete process.env.HATCH_CLAUDE_BIN;
+    delete process.env.FAKE_CLAUDE;
+  });
+
+  it('붙여넣은 PRD를 리뷰하고, prevId로 다시 리뷰하면 전후 차이를 남긴다', async () => {
+    const first = await runTool(prdReviewTool, { source: { pasted: '## 배경\nPRD 본문' }, input: {} });
+    const r1 = await getToolResult(null, first.resultId);
+    expect(r1?.tool).toBe('prd-review');
+    expect(r1?.body).toContain('## 반론');
+    expect(r1?.body).not.toContain('(이전 ');
+
+    const second = await runTool(prdReviewTool, { source: { pasted: '## 배경\n고친 PRD' }, input: {}, prevId: first.resultId });
+    const r2 = await getToolResult(null, second.resultId);
+    expect(r2?.prevId).toBe(first.resultId);
+    expect(r2?.body).toContain('(이전 ');
+    expect(r2?.body).toContain('±0'); // 같은 fake 출력이라 차이 0
+
+    await expect(
+      runTool(prdReviewTool, { source: { pasted: 'a' }, input: {}, prevId: 'voc-20261028T000000-abcd' }),
+    ).rejects.toThrow('이전 결과를 찾을 수 없어요.');
   });
 });

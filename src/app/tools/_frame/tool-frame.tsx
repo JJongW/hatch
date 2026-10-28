@@ -33,7 +33,7 @@ type Props = ToolFrameData & {
   inputFields?: React.ReactNode;
 };
 
-type Mode = 'idea' | 'pasted';
+type Mode = 'idea' | 'pasted' | 'none';
 
 const sectionTitle = (text: string) => (
   <Typography as="h2" variant="headline2" weight="bold" sx={{ display: 'block', marginBottom: '12px' }}>
@@ -59,6 +59,12 @@ export default function ToolFrame({ tool, ideas, ideaId, results, current, busy,
   };
 
   const [mode, setMode] = useState<Mode>(ideaId !== null ? 'idea' : 'pasted');
+  // 앞으로 · 뒤로 가기로 ideaId가 바뀌면 모드를 맞춘다 (렌더 중 조정)
+  const [seenIdea, setSeenIdea] = useState(ideaId);
+  if (seenIdea !== ideaId) {
+    setSeenIdea(ideaId);
+    setMode(ideaId !== null ? 'idea' : mode === 'idea' ? 'pasted' : mode);
+  }
   const [docKey, setDocKey] = useState('');
   const [pasted, setPasted] = useState('');
 
@@ -76,6 +82,8 @@ export default function ToolFrame({ tool, ideas, ideaId, results, current, busy,
   const otherBusy = busy && !pending;
   useRefreshWhile(otherBusy);
   const blocked = pending || otherBusy;
+  const noSource = mode === 'idea' && !selectedDoc; // 아이디어 · 문서를 아직 안 골랐다
+  const showResults = !(mode === 'idea' && ideaId === null); // 아이디어를 고르기 전엔 붙여넣기 결과를 숨긴다
 
   // <form action>은 성공 뒤 form.reset()을 부르고, Montage SegmentedControl · Select가 reset 이벤트에
   // 처음 값으로 돌아가며 onChange를 부른다 (모드 · 아이디어가 바뀌어 페이지 이동). 그래서 onSubmit에서 직접 보낸다.
@@ -87,9 +95,9 @@ export default function ToolFrame({ tool, ideas, ideaId, results, current, busy,
   };
 
   const changeMode = (v: string) => {
-    const next = v === 'pasted' ? 'pasted' : 'idea';
+    const next: Mode = v === 'pasted' || v === 'none' ? v : 'idea';
     setMode(next);
-    if (next === 'pasted' && ideaId !== null) router.push(base);
+    if (next !== 'idea' && ideaId !== null) router.push(base);
   };
 
   return (
@@ -108,6 +116,7 @@ export default function ToolFrame({ tool, ideas, ideaId, results, current, busy,
               <SegmentedControl value={mode} onValueChange={changeMode} size="medium">
                 <SegmentedControlItem value="idea">아이디어 문서</SegmentedControlItem>
                 <SegmentedControlItem value="pasted">직접 붙여넣기</SegmentedControlItem>
+                {tool.sourceOptional && <SegmentedControlItem value="none">문서 없이</SegmentedControlItem>}
               </SegmentedControl>
 
               {mode === 'idea' ? (
@@ -129,7 +138,7 @@ export default function ToolFrame({ tool, ideas, ideaId, results, current, busy,
                   </Select>
                   {idea &&
                     (idea.docs.length === 0 ? (
-                      <SectionMessage variant="info">이 도구가 받는 문서(PRD 등)가 아직 없어요.</SectionMessage>
+                      <SectionMessage variant="info">이 도구가 받는 문서({tool.acceptsLabels.join(' · ')})가 아직 없어요.</SectionMessage>
                     ) : (
                       <Select value={selectedDoc} onChange={(k) => k && setDocKey(k)} disabled={blocked} width="100%" aria-label="문서">
                         {idea.docs.map((d) => (
@@ -140,6 +149,10 @@ export default function ToolFrame({ tool, ideas, ideaId, results, current, busy,
                       </Select>
                     ))}
                 </FlexBox>
+              ) : mode === 'none' ? (
+                <Typography variant="body2" color="semantic.foreground.neutral.secondary">
+                  입력 문서 없이 실행해요.
+                </Typography>
               ) : (
                 <FlexBox flexDirection="column" gap="4px">
                   <TextArea
@@ -164,19 +177,21 @@ export default function ToolFrame({ tool, ideas, ideaId, results, current, busy,
           {inputFields && (
             <section>
               {sectionTitle('도구 입력')}
-              {inputFields}
+              <fieldset disabled={blocked} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
+                {inputFields}
+              </fieldset>
             </section>
           )}
 
           <FlexBox flexDirection="column" gap="12px">
             <FlexBox alignItems="center" gap="12px" flexWrap="wrap">
-              <Button type="submit" disabled={blocked}>
+              <Button type="submit" disabled={blocked || noSource}>
                 실행
               </Button>
               {pending && (
                 <FlexBox alignItems="center" gap="8px">
                   <Loading variant="circular" size={20} />
-                  <Typography variant="body2">위원회가 읽는 중이에요 (1~2분)</Typography>
+                  <Typography variant="body2">{tool.runningLabel}</Typography>
                 </FlexBox>
               )}
               {otherBusy && (
@@ -188,7 +203,7 @@ export default function ToolFrame({ tool, ideas, ideaId, results, current, busy,
             {state.error && !pending && <SectionMessage variant="negative">{state.error}</SectionMessage>}
           </FlexBox>
 
-          {current && (
+          {showResults && current && (
             <section>
               {sectionTitle('결과')}
               <Box sx={resultBoxStyle}>
@@ -197,7 +212,7 @@ export default function ToolFrame({ tool, ideas, ideaId, results, current, busy,
                 </Typography>
                 {tool.continueLabel && (
                   <FlexBox justifyContent="flex-end" sx={{ marginTop: '12px' }}>
-                    <Button type="submit" name="prevId" value={current.id} variant="outlined" color="assistive" size="small" disabled={blocked}>
+                    <Button type="submit" name="prevId" value={current.id} variant="outlined" color="assistive" size="small" disabled={blocked || noSource}>
                       {tool.continueLabel}
                     </Button>
                   </FlexBox>
@@ -206,7 +221,7 @@ export default function ToolFrame({ tool, ideas, ideaId, results, current, busy,
             </section>
           )}
 
-          {results.length > 0 && (
+          {showResults && results.length > 0 && (
             <section>
               {sectionTitle('지난 결과')}
               <FlexBox flexDirection="column">

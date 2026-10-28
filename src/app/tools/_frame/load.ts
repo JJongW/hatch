@@ -15,7 +15,16 @@ import {
 import { isClaudeBusy, TOOLS, type ToolKey } from '@/lib/tools';
 
 export type ToolFrameData = {
-  tool: { key: ToolKey; label: string; description: string; continueLabel: string | null };
+  tool: {
+    key: ToolKey;
+    label: string;
+    description: string;
+    continueLabel: string | null;
+    runningLabel: string;
+    sourceOptional: boolean;
+    /** accepts의 라벨, 문서가 없을 때 안내에 쓴다 */
+    acceptsLabels: string[];
+  };
   /** accepts 순서, 있는 문서만 */
   ideas: { id: string; title: string; docs: { key: DocKey; label: string }[] }[];
   /** ?idea= (유효하지 않으면 null = 붙여넣기) */
@@ -28,7 +37,7 @@ export type ToolFrameData = {
 };
 
 const labelOf = (key: string) =>
-  key === 'pasted' ? '붙여넣기' : (DOC_STEPS.find((s) => s.key === key)?.label ?? key);
+  key === 'pasted' ? '붙여넣기' : key === 'none' ? '문서 없이' : (DOC_STEPS.find((s) => s.key === key)?.label ?? key);
 
 // 날짜는 서버에서 문자열로 (hydration 차이 방지)
 const formatDate = (iso: string) => new Date(iso).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
@@ -59,7 +68,15 @@ export async function loadToolPage(
   const cur = picked && picked.tool === key ? picked : (list[0] ?? null);
 
   return {
-    tool: { key, label: tool.label, description: tool.description, continueLabel: tool.continueLabel ?? null },
+    tool: {
+      key,
+      label: tool.label,
+      description: tool.description,
+      continueLabel: tool.continueLabel ?? null,
+      runningLabel: tool.runningLabel ?? '실행 중이에요 (1~2분)',
+      sourceOptional: tool.sourceOptional === true,
+      acceptsLabels: tool.accepts.map(labelOf),
+    },
     ideas,
     ideaId,
     results,

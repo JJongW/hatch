@@ -76,6 +76,23 @@ describe('runTool', () => {
     await expect(runTool(echoTool, { source: { pasted: 'a' }, input: { note: '여섯글자입니다' } })).rejects.toThrow('메모는 5자까지예요.');
     await expect(runTool(echoTool, { source: { pasted: 'a' }, input: {}, prevId: 'prd-review-20261028T000000-abcd' })).rejects.toThrow('이전 결과를 찾을 수 없어요.');
   });
+  it('sourceOptional 도구는 문서 없이 실행하고 프롬프트에 문서 블록이 빠진다', async () => {
+    const optional = { ...echoTool, sourceOptional: true as const };
+    const { resultId, ideaId } = await runTool(optional, { source: { none: true }, input: { note: 'ctx' } });
+    expect(ideaId).toBeNull();
+    const r = await getToolResult(null, resultId);
+    expect(r?.source).toBe('none');
+    const prompt = (r?.data as { echo: string }).echo;
+    expect(prompt).not.toContain('### 입력 문서');
+    expect(prompt).toContain('### 메모\nctx');
+    await expect(runTool(echoTool, { source: { none: true }, input: {} })).rejects.toThrow('입력 문서를 골라 주세요.');
+  });
+  it('validate가 문자열을 돌려주면 claude 실행 전에 거절한다', async () => {
+    const guarded = { ...echoTool, validate: (i: { note: string }, prev: unknown) => (prev && !i.note ? '내 답을 적어 주세요.' : undefined) };
+    const first = await runTool(guarded, { source: { pasted: 'a' }, input: {} }); // prev 없음 → 통과
+    process.env.FAKE_CLAUDE = 'crash'; // 실행까지 갔다면 다른 오류가 난다
+    await expect(runTool(guarded, { source: { pasted: 'a' }, input: {}, prevId: first.resultId })).rejects.toThrow('내 답을 적어 주세요.');
+  });
   it('AI 출력 형식이 틀리면 저장하지 않는다', async () => {
     process.env.FAKE_CLAUDE = 'plan'; // echo 칸이 없는 출력
     await expect(runTool(echoTool, { source: { pasted: 'a' }, input: {} })).rejects.toThrow('결과 형식이 맞지 않아요');
