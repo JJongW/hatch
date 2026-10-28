@@ -1,4 +1,4 @@
-// 화면 · Server Action은 이 파일만 import한다. 저장 방식이 바뀌어도(B: bridge, 이후 DB) 이 모양은 유지.
+// 화면 · Server Action은 이 파일만 import한다. 저장 방식이 바뀌어도(이후 DB) 이 모양은 유지.
 export {
   createIdea,
   getIdea,

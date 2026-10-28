@@ -4,8 +4,8 @@
 Next.js(App Router) · Montage(원티드 디자인 시스템) · 생성은 로컬 `claude -p`(`src/lib/claude/`).
 
 ## 지금 단계
-**A 완료 · B-1 진행 중** — 체인 바탕(`src/lib/chain` · `src/lib/claude`)과 기획안 생성. 다음: B-2 나머지 5단계(로드맵 · PRD · 기능명세 · 개발/디자인 프롬프트).
-실행: `cp .env.example .env.local` → `npm run dev`. 앱은 Mac에서 돌린다 (생성은 로컬 `claude -p`). `bridge/`는 보류 (spec §1).
+**A · B 완료** — 아이디어 → 기획안 → 로드맵 → PRD → 기능명세 → 개발/디자인 프롬프트 생성. 다음: C PO 도구.
+실행: `cp .env.example .env.local` → `npm run dev`. 앱은 Mac에서 돌린다 (생성은 로컬 `claude -p`). 다른 기기는 Tailscale Serve (README). `bridge/`는 보류 (spec §1).
 
 ## 폴더 지도 — 일할 폴더의 CLAUDE.md를 먼저 읽는다
 | 경로 | 역할 | 단계 | 에이전트 |
@@ -18,7 +18,7 @@ Next.js(App Router) · Montage(원티드 디자인 시스템) · 생성은 로�
 | `src/lib/claude/` | claude -p 실행기 | B | `chain-author` |
 | `src/lib/chain/` | 문서 생성 체인 단계 | B | `chain-author` |
 | `src/lib/prompts/` | 프롬프트 문자열 (여기에만) | B · C | `chain-author` |
-| `bridge/` | 맥 중계 서버 + Tailscale | B | `bridge-engineer` |
+| `bridge/` | 맥 중계 서버 — **보류** | — | `bridge-engineer` |
 
 검사는 `hatch-reviewer`(읽기 전용). 스킬: `montage-ui` · `new-po-tool` · `chain-step` (`.claude/skills/`).
 

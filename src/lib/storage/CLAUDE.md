@@ -12,7 +12,7 @@
 문서 머리말 `generatedAt · sourceHash · version`(머리말 없는 손글 문서는 stale 아님) · 덮어쓰기 전 이전 판은 `<id>/.history/<key>-<시각>.md` · 생성 중 표시 `<id>/.running.json`(10분 넘으면 무시)
 
 ## 규칙
-- 함수 모양(인터페이스)은 유지. B에서 bridge로 옮겨도 호출부는 그대로
+- 함수 모양(인터페이스)은 유지. 나중에 DB로 옮겨도 호출부는 그대로
 - id는 `isValidId` 통과한 것만 경로에 쓴다 (경로 조작 방지)
 - 머리말 형식을 바꾸면 `IDEA_FILE_VERSION`을 올리고 읽을 때 변환
 - 깨진 파일은 건너뛰고 개수만 알린다. 빈 저장소는 빈 값

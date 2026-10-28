@@ -11,11 +11,11 @@ Hatch는 **적기만 하면 다음 문서가 이어서 나오고**, 그 문서�
 
 ```
 아이디어 한 줄
-  └─▶ 상세 기획안 ─▶ 커리큘럼 ─▶ PRD ─▶ 기능명세서
-                                              └─▶ 개발 프롬프트 / 디자인 프롬프트
+  └─▶ 상세 기획안 ─▶ 개발 로드맵 ─▶ PRD ─▶ 기능명세서
+                                                └─▶ 개발 프롬프트 / 디자인 프롬프트
 ```
 
-각 단계는 앞 단계 결과를 입력으로 받는다. 생성은 사용자의 **로컬 Claude Code**가 한다 (아래 "로컬 Claude 연결").
+각 단계는 앞 단계 결과를 입력으로 받는다. 버튼을 누르면 한 단계씩 만들고, 만든 문서는 고칠 수 있다. 생성은 맥의 **로컬 Claude Code**(`claude -p`)가 한다.
 
 ## 화면 구성
 
@@ -33,37 +33,51 @@ Hatch는 **적기만 하면 다음 문서가 이어서 나오고**, 그 문서�
 | 단계 | 내용 | 비고 |
 | --- | --- | --- |
 | **A. 아이디어 뱅크** | 작성 · 모음 · 네비바 · 저장 | 나머지 전부의 바닥 |
-| **B. 문서 생성 체인** | 아이디어 → 기획안 → 커리큘럼 → PRD → 기능명세 → 프롬프트 | A의 데이터를 입력으로 |
+| **B. 문서 생성 체인** | 아이디어 → 기획안 → 개발 로드맵 → PRD → 기능명세 → 프롬프트 | A의 데이터를 입력으로 |
 | **C. PO 도구 4종** | 기획안 선택 + 도구 실행 | 공통 틀 하나 → 4개는 서브 작업으로 병렬 |
 | **D. 디자인 시스템** | Montage 기본 + TDS 패턴 참고 | A부터 적용, 마지막에 다듬기 |
 
 ## 기술 스택
 
-- **Next.js** (App Router) · **Vercel** 배포
+- **Next.js** (App Router) · 맥에서 실행
 - **디자인**: [Montage](https://github.com/wanteddev/montage-web) (원티드 웹 디자인 시스템, MIT) 기본 컴포넌트 · 토큰.
   TDS(토스 디자인 시스템)는 화면 패턴 · UX 라이팅만 참고 (두 시스템의 토큰을 섞지 않는다)
-- **저장**: 처음엔 서버 없이 (브라우저 저장 / 로컬 파일)
+- **저장**: 맥의 md 파일 (`~/Hatch/ideas/<id>/`)
 - **생성**: 로컬 Claude Code (`claude -p`)
 
-## 로컬 Claude 연결
+## 실행
+
+```bash
+cp .env.example .env.local
+npm install
+npm run dev
+```
+
+http://localhost:3000 에서 연다. `claude`가 설치돼 있고 로그인돼 있어야 문서를 만들 수 있다.
+
+## 다른 기기에서 열기 (Tailscale Serve)
 
 ```
-[브라우저: Vercel 사이트] ──fetch──▶ https://<내 맥>.<tailnet>.ts.net  (Tailscale Serve)
-                                          │
-                                   [맥: 중계 서버] ── claude -p
+[휴대폰 · 다른 맥] ──▶ https://<내 맥>.<tailnet>.ts.net  (Tailscale Serve, 내 tailnet만)
+                              │
+                       [맥: Next 서버] ── claude -p · ~/Hatch
 ```
 
-- 호출은 **브라우저 → 맥** 직접. Vercel 서버는 tailnet 밖이라 맥에 닿지 않는다
-- 중계 서버는 **문서 생성만**: 도구(Bash · 파일 수정) 없이 텍스트 출력, 접근 토큰 + CORS(내 Vercel 도메인만)
-- 맥이 켜져 있어야 동작. 개인용
+1. Tailscale 관리 화면에서 MagicDNS · HTTPS 인증서 · Serve를 켠다 (처음 한 번)
+2. 맥에서 `npm run build && npm start`
+3. `tailscale serve --bg 3000` → 같은 tailnet 기기에서 `https://<내 맥>.<tailnet>.ts.net`
+4. 저장 · 생성 버튼이 동작하지 않고 서버 로그에 origin 관련 오류가 보이면 `.env.local`에 `HATCH_SERVE_HOST=<내 맥>.<tailnet>.ts.net`을 넣고 다시 빌드
+5. 그만 열 때 `tailscale serve reset`
+
+- 맥이 켜져 있어야 동작한다. 개인용이라 로그인은 없다 — **Funnel(인터넷 공개)은 쓰지 않는다**
+- `bridge/`(별도 중계 서버)는 보류. Next 서버가 맥에서 `claude`를 직접 실행하므로 필요 없다
 
 ## 나중에 갈아탈 신호
 
-- 맥이 꺼져 있어도 써야 하거나, 다른 사람도 써야 한다 → **작업 대기열**(Supabase / Upstash에 작업을 쌓고 맥 워커가 가져감)
-- 기기 여러 대에서 같은 아이디어를 봐야 한다 → 브라우저 저장 대신 DB
+- 맥이 꺼져 있어도 써야 하거나, 다른 사람도 써야 하거나, Vercel에 올려야 한다 → **작업 대기열**(Supabase / Upstash에 작업을 쌓고 맥 워커가 가져감). 이때 `bridge/`를 다시 꺼낸다
+- 맥 말고 다른 곳에서도 같은 아이디어를 저장해야 한다 → md 파일 대신 DB
 - PO 도구가 4개를 넘는다 → 도구 정의를 설정 파일 하나로 모으기
 
 ## 열린 질문
 
-- "커리큘럼" 단계의 의미 (교육 과정 / 개발 로드맵)
-- 공개 사이트 → Tailscale 주소(100.x) 요청이 Chrome의 Private Network Access에 막히는지 검증
+- 휴대폰 화면 배치 (지금은 좁으면 네비바가 위로 접히는 정도)
