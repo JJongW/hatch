@@ -120,9 +120,18 @@ export default function ToolFrame({ tool, ideas, ideaId, none, results, current,
             {sectionTitle('입력 문서')}
             <FlexBox flexDirection="column" gap="12px">
               <SegmentedControl value={mode} onValueChange={changeMode} size="medium">
-                <SegmentedControlItem value="idea">아이디어 문서</SegmentedControlItem>
-                <SegmentedControlItem value="pasted">직접 붙여넣기</SegmentedControlItem>
-                {tool.sourceOptional && <SegmentedControlItem value="none">문서 없이</SegmentedControlItem>}
+                {/* 실행 중 탭을 바꾸면 결과 링크(hrefOf)가 다른 탭 것이 된다 → 실행 중엔 막는다 */}
+                <SegmentedControlItem value="idea" disabled={blocked}>
+                  아이디어 문서
+                </SegmentedControlItem>
+                <SegmentedControlItem value="pasted" disabled={blocked}>
+                  직접 붙여넣기
+                </SegmentedControlItem>
+                {tool.sourceOptional && (
+                  <SegmentedControlItem value="none" disabled={blocked}>
+                    문서 없이
+                  </SegmentedControlItem>
+                )}
               </SegmentedControl>
 
               {mode === 'idea' ? (
