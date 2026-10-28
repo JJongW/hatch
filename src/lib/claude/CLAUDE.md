@@ -9,4 +9,4 @@
 - 보안: 도구 없음(`--tools ""`). 프롬프트 본문은 로그에 남기지 않는다(stderr 앞 500자만).
 - 오류는 `ChainError`(한국어 한 줄)로 던진다. 화면에 그대로 보여 준다.
 - 호출은 `src/lib/chain/generate.ts`에서만.
-- 테스트는 `fake-claude.mjs`(`FAKE_CLAUDE=ok|error|crash|slow`)를 `HATCH_CLAUDE_BIN`으로 쓴다. 실제 claude는 돌리지 않는다.
+- 테스트는 `fake-claude.mjs`(`FAKE_CLAUDE=ok|plan|error|crash|slow`)를 `HATCH_CLAUDE_BIN`으로 쓴다. 실제 claude는 돌리지 않는다.
