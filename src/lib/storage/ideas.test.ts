@@ -5,7 +5,6 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
   createIdea,
-  getDocs,
   getIdea,
   isValidId,
   listIdeas,
@@ -14,6 +13,7 @@ import {
   trashIdea,
   updateIdea,
 } from '.';
+import { getDocs } from './docs';
 
 let dir: string;
 
@@ -167,7 +167,7 @@ describe('getDocs', () => {
     await fs.writeFile(path.join(dir, 'ideas', idea.id, 'prd.md'), '# PRD');
 
     const docs = await getDocs(idea.id);
-    expect(docs.map((d) => d.key)).toEqual(['plan', 'curriculum', 'prd', 'spec', 'dev-prompt', 'design-prompt']);
+    expect(docs.map((d) => d.key)).toEqual(['plan', 'roadmap', 'prd', 'spec', 'dev-prompt', 'design-prompt']);
     expect(docs.find((d) => d.key === 'prd')?.content).toBe('# PRD');
     expect(docs.find((d) => d.key === 'plan')?.content).toBeNull();
   });

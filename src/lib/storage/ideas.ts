@@ -1,28 +1,17 @@
 import 'server-only';
 
 import fs from 'node:fs/promises';
-import os from 'node:os';
 import path from 'node:path';
 import matter from 'gray-matter';
 
 import { assertValidId, isValidId, newId } from './ids';
+import { getDocs } from './docs';
+import { ideaDir, ideaFile, ideasDir, isMissing, dataDir } from './paths';
 import { progressOf } from './progress';
-import { DOC_STEPS, IDEA_FILE_VERSION, type Doc, type Idea } from './types';
+import { IDEA_FILE_VERSION, type Idea } from './types';
 
 /** 사용자에게 그대로 보여 줘도 되는 오류 (한국어 한 줄). 나머지 오류는 화면에서 일반 안내로 바꾼다. */
 export class StorageError extends Error {}
-
-/** 매 호출마다 읽는다 (테스트 · .env 변경 반영). `~` · `~/…` 만 홈으로 푼다. */
-function dataDir() {
-  const dir = process.env.HATCH_DATA_DIR?.trim() || '~/Hatch';
-  return dir === '~' || dir.startsWith('~/') ? path.join(os.homedir(), dir.slice(1)) : dir;
-}
-
-const ideasDir = () => path.join(dataDir(), 'ideas');
-const ideaDir = (id: string) => path.join(ideasDir(), id);
-const ideaFile = (id: string) => path.join(ideaDir(id), 'idea.md');
-
-const isMissing = (e: unknown) => (e as NodeJS.ErrnoException).code === 'ENOENT';
 
 function cleanTitle(title: string) {
   const t = title.trim();
@@ -117,17 +106,4 @@ export async function listIdeasWithProgress() {
   const { ideas, unreadable } = await listIdeas();
   const items = await Promise.all(ideas.map(async (idea) => ({ idea, progress: progressOf(await getDocs(idea.id)) })));
   return { items, unreadable };
-}
-
-export async function getDocs(id: string): Promise<Doc[]> {
-  assertValidId(id);
-  return Promise.all(
-    DOC_STEPS.map(async (step) => {
-      const content = await fs.readFile(path.join(ideaDir(id), step.file), 'utf8').catch((e) => {
-        if (isMissing(e)) return null;
-        throw e;
-      });
-      return { ...step, content };
-    }),
-  );
 }

@@ -1,0 +1,49 @@
+#!/usr/bin/env node
+import { spawn } from 'node:child_process';
+// 테스트용 가짜 claude. FAKE_CLAUDE 값으로 동작을 고른다.
+let input = '';
+process.stdin.on('data', (c) => (input += c));
+process.stdin.on('end', () => {
+  const mode = process.env.FAKE_CLAUDE ?? 'ok';
+  if (mode === 'ok') {
+    const args = process.argv.slice(2);
+    console.log(JSON.stringify({ is_error: false, structured_output: { echo: input, args } }));
+  } else if (mode === 'plan') {
+    console.log(
+      JSON.stringify({
+        is_error: false,
+        structured_output: {
+          summary: '동네 원데이 클래스 추천',
+          problem: '퇴근 후 할 거리를 찾기 어렵다',
+          targetUsers: ['직장인'],
+          value: '가까운 곳에서 바로 예약',
+          features: [{ name: '추천', description: '취향 기반 추천' }],
+          successMetrics: ['예약 전환율 — [확인 필요: 목표치]'],
+          risks: ['공급자 확보'],
+          openQuestions: ['결제 수수료'],
+        },
+      }),
+    );
+  } else if (mode === 'error') {
+    console.log(JSON.stringify({ is_error: true, result: 'Not logged in' }));
+  } else if (mode === 'crash') {
+    console.error('boom');
+    process.exit(2);
+  } else if (mode === 'slow') {
+    setTimeout(() => {}, 60_000);
+  } else if (mode === 'stubborn') {
+    process.on('SIGTERM', () => {}); // SIGTERM 무시 -> SIGKILL 경로
+    setTimeout(() => {}, 60_000);
+  } else if (mode === 'grandchild') {
+    // 손자가 stdout을 붙잡은 채 살아 있다 (2.5초 뒤 스스로 끝남). 부모는 SIGTERM에 죽는다.
+    spawn(process.execPath, ['-e', 'setTimeout(() => {}, 2500)'], {
+      detached: true,
+      stdio: ['ignore', 'inherit', 'inherit'],
+    }).unref();
+    setTimeout(() => {}, 60_000);
+  } else if (mode === 'korean') {
+    // 멀티바이트 문자가 청크 경계에서 잘리도록 큰 한글 출력을 나눠 쓴다
+    const buf = Buffer.from(JSON.stringify({ is_error: false, structured_output: { text: '가'.repeat(100000) } }));
+    for (let i = 0; i < buf.length; i += 4999) process.stdout.write(buf.subarray(i, i + 4999));
+  }
+});

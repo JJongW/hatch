@@ -6,6 +6,9 @@ import IdeaList from '../_components/idea-list';
 import PageHeader from '../_components/page-header';
 import { toCard } from '../_components/to-card';
 
+// 로컬 전용 · 항상 요청 시 렌더라 정적 셸 검증을 끈다 (docs: route-segment-config/instant, 'Disabling instant')
+export const instant = false;
+
 export default async function IdeasPage() {
   await connection();
   const { items, unreadable } = await listIdeasWithProgress();

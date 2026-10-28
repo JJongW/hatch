@@ -1,38 +1,46 @@
 'use client';
 
-import { Box, Button, ContentBadge, FlexBox, Typography } from '@montage-ui/core';
-
-import type { Theme } from '@montage-ui/core';
+import { useState } from 'react';
+import { Button, FlexBox } from '@montage-ui/core';
 
 import IdeaForm from '../../_components/idea-form';
 import PageHeader from '../../_components/page-header';
 import SectionTitle from '../../_components/section-title';
 
-import type { Doc } from '@/lib/storage';
-import type { FormState } from '../../actions';
+import DocCard from './doc-card';
+import { useRefreshWhile } from './use-refresh-while';
+
+import type { Doc, DocKey } from '@/lib/storage';
+import type { DocActionState, FormState } from '../../actions';
 
 type Props = {
   idea: { title: string; memo: string };
   docs: Doc[];
+  generatable: DocKey[];
+  /** 서버가 아는 생성 중 문서 */
+  running: DocKey | null;
+  generateAction: (key: DocKey, prev: DocActionState) => Promise<DocActionState>;
+  updateDocAction: (key: DocKey, prev: DocActionState, formData: FormData) => Promise<DocActionState>;
   updateAction: (prev: FormState, formData: FormData) => Promise<FormState>;
   trashAction: () => Promise<void>;
 };
 
-const docBoxStyle = (theme: Theme) => ({
-  border: `1px solid ${theme.semantic.line.neutral.primary}`,
-  borderRadius: '12px',
-  padding: '16px',
-});
-
-const preStyle = {
-  margin: 0,
-  whiteSpace: 'pre-wrap' as const,
-  font: 'inherit',
-  maxHeight: '320px',
-  overflow: 'auto',
-};
-
-export default function IdeaDetail({ idea, docs, updateAction, trashAction }: Props) {
+export default function IdeaDetail({
+  idea,
+  docs,
+  generatable,
+  running,
+  generateAction,
+  updateDocAction,
+  updateAction,
+  trashAction,
+}: Props) {
+  // 이 화면에서 시작한 생성 (서버 running이 갱신되기 전에도 다른 카드를 막는다)
+  const [busy, setBusy] = useState<DocKey | null>(null);
+  // 다른 탭 · 새로고침 뒤의 생성 중 표시는 서버 값을 3초마다 다시 받아 맞춘다
+  useRefreshWhile(running !== null && busy === null);
+  // Server Action은 클라이언트에서 하나씩 실행되므로 생성 중엔 다른 저장 버튼을 막는다
+  const generating = (busy ?? running) !== null;
   const confirmTrash = (e: React.FormEvent) => {
     if (!window.confirm('휴지통(~/Hatch/.trash)으로 옮길까요? 파일은 지워지지 않아요.')) e.preventDefault();
   };
@@ -40,11 +48,11 @@ export default function IdeaDetail({ idea, docs, updateAction, trashAction }: Pr
   return (
     <>
       <PageHeader title={idea.title} description="아이디어를 고치고, 아래에서 이어지는 문서를 확인해요." />
-      <IdeaForm action={updateAction} submitLabel="수정 저장" initial={idea} />
+      <IdeaForm action={updateAction} submitLabel="수정 저장" initial={idea} disabled={generating} />
 
       <form action={trashAction} onSubmit={confirmTrash}>
         <FlexBox justifyContent="flex-end" sx={{ marginTop: '8px' }}>
-          <Button type="submit" variant="outlined" color="assistive" size="small">
+          <Button type="submit" variant="outlined" color="assistive" size="small" disabled={generating}>
             휴지통으로
           </Button>
         </FlexBox>
@@ -53,25 +61,17 @@ export default function IdeaDetail({ idea, docs, updateAction, trashAction }: Pr
       <SectionTitle>문서</SectionTitle>
       <FlexBox flexDirection="column" gap="12px">
         {docs.map((doc, i) => (
-          <Box key={doc.key} sx={docBoxStyle}>
-            <FlexBox alignItems="center" gap="8px" sx={{ marginBottom: '8px' }}>
-              <Typography variant="headline2" weight="bold">
-                {i + 1}. {doc.label}
-              </Typography>
-              <ContentBadge size="xsmall" variant="outlined" color={doc.content === null ? 'neutral' : 'accent'}>
-                {doc.content === null ? '아직 없음' : doc.file}
-              </ContentBadge>
-            </FlexBox>
-            {doc.content === null ? (
-              <Typography variant="body2" color="semantic.foreground.neutral.tertiary">
-                B 단계에서 생성
-              </Typography>
-            ) : (
-              <Typography as="pre" variant="body2" sx={preStyle}>
-                {doc.content}
-              </Typography>
-            )}
-          </Box>
+          <DocCard
+            key={doc.key}
+            doc={doc}
+            index={i}
+            ready={generatable.includes(doc.key)}
+            hasSource={doc.from === 'idea' || docs.find((d) => d.key === doc.from)?.content != null}
+            running={busy ?? running}
+            onBusy={setBusy}
+            generate={generateAction}
+            update={updateDocAction}
+          />
         ))}
       </FlexBox>
     </>
