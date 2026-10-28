@@ -58,7 +58,7 @@ export function SideNavView({ pathname }: { pathname: string | null }) {
 
   return (
     <Box as="nav" aria-label="주 메뉴" sx={navStyle}>
-      <Typography as={Link} href="/" variant="headline1" weight="bold" sx={{ textDecoration: 'none' }}>
+      <Typography as={Link} href="/" variant="headline1" weight="bold" sx={{ textDecoration: 'none', fontFamily: 'var(--font-title)' }}>
         🐣 Hatch
       </Typography>
 
