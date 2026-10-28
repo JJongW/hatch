@@ -1,0 +1,10 @@
+#!/bin/sh
+# main 직접 push 금지 — 무료 플랜 비공개 레포라 GitHub 브랜치 보호를 못 써서 로컬에서 막는다.
+# 설치: git config core.hooksPath .githooks
+while read -r local_ref local_sha remote_ref remote_sha; do
+  if [ "$remote_ref" = "refs/heads/main" ]; then
+    echo "✋ main 에 직접 push 할 수 없어요. 브랜치를 만들어 PR 로 올려 주세요 (docs/CLAUDE.md)." >&2
+    exit 1
+  fi
+done
+exit 0
