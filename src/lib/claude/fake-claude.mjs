@@ -41,6 +41,13 @@ process.stdin.on('end', () => {
         },
       }),
     );
+  } else if (mode === 'voc') {
+    const topics = [{ name: '결제', description: '결제 실패 · 환불 문의' }, { name: '검색', description: '원하는 결과가 안 나온다' }, { name: '알림', description: '알림이 너무 많다' }];
+    const items = [[1, '결제', 5], [2, '검색', 3], [3, '결제', 4], [4, '알림', 2], [5, '없는 주제', 3]].map(([line, topic, severity]) => ({ line, topic, severity }));
+    console.log(JSON.stringify({ is_error: false, structured_output: { topics, items } }));
+  } else if (mode === 'metrics') {
+    const m = (name) => ({ name, definition: `${name} 사용자 수 ÷ 방문자 수 (주간)`, why: '문서의 목표와 바로 이어진다' });
+    console.log(JSON.stringify({ is_error: false, structured_output: { coreMetric: m('예약 전환율'), secondaryMetrics: [m('추천 클릭률'), m('상세 조회율')], guardrails: [m('결제 오류율')], experiments: [{ hypothesis: '추천을 맨 위에 두면 예약이 늘 것이다', variants: ['대조군: 현재 목록', '변형 A: 추천 맨 위'], primaryMetric: '예약 전환율' }] } }));
   } else if (mode === 'negotiation') {
     // 프롬프트에 '이번 내 답'이 있으면 다음 라운드(채점), 없으면 1라운드(페르소나 · 요청)
     const criteria = ['공감', '근거', '대안 제시', '범위 지키기', '명확성'];
