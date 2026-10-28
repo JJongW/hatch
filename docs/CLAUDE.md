@@ -3,6 +3,8 @@
 ## 파일 지도
 - `specs/YYYY-MM-DD-<주제>-design.md` — 단계별 설계 (무엇을 · 왜)
 - `plans/YYYY-MM-DD-<주제>.md` — 실행 계획 (Task 단위 체크리스트)
+- `decisions/YYYY-MM-DD_<제목>.md` — 결정 하나의 What · Why (구현은 쓰지 않음). 목록은 `decisions/README.md`
+- `ai-usage/` — AI 활용 과정 (제출용): 프롬프트 · 실수 수정 사례 · 토큰 관리
 
 ## 이슈
 - 마일스톤 = 단계(A~D). 작업 1개 = 이슈 1 = 브랜치 1 = PR 1
@@ -14,7 +16,11 @@
 - 커밋 `<type>(<area>): 내용 (#이슈)` 예: `feat(bank): 아이디어 저장 (#12)`
 
 ## PR · 머지
-- 템플릿 칸 모두 채움: 개요 · closes #n · 변경 · 검증(명령 → 결과) · 화면 캡처(UI) · 리뷰어 결과
+- 템플릿 칸 모두 채움: 개요 · closes #n · 변경 · 검증(명령 → 결과) · 화면 캡처(UI) · 리뷰어 결과 · why 기록
+
+## 기록 (PR마다 같이)
+- 사용자가 느끼는 동작 · 범위가 바뀌면 `decisions/`에 why 1개 + `decisions/README.md` 표에 한 줄 (`why` 스킬 형식)
+- AI 실수를 잡아 고쳤으면 `ai-usage/mistakes.md`에 한 줄 · 앱 프롬프트를 바꿨으면 `ai-usage/prompts.md` §5에 한 줄
 - PR 하나 = 영역 하나. 400줄 / 15파일 넘으면 쪼갠다
 - 머지 조건: 검증 통과 + `hatch-reviewer` 지적 0(남기면 이유) + UI는 로컬 dev 화면 확인 (Vercel 배포 없음)
 - **squash만. 머지는 사용자 승인 후.** 머지 후 브랜치 자동 삭제
