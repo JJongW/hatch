@@ -48,6 +48,13 @@ process.stdin.on('end', () => {
   } else if (mode === 'metrics') {
     const m = (name) => ({ name, definition: `${name} 사용자 수 ÷ 방문자 수 (주간)`, why: '문서의 목표와 바로 이어진다' });
     console.log(JSON.stringify({ is_error: false, structured_output: { coreMetric: m('예약 전환율'), secondaryMetrics: [m('추천 클릭률'), m('상세 조회율')], guardrails: [m('결제 오류율')], experiments: [{ hypothesis: '추천을 맨 위에 두면 예약이 늘 것이다', variants: ['대조군: 현재 목록', '변형 A: 추천 맨 위'], primaryMetric: '예약 전환율' }] } }));
+  } else if (mode === 'negotiation') {
+    // 프롬프트에 '이번 내 답'이 있으면 다음 라운드(채점), 없으면 1라운드(페르소나 · 요청)
+    const criteria = ['공감', '근거', '대안 제시', '범위 지키기', '명확성'];
+    const out = input.includes('### 이번 내 답')
+      ? { scores: criteria.map((criterion, i) => ({ criterion, score: i + 1, reason: '답의 한 부분 때문이다' })), feedback: '대안을 더 구체적으로 낸다.', reaction: '일정은 이해했어요.', request: '그럼 다음 분기 첫 주에 넣어 주세요.' }
+      : { persona: { role: '영업 본부장', goal: '분기 계약 목표 달성', pressure: '대형 고객 이탈 위험' }, request: '엑셀 내보내기를 이번 출시에 넣어 주세요.' };
+    console.log(JSON.stringify({ is_error: false, structured_output: out }));
   } else if (mode === 'error') {
     console.log(JSON.stringify({ is_error: true, result: 'Not logged in' }));
   } else if (mode === 'crash') {

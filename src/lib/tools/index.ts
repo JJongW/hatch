@@ -1,4 +1,5 @@
 import { metricsTool } from './metrics';
+import { negotiationTool } from './negotiation';
 import { prdReviewTool } from './prd-review';
 import type { AnyToolDef, ToolKey } from './types';
 import { vocTool } from './voc';
@@ -8,6 +9,7 @@ export const TOOLS: Partial<Record<ToolKey, AnyToolDef>> = {
   'prd-review': prdReviewTool,
   voc: vocTool,
   metrics: metricsTool,
+  negotiation: negotiationTool,
 };
 
 export { MAX_SOURCE_CHARS, runTool } from './run';

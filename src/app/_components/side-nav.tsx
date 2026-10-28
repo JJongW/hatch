@@ -25,7 +25,7 @@ const TOOL_LINKS = [
   { label: 'PRD 리뷰 위원회', href: '/tools/prd-review', ready: true },
   { label: 'VOC 우선순위', href: '/tools/voc', ready: true },
   { label: '지표 · 실험 설계', href: '/tools/metrics', ready: true },
-  { label: '이해관계자 협상', href: '/tools/negotiation', ready: false },
+  { label: '이해관계자 협상', href: '/tools/negotiation', ready: true },
 ];
 
 const navStyle = (theme: Theme) => ({
