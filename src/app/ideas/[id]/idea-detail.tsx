@@ -6,9 +6,9 @@ import { Button, FlexBox } from '@montage-ui/core';
 import IdeaForm from '../../_components/idea-form';
 import PageHeader from '../../_components/page-header';
 import SectionTitle from '../../_components/section-title';
+import { useRefreshWhile } from '../../_components/use-refresh-while';
 
 import DocCard from './doc-card';
-import { useRefreshWhile } from './use-refresh-while';
 
 import type { Doc, DocKey } from '@/lib/storage';
 import type { DocActionState, FormState } from '../../actions';

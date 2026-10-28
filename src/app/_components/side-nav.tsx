@@ -20,8 +20,13 @@ const MAIN = [
   { href: '/ideas', label: '아이디어 모음' },
 ];
 
-// C 단계에서 링크를 연결한다
-const TOOLS = ['PRD 리뷰 위원회', 'VOC 우선순위', '지표 · 실험 설계', '이해관계자 협상'];
+// 도구가 완성되면 ready: true
+const TOOL_LINKS = [
+  { label: 'PRD 리뷰 위원회', href: '/tools/prd-review', ready: true },
+  { label: 'VOC 우선순위', href: '/tools/voc', ready: false },
+  { label: '지표 · 실험 설계', href: '/tools/metrics', ready: false },
+  { label: '이해관계자 협상', href: '/tools/negotiation', ready: false },
+];
 
 const navStyle = (theme: Theme) => ({
   display: 'flex',
@@ -71,23 +76,29 @@ export function SideNavView({ pathname }: { pathname: string | null }) {
         <Typography variant="caption1" color="semantic.foreground.neutral.tertiary">
           PO 도구
         </Typography>
-        {TOOLS.map((t) => (
-          <ListCell
-            key={t}
-            as="div"
-            disabled
-            verticalPadding="small"
-            trailingContent={
-              <ListCellContent>
-                <ContentBadge size="xsmall" variant="outlined">
-                  준비 중
-                </ContentBadge>
-              </ListCellContent>
-            }
-          >
-            {t}
-          </ListCell>
-        ))}
+        {TOOL_LINKS.map((t) =>
+          t.ready ? (
+            <ListCell key={t.href} as={Link} href={t.href} selected={isActive(t.href)} verticalPadding="small">
+              {t.label}
+            </ListCell>
+          ) : (
+            <ListCell
+              key={t.href}
+              as="div"
+              disabled
+              verticalPadding="small"
+              trailingContent={
+                <ListCellContent>
+                  <ContentBadge size="xsmall" variant="outlined">
+                    준비 중
+                  </ContentBadge>
+                </ListCellContent>
+              }
+            >
+              {t.label}
+            </ListCell>
+          ),
+        )}
       </FlexBox>
     </Box>
   );
