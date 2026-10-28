@@ -16,3 +16,6 @@ closes #
 
 ## hatch-reviewer 결과
 <!-- 지적 0건 / 남긴 지적과 이유 -->
+
+## why 기록
+<!-- decisions/ 파일 링크 · AI 실수 · 프롬프트 변경을 ai-usage에 남겼는지. 해당 없으면 "없음 (이유)" -->
