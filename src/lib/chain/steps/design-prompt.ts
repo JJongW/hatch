@@ -4,6 +4,8 @@ import { DESIGN_PROMPT_PROMPT } from '@/lib/prompts/chain/design-prompt';
 
 import type { ChainStep } from '../types';
 
+import { fenced } from './fence';
+
 const list = (items: string[]) => items.map((s) => `- ${s}`).join('\n');
 
 export const designPromptSchema = z.object({
@@ -21,7 +23,7 @@ export const designPromptStep: ChainStep<DesignPromptOutput> = {
   prompt: DESIGN_PROMPT_PROMPT,
   render: (o) =>
     [
-      `## 프롬프트\n~~~text\n${o.prompt}\n~~~`,
+      `## 프롬프트\n${fenced(o.prompt)}`,
       `## 화면 목록\n${list(o.screens)}`,
       `## 톤\n${o.tone}`,
       `## 참고 패턴\n${list(o.references) || '- 없음'}`,

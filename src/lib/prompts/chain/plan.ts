@@ -6,6 +6,6 @@ export const PLAN_PROMPT = `## 할 일
 - targetUsers: 핵심 사용자 1~3그룹
 - value: 이 서비스만의 핵심 가치
 - features: 주요 기능 3~6개 (name · description)
-- successMetrics: 성공을 판단할 지표 2~4개 (지표 이름과 이유, 목표 수치는 [확인 필요])
+- successMetrics: 성공을 판단할 지표 2~4개 (지표 이름과 이유, 목표 수치는 [확인 필요: 목표 수치])
 - risks: 가장 큰 위험 2~4개
 - openQuestions: 기획을 이어 가기 전에 확인할 것`;

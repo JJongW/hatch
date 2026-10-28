@@ -30,4 +30,12 @@ describe('devPromptStep', () => {
     const md = devPromptStep.render({ ...ok, prompt: p });
     expect(md).toContain(`## 프롬프트\n~~~text\n${p}\n~~~`);
   });
+  it('본문에 ~~~ 가 있으면 펜스를 더 길게 해서 중간에 닫히지 않는다', () => {
+    const p = '예시\n~~~\n안쪽\n~~~';
+    expect(devPromptStep.render({ ...ok, prompt: p })).toContain(`~~~~text\n${p}\n~~~~`);
+  });
+  it('기술 가정이 없으면 "없음"', () => {
+    expect(devPromptStep.schema.safeParse({ ...ok, assumptions: [] }).success).toBe(true);
+    expect(devPromptStep.render({ ...ok, assumptions: [] })).toContain('## 기술 가정\n- 없음');
+  });
 });
