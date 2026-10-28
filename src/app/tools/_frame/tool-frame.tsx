@@ -47,24 +47,27 @@ const resultBoxStyle = (theme: Theme) => ({
   padding: '16px',
 });
 
-export default function ToolFrame({ tool, ideas, ideaId, results, current, busy, run, inputFields }: Props) {
+export default function ToolFrame({ tool, ideas, ideaId, none, results, current, busy, run, inputFields }: Props) {
   const router = useRouter();
   const base = `/tools/${tool.key}`;
+  const urlMode: Mode = ideaId !== null ? 'idea' : none ? 'none' : 'pasted';
+  const [mode, setMode] = useState<Mode>(urlMode);
+  // 앞으로 · 뒤로 가기로 URL(아이디어 · ?source=none)이 바뀌면 모드를 맞춘다 (렌더 중 조정)
+  const [seenMode, setSeenMode] = useState(urlMode);
+  if (seenMode !== urlMode) {
+    setSeenMode(urlMode);
+    setMode(urlMode);
+  }
+
   const hrefOf = (idea: string | null, result?: string) => {
     const q = new URLSearchParams();
     if (idea) q.set('idea', idea);
+    else if (mode === 'none') q.set('source', 'none');
     if (result) q.set('result', result);
     const s = q.toString();
     return s ? `${base}?${s}` : base;
   };
 
-  const [mode, setMode] = useState<Mode>(ideaId !== null ? 'idea' : 'pasted');
-  // 앞으로 · 뒤로 가기로 ideaId가 바뀌면 모드를 맞춘다 (렌더 중 조정)
-  const [seenIdea, setSeenIdea] = useState(ideaId);
-  if (seenIdea !== ideaId) {
-    setSeenIdea(ideaId);
-    setMode(ideaId !== null ? 'idea' : mode === 'idea' ? 'pasted' : mode);
-  }
   const [docKey, setDocKey] = useState('');
   const [pasted, setPasted] = useState('');
 
@@ -83,7 +86,8 @@ export default function ToolFrame({ tool, ideas, ideaId, results, current, busy,
   useRefreshWhile(otherBusy);
   const blocked = pending || otherBusy;
   const noSource = mode === 'idea' && !selectedDoc; // 아이디어 · 문서를 아직 안 골랐다
-  const showResults = !(mode === 'idea' && ideaId === null); // 아이디어를 고르기 전엔 붙여넣기 결과를 숨긴다
+  // 받은 결과가 지금 탭의 것일 때만 보인다 (아이디어를 고르기 전 · 탭을 바꿔 이동하는 중엔 숨긴다)
+  const showResults = mode === urlMode;
 
   // <form action>은 성공 뒤 form.reset()을 부르고, Montage SegmentedControl · Select가 reset 이벤트에
   // 처음 값으로 돌아가며 onChange를 부른다 (모드 · 아이디어가 바뀌어 페이지 이동). 그래서 onSubmit에서 직접 보낸다.
@@ -97,7 +101,9 @@ export default function ToolFrame({ tool, ideas, ideaId, results, current, busy,
   const changeMode = (v: string) => {
     const next: Mode = v === 'pasted' || v === 'none' ? v : 'idea';
     setMode(next);
-    if (next !== 'idea' && ideaId !== null) router.push(base);
+    // 아이디어 탭은 아이디어를 고를 때 이동한다
+    if (next === 'none' && urlMode !== 'none') router.push(`${base}?source=none`);
+    if (next === 'pasted' && urlMode !== 'pasted') router.push(base);
   };
 
   return (
@@ -114,9 +120,18 @@ export default function ToolFrame({ tool, ideas, ideaId, results, current, busy,
             {sectionTitle('입력 문서')}
             <FlexBox flexDirection="column" gap="12px">
               <SegmentedControl value={mode} onValueChange={changeMode} size="medium">
-                <SegmentedControlItem value="idea">아이디어 문서</SegmentedControlItem>
-                <SegmentedControlItem value="pasted">직접 붙여넣기</SegmentedControlItem>
-                {tool.sourceOptional && <SegmentedControlItem value="none">문서 없이</SegmentedControlItem>}
+                {/* 실행 중 탭을 바꾸면 결과 링크(hrefOf)가 다른 탭 것이 된다 → 실행 중엔 막는다 */}
+                <SegmentedControlItem value="idea" disabled={blocked}>
+                  아이디어 문서
+                </SegmentedControlItem>
+                <SegmentedControlItem value="pasted" disabled={blocked}>
+                  직접 붙여넣기
+                </SegmentedControlItem>
+                {tool.sourceOptional && (
+                  <SegmentedControlItem value="none" disabled={blocked}>
+                    문서 없이
+                  </SegmentedControlItem>
+                )}
               </SegmentedControl>
 
               {mode === 'idea' ? (

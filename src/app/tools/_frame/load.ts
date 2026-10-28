@@ -29,6 +29,8 @@ export type ToolFrameData = {
   ideas: { id: string; title: string; docs: { key: DocKey; label: string }[] }[];
   /** ?idea= (유효하지 않으면 null = 붙여넣기) */
   ideaId: string | null;
+  /** ?source=none (아이디어가 없고 sourceOptional일 때만) — 결과 · 지난 결과가 '문서 없이' 것 */
+  none: boolean;
   /** 이 아이디어(또는 붙여넣기)의 이 도구 결과, 최신순. createdAt · source는 표시용 문자열 (문서 이름 또는 '붙여넣기') */
   results: { id: string; createdAt: string; source: string }[];
   /** ?result= 또는 최신 결과 */
@@ -44,11 +46,11 @@ const formatDate = (iso: string) => new Date(iso).toLocaleString('ko-KR', { time
 
 export async function loadToolPage(
   key: ToolKey,
-  searchParams: Promise<{ idea?: string; result?: string }>,
+  searchParams: Promise<{ idea?: string; result?: string; source?: string }>,
 ): Promise<ToolFrameData> {
   const tool = TOOLS[key];
   if (!tool) notFound();
-  const { idea, result } = await searchParams;
+  const { idea, result, source } = await searchParams;
 
   const { ideas: all } = await listIdeas();
   const ideaId = idea && isValidId(idea) && all.some((i) => i.id === idea) ? idea : null;
@@ -61,11 +63,14 @@ export async function loadToolPage(
     }),
   );
 
-  const list = await listToolResults(key, ideaId);
+  // 붙여넣기 · 문서 없이 결과는 같은 tools/ 폴더에 있다 → 탭에 맞는 것만
+  const none = ideaId === null && source === 'none' && tool.sourceOptional === true;
+  const only = ideaId !== null ? undefined : none ? 'none' : 'pasted';
+  const list = await listToolResults(key, ideaId, only);
   const results = list.map((r) => ({ id: r.id, createdAt: formatDate(r.createdAt), source: labelOf(r.source) }));
 
   const picked = result && isValidResultId(result) ? await getToolResult(ideaId, result) : null;
-  const cur = picked && picked.tool === key ? picked : (list[0] ?? null);
+  const cur = picked && picked.tool === key && (!only || picked.source === only) ? picked : (list[0] ?? null);
 
   return {
     tool: {
@@ -79,6 +84,7 @@ export async function loadToolPage(
     },
     ideas,
     ideaId,
+    none,
     results,
     current: cur ? { id: cur.id, body: cur.body } : null,
     busy: isClaudeBusy(),
