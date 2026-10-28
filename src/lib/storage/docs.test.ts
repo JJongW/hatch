@@ -53,7 +53,34 @@ describe('getDocs', () => {
   });
 });
 
+describe('getDocs 방어', () => {
+  it('머리말 YAML이 깨져도 throw하지 않고 본문으로 읽는다', async () => {
+    const idea = await createIdea({ title: 'x', memo: '' });
+    await fs.writeFile(path.join(dir, 'ideas', idea.id, 'plan.md'), '---\ntitle: [깨짐\n---\n본문');
+    const plan = (await getDocs(idea.id))[0];
+    expect(plan.content).not.toBeNull();
+    expect(plan.stale).toBe(false);
+  });
+
+  it('앞 문서를 고치면 뒤 문서가 stale (체인)', async () => {
+    const idea = await createIdea({ title: 'x', memo: '' });
+    await saveDoc(idea.id, 'plan', '기획', { sourceHash: hashOf(ideaSource(idea)) });
+    await saveDoc(idea.id, 'roadmap', '로드맵', { sourceHash: hashOf('기획') });
+    expect((await getDocs(idea.id))[1].stale).toBe(false);
+    await updateDocBody(idea.id, 'plan', '고친 기획');
+    expect((await getDocs(idea.id))[1].stale).toBe(true);
+  });
+});
+
 describe('saveDoc · updateDocBody', () => {
+  it('---로 시작하는 본문도 그대로 저장된다', async () => {
+    const idea = await createIdea({ title: 'x', memo: '' });
+    await saveDoc(idea.id, 'plan', '---\n\n# 제목', { sourceHash: 'a' });
+    expect((await getDocs(idea.id))[0].content).toBe('---\n\n# 제목');
+    await updateDocBody(idea.id, 'plan', '---\n\n# 고침');
+    expect((await getDocs(idea.id))[0].content).toBe('---\n\n# 고침');
+  });
+
   it('덮어쓰기 전 이전 판을 .history로 옮긴다', async () => {
     const idea = await createIdea({ title: 'x', memo: '' });
     await saveDoc(idea.id, 'plan', '첫 판', { sourceHash: 'a' });
@@ -90,6 +117,16 @@ describe('running', () => {
     const idea = await createIdea({ title: 'x', memo: '' });
     const old = new Date(Date.now() - 11 * 60_000).toISOString();
     await fs.writeFile(path.join(dir, 'ideas', idea.id, '.running.json'), JSON.stringify({ key: 'plan', startedAt: old }));
+    expect(await getRunning(idea.id)).toBeNull();
+  });
+
+  it.each([
+    ['깨진 JSON', '{nope'],
+    ['startedAt 없음', JSON.stringify({ key: 'plan' })],
+    ['모르는 key', JSON.stringify({ key: 'zzz', startedAt: new Date().toISOString() })],
+  ])('%s는 null', async (_n, content) => {
+    const idea = await createIdea({ title: 'x', memo: '' });
+    await fs.writeFile(path.join(dir, 'ideas', idea.id, '.running.json'), content);
     expect(await getRunning(idea.id)).toBeNull();
   });
 });

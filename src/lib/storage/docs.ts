@@ -19,6 +19,9 @@ const stepOf = (key: DocKey) => DOC_STEPS.find((s) => s.key === key)!;
 const docPath = (id: string, key: DocKey) => path.join(ideaDir(id), stepOf(key).file);
 const stamp = () => new Date().toISOString().replace(/[-:]/g, '').replace(/\..+/, ''); // 20261028T091500
 
+/** 본문을 stringify에 넣으면 `---`로 시작할 때 머리말로 다시 읽히므로, 머리말만 만들고 본문은 이어 붙인다 */
+const withFront = (data: Record<string, unknown>, body: string) => matter.stringify('', data) + '\n' + body.trim() + '\n';
+
 async function readRaw(id: string, key: DocKey) {
   return fs.readFile(docPath(id, key), 'utf8').catch((e) => {
     if (isMissing(e)) return null;
@@ -43,8 +46,13 @@ export async function getDocs(id: string): Promise<Doc[]> {
     DOC_STEPS.map(async (step) => {
       const raw = await readRaw(id, step.key);
       if (raw === null) return { step, body: null, sourceHash: undefined };
-      const { data, content } = matter(raw);
-      return { step, body: content.trim(), sourceHash: typeof data.sourceHash === 'string' ? data.sourceHash : undefined };
+      try {
+        const { data, content } = matter(raw);
+        return { step, body: content.trim(), sourceHash: typeof data.sourceHash === 'string' ? data.sourceHash : undefined };
+      } catch {
+        // 손으로 쓴 머리말이 깨졌다: 목록 화면 전체가 죽지 않게 통째로 본문 취급
+        return { step, body: raw.trim(), sourceHash: undefined };
+      }
     }),
   );
   const bodyOf = (from: DocKey | 'idea') =>
@@ -61,16 +69,21 @@ export async function saveDoc(id: string, key: DocKey, body: string, meta: { sou
   assertValidId(id);
   await keepHistory(id, key);
   const front = { generatedAt: new Date().toISOString(), sourceHash: meta.sourceHash, version: DOC_FILE_VERSION };
-  await fs.writeFile(docPath(id, key), matter.stringify(body.trim() + '\n', front));
+  await fs.writeFile(docPath(id, key), withFront(front, body));
 }
 
 export async function updateDocBody(id: string, key: DocKey, body: string) {
   assertValidId(id);
   const raw = await readRaw(id, key);
   if (raw === null) throw new StorageError('문서를 찾을 수 없어요. 먼저 만들어 주세요.');
-  const { data } = matter(raw);
+  let data: Record<string, unknown> = {};
+  try {
+    data = matter(raw).data;
+  } catch {
+    // 깨진 머리말은 버리고 본문만 새로 쓴다 (이전 판은 .history에 남음)
+  }
   await keepHistory(id, key);
-  await fs.writeFile(docPath(id, key), matter.stringify(body.trim() + '\n', data));
+  await fs.writeFile(docPath(id, key), withFront(data, body));
 }
 
 const runningFile = (id: string) => path.join(ideaDir(id), '.running.json');
@@ -81,7 +94,9 @@ export async function getRunning(id: string): Promise<{ key: DocKey; startedAt: 
   if (!raw) return null;
   try {
     const r = JSON.parse(raw);
-    if (Date.now() - Date.parse(r.startedAt) > RUNNING_TTL_MS) return null;
+    if (!DOC_STEPS.some((s) => s.key === r?.key)) return null;
+    const started = Date.parse(r.startedAt);
+    if (!Number.isFinite(started) || Date.now() - started > RUNNING_TTL_MS) return null;
     return { key: r.key, startedAt: r.startedAt };
   } catch {
     return null;
