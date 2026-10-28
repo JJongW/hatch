@@ -3,7 +3,7 @@
 import { useActionState, useState } from 'react';
 import { Box, Button, ContentBadge, FlexBox, Loading, SectionMessage, TextArea, Typography } from '@montage-ui/core';
 
-import DocMarkdown from './doc-markdown';
+import DocMarkdown from '../../_components/doc-markdown';
 
 import type { Theme } from '@montage-ui/core';
 

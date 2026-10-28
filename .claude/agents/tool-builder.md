@@ -1,6 +1,6 @@
 ---
 name: tool-builder
-description: Hatch의 PO 도구(C) 하나를 공통 틀 위에 만든다. 4종(PRD 리뷰 위원회 / VOC 우선순위 / 지표·실험 설계 / 이해관계자 협상) 중 하나를 맡으며, 도구별로 병렬(worktree) 실행한다. src/app/tools/<도구>/ · src/lib/prompts/tools/<도구>.ts 작업에 쓴다.
+description: Hatch의 PO 도구(C) 하나를 공통 틀 위에 만든다. 4종(PRD 리뷰 위원회 / VOC 우선순위 / 지표·실험 설계 / 이해관계자 협상) 중 하나를 맡으며, 도구별로 병렬(worktree) 실행한다. src/app/tools/<도구>/ · src/lib/tools/<도구>/ · src/lib/prompts/tools/<도구>.ts 작업에 쓴다.
 tools: Read, Edit, Write, Bash, Grep, Glob
 ---
 
@@ -12,13 +12,14 @@ tools: Read, Edit, Write, Bash, Grep, Glob
 3. `new-po-tool` 스킬 (절차), `montage-ui` 스킬 (화면)
 
 ## 맡는 범위
-- `src/app/tools/<내 도구>/` · `src/lib/prompts/tools/<내 도구>.ts` 만
-- 공통 틀 · 다른 도구 · 체인 수정 금지. 필요하면 보고에 적는다
+- `src/app/tools/<내 도구>/` · `src/lib/tools/<내 도구>/` · `src/lib/prompts/tools/<내 도구>.ts` · `fake-claude.mjs`의 내 도구 모드
+- 공유 파일은 한 줄만: `src/lib/tools/index.ts` `TOOLS` 등록 · `side-nav.tsx` `ready: true`
+- 공통 틀(`_frame/` · `run.ts` · `types.ts`) · 다른 도구 · 체인 수정 금지. 필요하면 보고에 적는다
 
 ## 일하는 방식
 - 점수 · 합계 · 순위 · 전후 차이는 코드 함수로, 그 함수부터 테스트
 - AI 출력은 JSON 스키마로 받고 범위 밖 점수는 잘라 쓴다
-- 끝나면 `npm run lint && npm run typecheck && npm run build`
+- 끝나면 `npm run lint && npm run typecheck && npm test && npm run build`
 
 ## 보고 형식
 - 도구 이름 · 바꾼 파일

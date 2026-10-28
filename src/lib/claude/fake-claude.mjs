@@ -24,6 +24,23 @@ process.stdin.on('end', () => {
         },
       }),
     );
+  } else if (mode === 'prd-review') {
+    const criteria = ['명확성', '실현 가능성', '측정 가능성', '사용자 가치', '위험 대응'];
+    const scores = (base) => criteria.map((criterion, i) => ({ criterion, score: i % 2 ? base : base + 1, reason: '근거가 일부 부족하다' }));
+    console.log(
+      JSON.stringify({
+        is_error: false,
+        structured_output: {
+          reviews: [
+            { reviewer: '개발', objections: [{ issue: 'API 범위가 정해지지 않았다', severity: 3, suggestion: '엔드포인트 목록을 적는다' }, { issue: '용어가 섞여 있다', severity: 1, suggestion: '용어를 통일한다' }], scores: scores(3) },
+            { reviewer: '디자인', objections: [{ issue: '빈 상태 화면이 없다', severity: 2, suggestion: '빈 상태 시안을 추가한다' }], scores: scores(3) },
+            { reviewer: '마케팅', objections: [], scores: scores(4) },
+            { reviewer: 'CS', objections: [{ issue: '문의 경로가 없다', severity: 2, suggestion: '문의 채널을 정한다' }], scores: scores(3) },
+          ],
+          summary: '큰 막힘은 API 범위 하나다. 보완 후 진행해도 된다.',
+        },
+      }),
+    );
   } else if (mode === 'error') {
     console.log(JSON.stringify({ is_error: true, result: 'Not logged in' }));
   } else if (mode === 'crash') {
