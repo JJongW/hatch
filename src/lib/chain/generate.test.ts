@@ -4,9 +4,12 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { createIdea, getDocs, getRunning } from '@/lib/storage';
+import { createIdea, getDocs, getRunning, markRunning } from '@/lib/storage';
 
-import { generateDoc } from './generate';
+import { runClaude } from '@/lib/claude/run';
+
+import { generateDoc, toClaudeSchema } from './generate';
+import { planStep } from './steps/plan';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 let dir: string;
@@ -43,5 +46,22 @@ describe('generateDoc', () => {
     await expect(generateDoc(idea.id, 'plan')).rejects.toThrow('결과 형식이 맞지 않아요');
     expect((await getDocs(idea.id))[0].content).toBeNull();
     expect(await getRunning(idea.id)).toBeNull();
+  });
+  it('claude에 넘기는 스키마에는 $schema가 없다', () => {
+    const schema = toClaudeSchema(planStep.schema) as Record<string, unknown>;
+    expect(schema).not.toHaveProperty('$schema');
+    expect(schema.type).toBe('object');
+  });
+  it('이미 실행 중이면 거부하고 다른 아이디어의 생성 중 표시를 건드리지 않는다', async () => {
+    const a = await createIdea({ title: 'a', memo: '' });
+    const b = await createIdea({ title: 'b', memo: '' });
+    process.env.FAKE_CLAUDE = 'slow';
+    const slow = runClaude({ prompt: 'x', jsonSchema: {}, timeoutMs: 400, killGraceMs: 100 }).catch(() => {});
+    await new Promise((r) => setTimeout(r, 50));
+    await markRunning(a.id, 'plan');
+    await expect(generateDoc(b.id, 'plan')).rejects.toThrow('다른 문서를 만드는 중');
+    expect(await getRunning(b.id)).toBeNull();
+    expect(await getRunning(a.id)).not.toBeNull();
+    await slow;
   });
 });

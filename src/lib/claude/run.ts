@@ -11,6 +11,9 @@ export class ChainError extends Error {}
 const DEFAULT_TIMEOUT_MS = 5 * 60_000;
 const LOGIN_HINT = 'Claude 실행에 실패했어요. 터미널에서 `claude`를 한 번 실행해 로그인 상태를 확인해 주세요.';
 
+/** 동시 실행 거부 문구 (generate.ts도 같은 문구를 쓴다) */
+export const BUSY_MESSAGE = '다른 문서를 만드는 중이에요. 끝난 뒤 다시 눌러 주세요.';
+
 let busy = false;
 export const isClaudeBusy = () => busy;
 
@@ -26,7 +29,7 @@ export async function runClaude({
   /** 시간 초과 시 SIGTERM 뒤 SIGKILL까지 기다리는 시간 */
   killGraceMs?: number;
 }): Promise<unknown> {
-  if (busy) throw new ChainError('다른 문서를 만드는 중이에요. 끝난 뒤 다시 눌러 주세요.');
+  if (busy) throw new ChainError(BUSY_MESSAGE);
   busy = true;
   let cwd: string | undefined;
   try {
