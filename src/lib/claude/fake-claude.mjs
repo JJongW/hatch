@@ -41,6 +41,9 @@ process.stdin.on('end', () => {
         },
       }),
     );
+  } else if (mode === 'metrics') {
+    const m = (name) => ({ name, definition: `${name} 사용자 수 ÷ 방문자 수 (주간)`, why: '문서의 목표와 바로 이어진다' });
+    console.log(JSON.stringify({ is_error: false, structured_output: { coreMetric: m('예약 전환율'), secondaryMetrics: [m('추천 클릭률'), m('상세 조회율')], guardrails: [m('결제 오류율')], experiments: [{ hypothesis: '추천을 맨 위에 두면 예약이 늘 것이다', variants: ['대조군: 현재 목록', '변형 A: 추천 맨 위'], primaryMetric: '예약 전환율' }] } }));
   } else if (mode === 'error') {
     console.log(JSON.stringify({ is_error: true, result: 'Not logged in' }));
   } else if (mode === 'crash') {
