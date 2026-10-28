@@ -42,6 +42,13 @@ describe('tool results', () => {
     expect(list.map((r) => r.id)).toEqual([b, a]);
     expect(list[0].prevId).toBe(a);
   });
+  it('source를 주면 그 입력으로 실행한 결과만 (붙여넣기 · 문서 없이 분리)', async () => {
+    const pasted = await saveToolResult({ ...base, ideaId: null, source: 'pasted' });
+    const none = await saveToolResult({ ...base, ideaId: null, source: 'none' });
+    expect((await listToolResults('prd-review', null, 'pasted')).map((r) => r.id)).toEqual([pasted]);
+    expect((await listToolResults('prd-review', null, 'none')).map((r) => r.id)).toEqual([none]);
+    expect(await listToolResults('prd-review', null)).toHaveLength(2);
+  });
   it('결과가 없으면 빈 목록 · null', async () => {
     expect(await listToolResults('prd-review', null)).toEqual([]);
     expect(await getToolResult(null, 'prd-review-20261028T000000-abcd')).toBeNull();

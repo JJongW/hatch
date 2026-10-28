@@ -87,6 +87,14 @@ describe('runTool', () => {
     expect(prompt).toContain('### 메모\nctx');
     await expect(runTool(echoTool, { source: { none: true }, input: {} })).rejects.toThrow('입력 문서를 골라 주세요.');
   });
+  it('sourceOptional 도구도 아이디어 모드에서 문서를 못 읽으면 거절한다 (문서 없이는 none만)', async () => {
+    const optional = { ...echoTool, sourceOptional: true as const };
+    const idea = await createIdea({ title: 'x', memo: '' });
+    await expect(runTool(optional, { source: { ideaId: idea.id, docKey: 'prd' }, input: {} })).rejects.toThrow('입력 문서를 골라 주세요.');
+    await expect(runTool(optional, { source: { ideaId: idea.id, docKey: 'spec' }, input: {} })).rejects.toThrow('입력 문서를 골라 주세요.');
+    await expect(runTool(optional, { source: { pasted: '  ' }, input: {} })).rejects.toThrow('입력 문서를 골라 주세요.');
+    expect(await listToolResults('prd-review', idea.id)).toEqual([]);
+  });
   it('validate가 문자열을 돌려주면 claude 실행 전에 거절한다', async () => {
     const guarded = { ...echoTool, validate: (i: { note: string }, prev: unknown) => (prev && !i.note ? '내 답을 적어 주세요.' : undefined) };
     const first = await runTool(guarded, { source: { pasted: 'a' }, input: {} }); // prev 없음 → 통과
