@@ -31,7 +31,12 @@ export async function runClaude({
   let cwd: string | undefined;
   try {
     // 프로젝트 CLAUDE.md를 읽지 않도록 빈 폴더에서 실행
-    cwd = await fs.mkdtemp(path.join(os.tmpdir(), 'hatch-claude-'));
+    try {
+      cwd = await fs.mkdtemp(path.join(os.tmpdir(), 'hatch-claude-'));
+    } catch (e) {
+      console.error('[hatch] 임시 폴더 생성 실패:', e);
+      throw new ChainError('임시 폴더를 만들지 못했어요. 디스크 공간을 확인해 주세요.');
+    }
     const stdout = await spawnClaude(prompt, jsonSchema, cwd, timeoutMs, killGraceMs);
     let res: { is_error?: boolean; structured_output?: unknown };
     try {
@@ -65,9 +70,17 @@ function spawnClaude(prompt: string, jsonSchema: object, cwd: string, timeoutMs:
     let out = '';
     let err = '';
     let timedOut = false;
-    let failedToSpawn = false;
+    let settled = false;
     let killTimer: NodeJS.Timeout | undefined;
-    // 종료(close)된 뒤에만 settle해서 잠금 · 임시 폴더가 자식 종료 전에 풀리지 않게 한다
+    // 한 번만 settle. 시간 초과 땐 stdio를 손자 프로세스가 붙잡아도 close가 안 올 수 있어 exit로 끝낸다.
+    const settle = (fn: () => void) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      clearTimeout(killTimer);
+      fn();
+    };
+    const timeoutError = () => new ChainError('5분 안에 끝나지 않았어요. 다시 만들어 주세요.');
     const timer = setTimeout(() => {
       timedOut = true;
       child.kill('SIGTERM');
@@ -80,23 +93,29 @@ function spawnClaude(prompt: string, jsonSchema: object, cwd: string, timeoutMs:
     child.stdout.on('data', (c) => (out += c));
     child.stderr.on('data', (c) => (err += c));
     child.on('error', (e: NodeJS.ErrnoException) => {
-      failedToSpawn = true;
-      clearTimeout(timer);
-      clearTimeout(killTimer);
-      reject(
-        e.code === 'ENOENT'
-          ? new ChainError('claude를 찾을 수 없어요. Claude Code가 설치돼 있는지 확인해 주세요.')
-          : new ChainError(LOGIN_HINT),
+      if (child.pid !== undefined) {
+        console.error(`[hatch] claude 프로세스 오류: ${e.code ?? e.message}`); // 실행은 됐으니 exit/close가 마무리
+        return;
+      }
+      settle(() =>
+        reject(
+          e.code === 'ENOENT'
+            ? new ChainError('claude를 찾을 수 없어요. Claude Code가 설치돼 있는지 확인해 주세요.')
+            : new ChainError(LOGIN_HINT),
+        ),
       );
     });
+    child.on('exit', () => {
+      if (timedOut) settle(() => reject(timeoutError()));
+    });
     child.on('close', (code) => {
-      clearTimeout(timer);
-      clearTimeout(killTimer);
-      if (failedToSpawn) return; // error 핸들러가 이미 reject함
-      if (timedOut) return reject(new ChainError('5분 안에 끝나지 않았어요. 다시 만들어 주세요.'));
-      if (code === 0) return resolve(out);
-      console.error(`[hatch] claude 종료 코드 ${code}: ${err.slice(0, 500)}`); // stderr만, 프롬프트는 남기지 않음
-      reject(new ChainError(LOGIN_HINT));
+      if (timedOut) return settle(() => reject(timeoutError()));
+      if (child.pid === undefined) return; // 실행 실패는 error 핸들러가 처리
+      settle(() => {
+        if (code === 0) return resolve(out);
+        console.error(`[hatch] claude 종료 코드 ${code}: ${err.slice(0, 500)}`); // stderr만, 프롬프트는 남기지 않음
+        reject(new ChainError(LOGIN_HINT));
+      });
     });
     child.stdin.end(prompt);
   });

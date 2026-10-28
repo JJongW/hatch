@@ -1,6 +1,7 @@
+import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ChainError, isClaudeBusy, runClaude } from './run';
 
@@ -78,5 +79,22 @@ describe('runClaude', () => {
     process.env.FAKE_CLAUDE = 'korean';
     const out = (await runClaude({ prompt: 'x', jsonSchema: schema })) as { text: string };
     expect(out.text).toBe('가'.repeat(100000));
+  });
+
+  it('손자가 stdout을 붙잡아 close가 안 와도 시간 초과 뒤 잠금이 풀린다', async () => {
+    process.env.FAKE_CLAUDE = 'grandchild';
+    const started = Date.now();
+    await expect(runClaude({ prompt: 'x', jsonSchema: schema, timeoutMs: 300 })).rejects.toThrow('5분 안에');
+    expect(Date.now() - started).toBeLessThan(1500); // 손자(2.5초)가 끝나길 기다리지 않는다
+    expect(isClaudeBusy()).toBe(false);
+  });
+
+  it('임시 폴더를 못 만들면 ChainError이고 잠금이 풀린다', async () => {
+    const spy = vi.spyOn(fs, 'mkdtemp').mockRejectedValueOnce(new Error('ENOSPC'));
+    const errLog = vi.spyOn(console, 'error').mockImplementation(() => {});
+    await expect(runClaude({ prompt: 'x', jsonSchema: schema })).rejects.toThrow(ChainError);
+    expect(isClaudeBusy()).toBe(false);
+    spy.mockRestore();
+    errLog.mockRestore();
   });
 });

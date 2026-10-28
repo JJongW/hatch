@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { spawn } from 'node:child_process';
 // 테스트용 가짜 claude. FAKE_CLAUDE 값으로 동작을 고른다.
 let input = '';
 process.stdin.on('data', (c) => (input += c));
@@ -16,6 +17,13 @@ process.stdin.on('end', () => {
     setTimeout(() => {}, 60_000);
   } else if (mode === 'stubborn') {
     process.on('SIGTERM', () => {}); // SIGTERM 무시 -> SIGKILL 경로
+    setTimeout(() => {}, 60_000);
+  } else if (mode === 'grandchild') {
+    // 손자가 stdout을 붙잡은 채 살아 있다 (2.5초 뒤 스스로 끝남). 부모는 SIGTERM에 죽는다.
+    spawn(process.execPath, ['-e', 'setTimeout(() => {}, 2500)'], {
+      detached: true,
+      stdio: ['ignore', 'inherit', 'inherit'],
+    }).unref();
     setTimeout(() => {}, 60_000);
   } else if (mode === 'korean') {
     // 멀티바이트 문자가 청크 경계에서 잘리도록 큰 한글 출력을 나눠 쓴다
