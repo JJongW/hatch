@@ -4,7 +4,8 @@
 
 ## 체인
 아이디어 → 상세 기획안 → 개발 로드맵 → PRD → 기능명세서 → 개발 프롬프트 / 디자인 프롬프트
-(B-1은 기획안만 등록. 나머지는 B-2에서 `registry.ts`에 한 줄씩)
+`registry.ts`에 6단계 모두 등록 (plan · roadmap · prd · spec · dev-prompt · design-prompt).
+prd만 `extra: ['plan']`으로 기획안을 함께 받는다. 개발/디자인 프롬프트는 둘 다 spec에서 갈라진다.
 
 ## 파일 지도
 - `types.ts` — `ChainStep` (key · extra · schema · prompt · render)

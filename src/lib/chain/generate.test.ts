@@ -4,11 +4,12 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { createIdea, getDocs, getRunning, markRunning } from '@/lib/storage';
+import { createIdea, DOC_STEPS, getDocs, getRunning, hashOf, markRunning, saveDoc, type DocKey } from '@/lib/storage';
 
 import { runClaude } from '@/lib/claude/run';
 
 import { generateDoc, toClaudeSchema } from './generate';
+import { GENERATABLE } from './registry';
 import { planStep } from './steps/plan';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -36,9 +37,25 @@ describe('generateDoc', () => {
     expect(plan.stale).toBe(false);
     expect(await getRunning(idea.id)).toBeNull();
   });
-  it('등록되지 않은 단계는 거부 (B-1엔 roadmap 없음)', async () => {
+  it('GENERATABLE은 DOC_STEPS의 6개 key와 같다', () => {
+    expect(GENERATABLE).toEqual(DOC_STEPS.map((s) => s.key));
+    expect(GENERATABLE).toHaveLength(6);
+  });
+  it('모르는 단계는 거부', async () => {
     const idea = await createIdea({ title: 'x', memo: '' });
-    await expect(generateDoc(idea.id, 'roadmap')).rejects.toThrow('아직 만들 수 없는 문서');
+    await expect(generateDoc(idea.id, 'nope' as DocKey)).rejects.toThrow('아직 만들 수 없는 문서');
+  });
+  it('prd: roadmap만 있고 plan이 없으면 앞 문서를 먼저 만들라고 한다', async () => {
+    const idea = await createIdea({ title: 'x', memo: '' });
+    await saveDoc(idea.id, 'roadmap', '## 개요\n로드맵', { sourceHash: hashOf('x') });
+    await expect(generateDoc(idea.id, 'prd')).rejects.toThrow('앞 문서를 먼저 만들어 주세요.');
+  });
+  it('prd: plan · roadmap이 모두 있으면 claude까지 가서 형식 검사에서 끝난다', async () => {
+    process.env.FAKE_CLAUDE = 'ok';
+    const idea = await createIdea({ title: 'x', memo: '' });
+    await saveDoc(idea.id, 'plan', '## 한 줄 요약\n기획', { sourceHash: hashOf('x') });
+    await saveDoc(idea.id, 'roadmap', '## 개요\n로드맵', { sourceHash: hashOf('x') });
+    await expect(generateDoc(idea.id, 'prd')).rejects.toThrow('결과 형식이 맞지 않아요');
   });
   it('형식이 틀리면 저장하지 않고 생성 중 표시도 지운다', async () => {
     process.env.FAKE_CLAUDE = 'ok'; // { echo, args } → planSchema 불일치
