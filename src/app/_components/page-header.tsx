@@ -5,7 +5,7 @@ import { FlexBox, Typography } from '@montage-ui/core';
 export default function PageHeader({ title, description }: { title: string; description?: string }) {
   return (
     <FlexBox flexDirection="column" gap="4px" sx={{ marginBottom: '24px' }}>
-      <Typography as="h1" variant="title2" weight="bold" sx={{ fontFamily: 'var(--font-title)' }}>
+      <Typography as="h1" variant="title2" weight="bold">
         {title}
       </Typography>
       {description && (

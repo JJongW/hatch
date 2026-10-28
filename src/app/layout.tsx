@@ -10,7 +10,7 @@ import Providers from './providers';
 import '@montage-ui/core/global.css';
 import './globals.css';
 
-// 제목(페이지 제목 · 로고)은 HS산토끼체 2.0, 나머지는 머니그라피 Rounded (globals.css)
+// 사이트 이름(로고 "Hatch")만 HS산토끼체 2.0, 나머지는 머니그라피 Rounded (globals.css)
 const titleFont = localFont({ src: './fonts/HSSanTokki2.ttf', variable: '--font-title', display: 'swap' });
 const bodyFont = localFont({ src: './fonts/Moneygraphy-Rounded.woff2', variable: '--font-body', display: 'swap' });
 
