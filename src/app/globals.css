@@ -1,0 +1,7 @@
+/* 본문 글꼴: 머니그라피 Rounded (Montage global.css의 Pretendard를 덮는다. 없는 글자는 Pretendard로) */
+body,
+textarea,
+input,
+button {
+  font-family: var(--font-body), 'Pretendard Variable', Pretendard, -apple-system, sans-serif;
+}

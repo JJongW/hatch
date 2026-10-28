@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
 import { ChainError, generateDoc } from '@/lib/chain';
+import { DEMO_MESSAGE, isDemo } from '@/lib/demo';
 import { createIdea, isValidId, StorageError, trashIdea, updateDocBody, updateIdea, type DocKey } from '@/lib/storage';
 import { ChainError as ToolError, runTool, TOOLS, type ToolKey, type ToolSource } from '@/lib/tools';
 
@@ -33,6 +34,7 @@ function revalidateIdeas() {
 
 export async function createIdeaAction(_prev: FormState, formData: FormData): Promise<FormState> {
   const values = readForm(formData);
+  if (isDemo()) return { error: DEMO_MESSAGE, values };
   try {
     await createIdea(values);
   } catch (e) {
@@ -44,6 +46,7 @@ export async function createIdeaAction(_prev: FormState, formData: FormData): Pr
 
 export async function updateIdeaAction(id: string, _prev: FormState, formData: FormData): Promise<FormState> {
   const values = readForm(formData);
+  if (isDemo()) return { error: DEMO_MESSAGE, values };
   try {
     await updateIdea(id, values);
   } catch (e) {
@@ -54,6 +57,7 @@ export async function updateIdeaAction(id: string, _prev: FormState, formData: F
 }
 
 export async function trashIdeaAction(id: string) {
+  if (isDemo()) return; // 상단 안내가 읽기 전용임을 알린다
   await trashIdea(id);
   revalidateIdeas();
   redirect('/ideas');
@@ -69,6 +73,7 @@ const chainMessage = (e: unknown) =>
 
 // 1~2분 걸리는 긴 Server Action. 끝날 때까지 클라이언트가 pending 상태로 기다린다
 export async function generateDocAction(id: string, key: DocKey): Promise<DocActionState> {
+  if (isDemo()) return { error: DEMO_MESSAGE };
   try {
     await generateDoc(id, key);
   } catch (e) {
@@ -85,6 +90,7 @@ export async function updateDocAction(
   _prev: DocActionState,
   formData: FormData,
 ): Promise<DocActionState> {
+  if (isDemo()) return { error: DEMO_MESSAGE };
   try {
     await updateDocBody(id, key, String(formData.get('body') ?? ''));
   } catch (e) {
@@ -101,6 +107,7 @@ const FRAME_FIELDS = new Set(['mode', 'ideaId', 'docKey', 'pasted', 'prevId']);
 export async function runToolAction(key: ToolKey, _prev: ToolActionState, formData: FormData): Promise<ToolActionState> {
   const tool = TOOLS[key];
   if (!tool) return { error: '아직 쓸 수 없는 도구예요.' };
+  if (isDemo()) return { error: DEMO_MESSAGE };
   const get = (k: string) => String(formData.get(k) ?? '');
   const mode = get('mode');
   const source: ToolSource =

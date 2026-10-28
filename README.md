@@ -2,6 +2,8 @@
 
 > 아이디어 한 줄을 적으면, 기획안 · PRD · 기능명세서를 거쳐 개발 · 디자인 프롬프트까지 부화시키는 PO용 아이디어 뱅크.
 
+**데모 (읽기 전용)**: https://hatch-steel-alpha.vercel.app — 샘플 아이디어 · 6문서 · PO 도구 4종 결과를 둘러볼 수 있다. 생성은 맥에서 실행할 때만 된다 ([왜](docs/decisions/2026-10-28_읽기-전용-데모.md))
+
 ## 왜 만드나
 
 아이디어는 메모장에 쌓이기만 하고, 기획안으로 옮기는 데서 멈춘다.
@@ -98,3 +100,11 @@ http://localhost:3000 에서 연다. 데이터는 `~/Hatch`에 쌓인다 (`.env.
 ## 열린 질문
 
 - 휴대폰 화면 배치 (지금은 좁으면 네비바가 위로 접히는 정도)
+
+## 데모 배포 (Vercel)
+
+```bash
+vercel deploy --prod -e HATCH_DEMO=1 -e HATCH_DATA_DIR=demo-data -b HATCH_DEMO=1 -b HATCH_DATA_DIR=demo-data
+```
+
+`HATCH_DEMO=1`이면 저장 · 생성 · 도구 실행을 막고 상단에 안내를 띄운다. 데이터는 저장소의 `demo-data/`(실제 claude로 만든 샘플)를 읽는다.

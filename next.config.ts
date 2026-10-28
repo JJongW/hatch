@@ -12,6 +12,8 @@ const nextConfig: NextConfig = {
   /* config options here */
   cacheComponents: true,
   partialPrefetching: true,
+  // 읽기 전용 데모(HATCH_DEMO=1, HATCH_DATA_DIR=demo-data)가 샘플 md를 읽도록 서버 번들에 넣는다
+  outputFileTracingIncludes: { '/**': ['./demo-data/**/*'] },
   ...(serveHost && {
     allowedDevOrigins: [serveHost],
     experimental: { serverActions: { allowedOrigins: [serveHost] } },

@@ -1,10 +1,19 @@
 import type { Metadata } from 'next';
+import localFont from 'next/font/local';
 import type { PropsWithChildren } from 'react';
+
+import { isDemo, REPO_URL } from '@/lib/demo';
 
 import AppShell from './_components/app-shell';
 import Providers from './providers';
 
 import '@montage-ui/core/global.css';
+import './globals.css';
+
+// 로고만 따로: "Hatch"는 Avigea, "해치"는 HS산토끼체 2.0. 나머지는 머니그라피 Rounded (globals.css)
+const logoEnFont = localFont({ src: './fonts/Avigea.woff2', variable: '--font-logo-en', display: 'swap' });
+const logoKoFont = localFont({ src: './fonts/HSSanTokki2.ttf', variable: '--font-logo-ko', display: 'swap' });
+const bodyFont = localFont({ src: './fonts/Moneygraphy-Rounded.woff2', variable: '--font-body', display: 'swap' });
 
 export const metadata: Metadata = {
   title: 'Hatch',
@@ -13,7 +22,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: PropsWithChildren) {
   return (
-    <html lang="ko" suppressHydrationWarning>
+    <html lang="ko" className={`${logoEnFont.variable} ${logoKoFont.variable} ${bodyFont.variable}`} suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://cdn.jsdelivr.net" />
         <link
@@ -24,7 +33,7 @@ export default function RootLayout({ children }: PropsWithChildren) {
       </head>
       <body>
         <Providers>
-          <AppShell>{children}</AppShell>
+          <AppShell demo={isDemo() ? { repoUrl: REPO_URL } : undefined}>{children}</AppShell>
         </Providers>
       </body>
     </html>

@@ -59,7 +59,8 @@ export function SideNavView({ pathname }: { pathname: string | null }) {
   return (
     <Box as="nav" aria-label="주 메뉴" sx={navStyle}>
       <Typography as={Link} href="/" variant="headline1" weight="bold" sx={{ textDecoration: 'none' }}>
-        🐣 Hatch
+        🐣 <span style={{ fontFamily: 'var(--font-logo-en)', fontWeight: 400 }}>Hatch</span>{' '}
+        <span style={{ fontFamily: 'var(--font-logo-ko)', fontWeight: 400 }}>해치</span>
       </Typography>
 
       <FlexBox flexDirection="column">

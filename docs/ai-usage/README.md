@@ -6,7 +6,7 @@ Hatch는 하루(2026-10-28) 동안 Claude Code로 만들었다. 사람(PO)은 �
 | 문서 | 내용 |
 | --- | --- |
 | [prompts.md](prompts.md) | 내가 Claude Code에 준 지시 전체(시간순)와 앱 안 프롬프트 변경 기록 — **제출용 프롬프트 md** |
-| [mistakes.md](mistakes.md) | AI 실수를 잡아 고친 사례 12건 |
+| [mistakes.md](mistakes.md) | AI 실수를 잡아 고친 사례 13건 |
 | [../decisions/](../decisions/) | 결정마다 What · Why 기록 |
 
 ## 1. 쓴 도구
@@ -74,7 +74,7 @@ AI가 필요한 문서만 읽게 하려고 CLAUDE.md를 폴더마다 나눴다 (
 - **작업마다 리뷰** — 구현한 에이전트가 아닌 다른 에이전트가 spec 대비 · 품질을 본다. 작은 지적은 장부에 "→ 최종"으로 미뤘다가 최종 리뷰에서 정리
 - **실제 실행** — 단위 테스트(가짜 claude)만 믿지 않고 단계 끝마다 실제 `claude`로 한 번 돌려 결과 파일과 화면을 본다. 조사 오류 · MVP 중복은 여기서만 잡혔다
 - **사람 승인 지점** — 머지 · 삭제 · force push는 AI가 혼자 못 한다. 병렬 PR 충돌 때 AI가 force push 대신 merge로 돌아간 것도 이 규칙 때문
-- 사례 12건: [mistakes.md](mistakes.md)
+- 사례 13건: [mistakes.md](mistakes.md)
 
 ## 7. 숫자로 본 진행
 | 항목 | 값 |
