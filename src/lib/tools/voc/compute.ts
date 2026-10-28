@@ -34,16 +34,16 @@ export function computeVoc(out: VocOutput, { lines }: VocInput): VocResult {
   });
 
   const ranked = topics
-    .map((t, order) => {
+    .map((t) => {
       const vocs = groups.get(t.name)!;
       const average = vocs.length ? round1(vocs.reduce((a, v) => a + v.severity, 0) / vocs.length) : null;
       // 점수 = 건수 × 평균 심각도 (= 심각도 합). 반올림 전 평균으로 계산한다
       const score = vocs.reduce((a, v) => a + v.severity, 0);
-      return { order, name: t.name, description: t.description, count: vocs.length, average, score, top: [...vocs].sort(bySeverity).slice(0, 3) };
+      return { name: t.name, description: t.description, count: vocs.length, average, score, top: [...vocs].sort(bySeverity).slice(0, 3) };
     })
-    .sort((a, b) => b.score - a.score || b.count - a.count || a.order - b.order);
+    .sort((a, b) => b.score - a.score || b.count - a.count); // 안정 정렬이라 나머지는 입력 순
   // 점수가 같으면 같은 순위 (1, 2, 2, 4). 같은 순위 안에서는 건수 많은 순 → 입력 순으로 놓는다
-  const withRank = ranked.map(({ order: _order, ...t }) => ({ rank: 1 + ranked.filter((x) => x.score > t.score).length, ...t }));
+  const withRank = ranked.map((t) => ({ rank: 1 + ranked.filter((x) => x.score > t.score).length, ...t }));
 
   return { total: lines.length, topics: withRank, unclassified: { count: unclassified.length, top: unclassified.sort(bySeverity).slice(0, 3) } };
 }
