@@ -8,7 +8,7 @@
 - Claude Code는 루트 `CLAUDE.md`를 항상, **하위 폴더 `CLAUDE.md`는 그 폴더 파일을 읽을 때만** 로드한다.
   → 규칙은 쓰이는 폴더에 둔다. 루트는 지도, 폴더는 그 폴더 규칙만.
 - 분량 한도: 루트 60줄, 폴더 30줄. 넘으면 `docs/`로 빼고 링크만 남긴다.
-- 폴더 CLAUDE.md 칸 고정: **목적(1줄) · 파일 지도 · 규칙 · 하지 말 것 · 자세히(링크)**.
+- 폴더 CLAUDE.md 기본 칸: **목적(1줄) · 파일 지도 · 규칙 · 하지 말 것**. 필요할 때만 **갈아탈 신호 · 자세히(링크)** 추가.
 
 ## 2. 폴더 구조
 
@@ -29,7 +29,7 @@
 | 이름 | 영역 | 도구 |
 | --- | --- | --- |
 | `ui-builder` | A 화면, D 다듬기. Montage 컴포넌트만 | Read · Edit · Write · Bash · Grep · Glob |
-| `chain-author` | B 체인 단계 · 프롬프트 · 입출력 스키마 | Read · Edit · Write · Grep · Glob |
+| `chain-author` | B 체인 단계 · 프롬프트 · 입출력 스키마 | Read · Edit · Write · Bash · Grep · Glob |
 | `tool-builder` | C 도구 하나 (4개 병렬, worktree별) | Read · Edit · Write · Bash · Grep · Glob |
 | `bridge-engineer` | 중계 서버 · `claude -p` · 토큰 · CORS | Read · Edit · Write · Bash · Grep · Glob |
 | `hatch-reviewer` | 읽기 전용 규칙 검사 | Read · Grep · Glob · Bash(읽기 명령만) |
@@ -59,7 +59,7 @@ spec(docs/specs) → plan(docs/plans) → 이슈 → 브랜치 → 구현(영역
 - **커밋**: `<type>(<area>): 내용 (#이슈)` (예: `feat(bank): 아이디어 저장 (#12)`).
 - **PR**: 템플릿 = 개요 · `closes #n` · 변경 · 검증(명령 → 결과) · 화면 캡처(UI) · 리뷰어 결과.
   PR 하나 = 영역 하나. 400줄 / 15파일 넘으면 쪼갠다.
-- **머지**: squash만. 조건 = 검증 통과 + 리뷰어 지적 0(남기면 이유) + UI PR은 Vercel 미리보기 확인.
+- **머지**: squash만. 조건 = 검증 통과 + CI 통과 + 리뷰어 지적 0(남기면 이유) + UI PR은 Vercel 미리보기 확인.
   **머지는 사용자 승인 후.** 머지 후 브랜치 자동 삭제.
 - **강제 장치**: 무료 플랜 비공개 레포라 GitHub 브랜치 보호 불가 →
   로컬 `pre-push` 훅(`.githooks/`, `core.hooksPath`)이 `main` push 차단 · 레포 설정(squash만, 머지 후 삭제) ·

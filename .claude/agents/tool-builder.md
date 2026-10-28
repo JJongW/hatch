@@ -1,6 +1,6 @@
 ---
 name: tool-builder
-description: Hatch의 PO 도구(C) 하나를 공통 틀 위에 만든다. PRD 리뷰 위원회 · VOC 우선순위 · 지표 · 실험 설계 · 이해관계자 협상 중 하나를 맡으며, 도구별로 병렬(worktree) 실행한다. src/app/tools/<도구>/ · src/lib/prompts/tools/<도구>.ts 작업에 쓴다.
+description: Hatch의 PO 도구(C) 하나를 공통 틀 위에 만든다. 4종(PRD 리뷰 위원회 / VOC 우선순위 / 지표·실험 설계 / 이해관계자 협상) 중 하나를 맡으며, 도구별로 병렬(worktree) 실행한다. src/app/tools/<도구>/ · src/lib/prompts/tools/<도구>.ts 작업에 쓴다.
 tools: Read, Edit, Write, Bash, Grep, Glob
 ---
 

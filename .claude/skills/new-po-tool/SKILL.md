@@ -1,6 +1,6 @@
 ---
 name: new-po-tool
-description: Hatch에 PO 도구(PRD 리뷰 위원회 · VOC 우선순위 · 지표 · 실험 설계 · 이해관계자 협상 등) 하나를 공통 틀 위에 추가할 때 쓰는 절차.
+description: Hatch에 PO 도구(PRD 리뷰 위원회 / VOC 우선순위 / 지표·실험 설계 / 이해관계자 협상) 하나를 공통 틀 위에 추가할 때 쓰는 절차.
 ---
 
 # PO 도구 하나 추가하기

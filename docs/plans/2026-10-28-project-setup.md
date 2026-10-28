@@ -9,7 +9,7 @@
 ## Global Constraints
 
 - 패키지 매니저 npm. `@montage-ui/*` 는 전부 같은 버전(4.1.5) 고정.
-- 루트 CLAUDE.md ≤ 60줄, 폴더 CLAUDE.md ≤ 30줄. 칸: 목적 · 파일 지도 · 규칙 · 하지 말 것 · 자세히.
+- 루트 CLAUDE.md ≤ 60줄, 폴더 CLAUDE.md ≤ 30줄. 칸: 목적 · 파일 지도 · 규칙 · 하지 말 것 (필요할 때만 갈아탈 신호 · 자세히 링크).
 - 커밋 `<type>(<area>): 내용 (#1)`. `main` 직접 push 금지. 머지는 사용자 승인 후.
 
 ---
@@ -21,7 +21,7 @@ Create `src/app/providers.tsx` · Modify `src/app/layout.tsx`, `src/app/page.tsx
 
 - [ ] 스크래치 폴더에 `npx create-next-app@latest hatch --ts --eslint --app --src-dir --no-tailwind --import-alias "@/*" --use-npm` → README·.git 제외하고 복사 (비어 있지 않은 폴더 충돌 회피)
 - [ ] `npm i @montage-ui/core@4.1.5 @montage-ui/icon@4.1.5 @montage-ui/nextjs@4.1.5`
-- [ ] `providers.tsx`(client): `AppRouterCacheProvider` → `ThemeProvider` 감싸기. `layout.tsx`: `lang="ko"`, Pretendard 링크, `@montage-ui/core/global.css`, Providers
+- [ ] `providers.tsx`(client): `ThemeProvider`(바깥) → `AppRouterCacheProvider`(안쪽) 감싸기 (Montage 문서 순서). `layout.tsx`: `lang="ko"`, Pretendard 링크, `@montage-ui/core/global.css`, Providers
 - [ ] `page.tsx`: Montage `Typography`로 "Hatch" 한 줄 (설치 확인용)
 - [ ] `package.json` scripts에 `"typecheck": "tsc --noEmit"`
 - [ ] 검증: `npm run lint && npm run typecheck && npm run build` 모두 통과
