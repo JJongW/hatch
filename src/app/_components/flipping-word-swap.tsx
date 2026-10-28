@@ -13,6 +13,8 @@ const segment = (text: string) => (segmenter ? Array.from(segmenter.segment(text
 
 const layer: CSSProperties = { gridArea: '1 / 1', display: 'inline-flex', alignItems: 'baseline', whiteSpace: 'pre' };
 const char: CSSProperties = { display: 'inline-block', whiteSpace: 'pre', backfaceVisibility: 'hidden', willChange: 'transform, opacity' };
+// gsap이 붙기 전(서버 HTML · hydration 전)에도 두 번째 단어는 숨겨 둔다 — 없으면 두 단어가 겹쳐 보인다
+const hiddenChar: CSSProperties = { ...char, opacity: 0 };
 
 type Props = {
   word1: string;
@@ -65,7 +67,7 @@ export default function FlippingWordSwap({ word1, word2, swapped, duration = 400
 
   const chars = (text: string, which: 'first' | 'second') =>
     segment(text).map((c, i) => (
-      <span key={`${which}-${i}-${c}`} data-flip-word={which} style={char}>
+      <span key={`${which}-${i}-${c}`} data-flip-word={which} style={which === 'second' ? hiddenChar : char}>
         {c === ' ' ? ' ' : c}
       </span>
     ));
