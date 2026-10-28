@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useState } from 'react';
 import {
   Box,
   ContentBadge,
@@ -14,6 +15,9 @@ import {
 } from '@montage-ui/core';
 
 import type { Theme } from '@montage-ui/core';
+import type { FocusEvent } from 'react';
+
+import FlippingWordSwap from './flipping-word-swap';
 
 const MAIN = [
   { href: '/', label: '아이디어 쓰기' },
@@ -51,6 +55,34 @@ export default function SideNav() {
   return <SideNavView pathname={usePathname()} />;
 }
 
+// 로고: 'Hatch'(Avigea) ↔ '해치'(HS산토끼체). 마우스를 올리거나 키보드로 포커스하면 뒤집힌다
+function BrandLogo() {
+  const [swapped, setSwapped] = useState(false);
+  return (
+    <Typography
+      as={Link}
+      href="/"
+      variant="headline1"
+      weight="bold"
+      aria-label="Hatch 해치 — 아이디어 쓰기로"
+      sx={{ textDecoration: 'none' }}
+      onMouseEnter={() => setSwapped(true)}
+      onMouseLeave={() => setSwapped(false)}
+      onFocus={(e: FocusEvent<HTMLElement>) => setSwapped(e.currentTarget.matches(':focus-visible'))}
+      onBlur={() => setSwapped(false)}
+    >
+      🐣{' '}
+      <FlippingWordSwap
+        word1="Hatch"
+        word2="해치"
+        swapped={swapped}
+        style={{ fontFamily: 'var(--font-logo-en)', fontWeight: 400 }}
+        toStyle={{ fontFamily: 'var(--font-logo-ko)' }}
+      />
+    </Typography>
+  );
+}
+
 /** 경로를 모를 때(Suspense 대기 중)는 강조 없이 그린다 */
 export function SideNavView({ pathname }: { pathname: string | null }) {
   const isActive = (href: string) =>
@@ -58,10 +90,7 @@ export function SideNavView({ pathname }: { pathname: string | null }) {
 
   return (
     <Box as="nav" aria-label="주 메뉴" sx={navStyle}>
-      <Typography as={Link} href="/" variant="headline1" weight="bold" sx={{ textDecoration: 'none' }}>
-        🐣 <span style={{ fontFamily: 'var(--font-logo-en)', fontWeight: 400 }}>Hatch</span>{' '}
-        <span style={{ fontFamily: 'var(--font-logo-ko)', fontWeight: 400 }}>해치</span>
-      </Typography>
+      <BrandLogo />
 
       <FlexBox flexDirection="column">
         {MAIN.map((m) => (
