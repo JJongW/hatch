@@ -66,7 +66,8 @@ http://localhost:3000 에서 연다. `claude`가 설치돼 있고 로그인돼 �
 1. Tailscale 관리 화면에서 MagicDNS · HTTPS 인증서 · Serve를 켠다 (처음 한 번)
 2. 맥에서 `npm run build && npm start`
 3. `tailscale serve --bg 3000` → 같은 tailnet 기기에서 `https://<내 맥>.<tailnet>.ts.net`
-4. 저장 · 생성 버튼이 동작하지 않고 서버 로그에 origin 관련 오류가 보이면 `.env.local`에 `HATCH_SERVE_HOST=<내 맥>.<tailnet>.ts.net`을 넣고 다시 빌드
+4. 따로 설정할 것은 없다 — Serve가 `x-forwarded-host`로 주소를 넘겨 Server Action 출처 검사를 통과한다 (2026-10-28 확인).
+   `npm run dev`로 열었는데 버튼이 막히면 `.env.local`에 `HATCH_SERVE_HOST=<내 맥>.<tailnet>.ts.net`
 5. 그만 열 때 `tailscale serve reset`
 
 - 맥이 켜져 있어야 동작한다. 개인용이라 로그인은 없다 — **Funnel(인터넷 공개)은 쓰지 않는다**
