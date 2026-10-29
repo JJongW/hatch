@@ -10,10 +10,11 @@ import Providers from './providers';
 import '@montage-ui/core/global.css';
 import './globals.css';
 
-// 로고만 따로: "Hatch"는 Avigea, "해치"는 HS산토끼체 2.0. 나머지는 머니그라피 Rounded (globals.css)
+// 로고만 따로: "Hatch"는 Avigea, "해치"는 HS산토끼체 2.0. 나머지는 Pretendard (globals.css)
 const logoEnFont = localFont({ src: './fonts/Avigea.woff2', variable: '--font-logo-en', display: 'swap' });
 const logoKoFont = localFont({ src: './fonts/HSSanTokki2.ttf', variable: '--font-logo-ko', display: 'swap' });
-const bodyFont = localFont({ src: './fonts/Moneygraphy-Rounded.woff2', variable: '--font-body', display: 'swap' });
+// Montage는 Pretendard를 이름으로만 부르고 파일은 안 준다 → 설치 안 된 기기는 시스템 글꼴이 된다. 그래서 직접 싣는다 (OFL)
+const bodyFont = localFont({ src: './fonts/PretendardVariable.woff2', variable: '--font-body', weight: '45 920', display: 'swap' });
 
 export const metadata: Metadata = {
   title: 'Hatch',

@@ -1,4 +1,4 @@
-/* 본문 글꼴: 머니그라피 Rounded (Montage global.css의 Pretendard를 덮는다. 없는 글자는 Pretendard로) */
+/* 본문 글꼴: Pretendard (layout.tsx가 파일을 싣는다). Montage가 빼먹은 button까지 맞춘다 */
 body,
 textarea,
 input,
