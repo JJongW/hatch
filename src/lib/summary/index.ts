@@ -1,7 +1,7 @@
 // 아이디어 상세 요약 판. 이미 읽은 값만으로 계산한다 — AI 없이 즉시 · 무료 · 같은 문서면 같은 요약
 import { countUnknowns, firstParagraph, planDecisions, section } from './parse';
 
-import type { Doc, DocKey } from '../storage/types';
+import type { Decision, Doc, DocKey } from '../storage/types';
 
 export type VocEvidence = { total: number; top: string };
 
@@ -21,6 +21,8 @@ export type SummaryInput = {
   voc: VocEvidence | null;
   /** 이 아이디어 PRD로 돌린 PRD 리뷰가 있나 */
   reviewedPrd: boolean;
+  /** 저장된 결정 · 보류 (저장 순) */
+  decisions: Decision[];
 };
 
 export type Summary = {
@@ -28,11 +30,20 @@ export type Summary = {
   evidence: { voc: VocEvidence | null };
   unknowns: { label: string; count: number }[];
   unknownTotal: number;
-  decisions: string[];
+  /** open: 기획안 질문 중 결정이 없는 것 (최대 5) · recorded: 저장된 결정 전부 */
+  decisions: { open: string[]; openMore: number; recorded: Decision[] };
   next: NextAction;
 };
 
 const MAX = 5;
+
+const norm = (s: string) => s.replace(/\s+/g, ' ').trim();
+
+function decisionsOf(plan: string | null, recorded: Decision[]): Summary['decisions'] {
+  const answered = new Set(recorded.map((d) => norm(d.question)));
+  const open = (plan ? planDecisions(plan) : []).filter((q) => !answered.has(norm(q)));
+  return { open: open.slice(0, MAX), openMore: Math.max(0, open.length - MAX), recorded };
+}
 
 /** VOC 결과 data에서 근거 한 줄. 모양이 다르면 null — 깨진 결과로 화면이 죽지 않게 */
 export function vocEvidence(data: unknown): VocEvidence | null {
@@ -73,7 +84,7 @@ export function summarize(input: SummaryInput): Summary {
     evidence: { voc: input.voc },
     unknowns: unknowns.slice(0, MAX),
     unknownTotal: unknowns.length,
-    decisions: plan ? planDecisions(plan).slice(0, MAX) : [],
+    decisions: decisionsOf(plan, input.decisions),
     next: nextOf(input, unknowns.length),
   };
 }

@@ -5,7 +5,7 @@ import { Box, Button, FlexBox, respondMore, Typography } from '@montage-ui/core'
 
 import type { Theme } from '@montage-ui/core';
 
-import type { Doc, DocKey } from '@/lib/storage';
+import type { Decision, Doc, DocKey } from '@/lib/storage';
 import type { NextAction, Summary } from '@/lib/summary';
 
 type Props = { summary: Summary; docs: Doc[]; ideaId: string; onOpenDoc: (key: DocKey) => void };
@@ -41,6 +41,23 @@ const items = (list: React.ReactNode[]) => (
     ))}
   </Typography>
 );
+
+const sub = (t: string) => (
+  <Typography as="h3" variant="caption1" weight="bold" color="semantic.foreground.neutral.tertiary" sx={{ display: 'block', marginBottom: '4px' }}>
+    {t}
+  </Typography>
+);
+
+function DecisionLine({ d }: { d: Decision }) {
+  return (
+    <>
+      {d.status === 'decided' ? `${d.question} → ${d.answer}` : `${d.question} · 보류`}
+      <Typography as="span" variant="caption1" color="semantic.foreground.neutral.secondary" sx={{ display: 'block' }}>
+        {d.status === 'decided' ? '이유' : '보류 이유'}: {d.reason}
+      </Typography>
+    </>
+  );
+}
 
 function NextCell({ next, docs, ideaId, onOpenDoc }: { next: NextAction } & Omit<Props, 'summary'>) {
   const label = (key: DocKey) => docs.find((d) => d.key === key)?.label ?? key;
@@ -93,6 +110,8 @@ function NextCell({ next, docs, ideaId, onOpenDoc }: { next: NextAction } & Omit
 export default function IdeaSummary({ summary, docs, ideaId, onOpenDoc }: Props) {
   const { problem, evidence, unknowns, unknownTotal, decisions, next } = summary;
   const rest = unknownTotal - unknowns.length;
+  const { open, openMore, recorded } = decisions;
+  const hasDecisions = open.length > 0 || recorded.length > 0;
   return (
     <Box sx={gridStyle}>
       <Cell title="해결하려는 문제">{text(problem.text)}</Cell>
@@ -103,7 +122,24 @@ export default function IdeaSummary({ summary, docs, ideaId, onOpenDoc }: Props)
             items([...unknowns.map((u) => `${u.label} ${u.count}곳`), ...(rest > 0 ? [`외 ${rest}개`] : [])])}
         </FlexBox>
       </Cell>
-      {decisions.length > 0 && <Cell title="지금 내려야 할 결정">{items(decisions)}</Cell>}
+      {hasDecisions && (
+        <Cell title="결정">
+          <FlexBox flexDirection="column" gap="12px">
+            {open.length > 0 && (
+              <Box>
+                {sub('아직 안 정한 것')}
+                {items([...open, ...(openMore > 0 ? [`외 ${openMore}개`] : [])])}
+              </Box>
+            )}
+            {recorded.length > 0 && (
+              <Box>
+                {sub('정한 것 · 보류한 것')}
+                {items(recorded.map((d) => <DecisionLine key={d.id} d={d} />))}
+              </Box>
+            )}
+          </FlexBox>
+        </Cell>
+      )}
       <Cell title="추천 다음 행동">
         <NextCell next={next} docs={docs} ideaId={ideaId} onOpenDoc={onOpenDoc} />
       </Cell>
