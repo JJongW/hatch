@@ -16,6 +16,7 @@ Next.js(App Router) · Montage(원티드 디자인 시스템) · 생성은 로�
 | `src/app/tools/` · `src/lib/tools/` | PO 도구 공통 틀 + 도구 4종 | C | `tool-builder` |
 | `src/components/` | 공용 UI (Montage 기반) | D | `ui-builder` |
 | `src/lib/storage/` | 아이디어 · 문서 저장 | A | `ui-builder` |
+| `src/lib/questions/` | 확인 질문 (모으기 · 검사 · 만들기) | 4b | `ui-builder` |
 | `src/lib/claude/` | claude -p 실행기 | B | `chain-author` |
 | `src/lib/chain/` | 문서 생성 체인 단계 | B | `chain-author` |
 | `src/lib/prompts/` | 프롬프트 문자열 (여기에만) | B · C | `chain-author` |

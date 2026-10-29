@@ -1,5 +1,5 @@
 // 아이디어 상세 요약 판. 이미 읽은 값만으로 계산한다 — AI 없이 즉시 · 무료 · 같은 문서면 같은 요약
-import { countUnknowns, firstParagraph, planDecisions, section } from './parse';
+import { countUnknowns, firstParagraph, norm, planDecisions, section } from './parse';
 
 import type { Decision, Doc, DocKey } from '../storage/types';
 
@@ -36,8 +36,6 @@ export type Summary = {
 };
 
 const MAX = 5;
-
-const norm = (s: string) => s.replace(/\s+/g, ' ').trim();
 
 function decisionsOf(plan: string | null, recorded: Decision[]): Summary['decisions'] {
   const answered = new Set(recorded.map((d) => norm(d.question)));
@@ -88,3 +86,5 @@ export function summarize(input: SummaryInput): Summary {
     next: nextOf(input, unknowns.length),
   };
 }
+
+export { questionView, type QuestionLine, type QuestionView } from './questions';
