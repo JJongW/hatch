@@ -9,18 +9,22 @@ import PageHeader from '../../_components/page-header';
 import SectionTitle from '../../_components/section-title';
 import { useRefreshWhile } from '../../_components/use-refresh-while';
 
+import ContextPanel from './context-panel';
 import DocCard from './doc-card';
 import DocTabs from './doc-tabs';
 import { firstTab } from './first-tab';
 import IdeaSummary from './idea-summary';
 
-import type { Doc, DocKey } from '@/lib/storage';
+import type { Doc, DocKey, IdeaContext } from '@/lib/storage';
 import type { Summary } from '@/lib/summary';
-import type { DocActionState, FormState } from '../../actions';
+import type { ContextState, DocActionState, FormState } from '../../actions';
 
 type Props = {
   idea: { title: string; memo: string };
   ideaId: string;
+  context: IdeaContext;
+  contextFields: ReadonlyArray<{ key: keyof IdeaContext; label: string }>;
+  saveContextAction: (prev: ContextState, formData: FormData) => Promise<ContextState>;
   summary: Summary;
   docs: Doc[];
   generatable: DocKey[];
@@ -35,6 +39,9 @@ type Props = {
 export default function IdeaDetail({
   idea,
   ideaId,
+  context,
+  contextFields,
+  saveContextAction,
   summary,
   docs,
   generatable,
@@ -95,6 +102,7 @@ export default function IdeaDetail({
         </Box>
       )}
 
+      <ContextPanel context={context} fields={contextFields} action={saveContextAction} disabled={generating} />
       <IdeaSummary summary={summary} docs={docs} ideaId={ideaId} onOpenDoc={setTab} />
 
       <SectionTitle>문서</SectionTitle>

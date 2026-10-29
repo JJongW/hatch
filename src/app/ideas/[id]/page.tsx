@@ -2,10 +2,10 @@ import { notFound } from 'next/navigation';
 import { connection } from 'next/server';
 
 import { GENERATABLE } from '@/lib/chain';
-import { getDocs, getIdea, getRunning, isValidId, listToolResults } from '@/lib/storage';
+import { CONTEXT_FIELDS, getDocs, getIdea, getRunning, isValidId, listToolResults } from '@/lib/storage';
 import { summarize, vocEvidence } from '@/lib/summary';
 
-import { generateDocAction, trashIdeaAction, updateDocAction, updateIdeaAction } from '../../actions';
+import { generateDocAction, saveContextAction, trashIdeaAction, updateDocAction, updateIdeaAction } from '../../actions';
 import IdeaDetail from './idea-detail';
 
 // 로컬 전용 · 항상 요청 시 렌더라 정적 셸 검증을 끈다 (docs: route-segment-config/instant, 'Disabling instant')
@@ -38,6 +38,9 @@ export default async function IdeaPage({ params }: { params: Promise<{ id: strin
     <IdeaDetail
       idea={{ title: idea.title, memo: idea.memo }}
       ideaId={id}
+      context={idea.context}
+      contextFields={CONTEXT_FIELDS}
+      saveContextAction={saveContextAction.bind(null, id)}
       summary={summary}
       docs={docs}
       generatable={GENERATABLE}
