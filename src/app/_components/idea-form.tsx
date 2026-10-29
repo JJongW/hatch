@@ -29,6 +29,8 @@ function FolderField({ initial, folders, disabled }: { initial: string; folders:
         placeholder="폴더 (선택, 비우면 미분류)"
         value={folder}
         onChange={(e) => setFolder(e.target.value)}
+        // 서버 검사(cleanFolder)도 그대로 둔다. 오류가 제목 칸에 붙지 않게 입력에서 먼저 막는다
+        maxLength={30}
         aria-label="폴더"
         disabled={disabled}
       />
