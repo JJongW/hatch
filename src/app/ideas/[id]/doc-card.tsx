@@ -3,6 +3,7 @@
 import { useActionState, useState } from 'react';
 import { Box, Button, ContentBadge, FlexBox, Loading, SectionMessage, TextArea, Typography } from '@montage-ui/core';
 
+import { UseLocallyButton, useDemo } from '../../_components/demo';
 import DocMarkdown from '../../_components/doc-markdown';
 
 import type { Theme } from '@montage-ui/core';
@@ -34,6 +35,7 @@ const boxStyle = (theme: Theme) => ({
 const bodyStyle = { maxHeight: '480px', overflow: 'auto' };
 
 export default function DocCard({ doc, index, ready, hasSource, running, onBusy, generate, update }: Props) {
+  const demo = useDemo();
   const [editing, setEditing] = useState(false);
 
   const [genState, genAction, genPending] = useActionState(async (prev: DocActionState) => {
@@ -95,7 +97,9 @@ export default function DocCard({ doc, index, ready, hasSource, running, onBusy,
           <Typography variant="body2">만드는 중이에요. 1~2분 걸려요.</Typography>
         </FlexBox>
       ) : doc.content === null ? (
-        !ready ? (
+        demo ? (
+          <UseLocallyButton size="small" />
+        ) : !ready ? (
           disabledButton('준비 중')
         ) : !hasSource ? (
           disabledButton('앞 문서 먼저')
@@ -121,12 +125,15 @@ export default function DocCard({ doc, index, ready, hasSource, running, onBusy,
           <Typography as="div" variant="body2" sx={bodyStyle}>
             <DocMarkdown>{doc.content}</DocMarkdown>
           </Typography>
-          <FlexBox justifyContent="flex-end" gap="8px" sx={{ marginTop: '12px' }}>
-            <Button type="button" size="small" variant="outlined" color="assistive" onClick={() => setEditing(true)} disabled={blocked}>
-              편집
-            </Button>
-            {ready && generateForm('다시 만들기', 'outlined', confirmRegenerate)}
-          </FlexBox>
+          {/* 데모는 읽기만 — 편집 · 다시 만들기 버튼을 아예 보이지 않는다 */}
+          {!demo && (
+            <FlexBox justifyContent="flex-end" gap="8px" sx={{ marginTop: '12px' }}>
+              <Button type="button" size="small" variant="outlined" color="assistive" onClick={() => setEditing(true)} disabled={blocked}>
+                편집
+              </Button>
+              {ready && generateForm('다시 만들기', 'outlined', confirmRegenerate)}
+            </FlexBox>
+          )}
         </>
       )}
 

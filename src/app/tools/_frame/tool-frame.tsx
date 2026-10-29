@@ -18,9 +18,12 @@ import {
   Typography,
 } from '@montage-ui/core';
 
+import { UseLocallyButton, useDemo } from '../../_components/demo';
 import DocMarkdown from '../../_components/doc-markdown';
 import PageHeader from '../../_components/page-header';
 import { useRefreshWhile } from '../../_components/use-refresh-while';
+
+import { DEMO_SAMPLE_IDEA } from '@/lib/demo';
 
 import type { Theme } from '@montage-ui/core';
 
@@ -49,6 +52,7 @@ const resultBoxStyle = (theme: Theme) => ({
 
 export default function ToolFrame({ tool, ideas, ideaId, none, results, current, busy, run, inputFields }: Props) {
   const router = useRouter();
+  const demo = useDemo();
   const base = `/tools/${tool.key}`;
   const urlMode: Mode = ideaId !== null ? 'idea' : none ? 'none' : 'pasted';
   const [mode, setMode] = useState<Mode>(urlMode);
@@ -109,6 +113,19 @@ export default function ToolFrame({ tool, ideas, ideaId, none, results, current,
   return (
     <>
       <PageHeader title={tool.label} description={tool.description} />
+
+      {/* 데모는 실행을 못 하니, 할 수 있는 일(샘플 결과 보기)을 맨 위에 둔다 */}
+      {demo && !current && (
+        <Box sx={{ marginBottom: '32px' }}>
+          <SectionMessage variant="info">데모에서는 실행할 수 없어요. 샘플 아이디어로 미리 만든 결과를 볼 수 있어요.</SectionMessage>
+          <FlexBox gap="8px" flexWrap="wrap" sx={{ marginTop: '12px' }}>
+            <Button as={Link} href={`${base}?idea=${DEMO_SAMPLE_IDEA}`}>
+              샘플 결과 보기
+            </Button>
+            <UseLocallyButton />
+          </FlexBox>
+        </Box>
+      )}
 
       <form onSubmit={submit}>
         <input type="hidden" name="mode" value={mode} />
@@ -177,7 +194,7 @@ export default function ToolFrame({ tool, ideas, ideaId, none, results, current,
                     minRows={10}
                     maxRows={20}
                     width="100%"
-                    disabled={blocked}
+                    disabled={blocked || demo}
                     aria-label="붙여넣을 문서"
                     placeholder="검토할 문서를 붙여넣어 주세요."
                   />
@@ -192,7 +209,7 @@ export default function ToolFrame({ tool, ideas, ideaId, none, results, current,
           {inputFields && (
             <section>
               {sectionTitle('도구 입력')}
-              <fieldset disabled={blocked} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
+              <fieldset disabled={blocked || demo} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
                 {inputFields}
               </fieldset>
             </section>
@@ -200,9 +217,13 @@ export default function ToolFrame({ tool, ideas, ideaId, none, results, current,
 
           <FlexBox flexDirection="column" gap="12px">
             <FlexBox alignItems="center" gap="12px" flexWrap="wrap">
-              <Button type="submit" disabled={blocked || noSource}>
-                실행
-              </Button>
+              {demo ? (
+                <UseLocallyButton />
+              ) : (
+                <Button type="submit" disabled={blocked || noSource}>
+                  실행
+                </Button>
+              )}
               {pending && (
                 <FlexBox alignItems="center" gap="8px">
                   <Loading variant="circular" size={20} />
@@ -225,7 +246,7 @@ export default function ToolFrame({ tool, ideas, ideaId, none, results, current,
                 <Typography as="div" variant="body2">
                   <DocMarkdown>{current.body}</DocMarkdown>
                 </Typography>
-                {tool.continueLabel && (
+                {tool.continueLabel && !demo && (
                   <FlexBox justifyContent="flex-end" sx={{ marginTop: '12px' }}>
                     <Button type="submit" name="prevId" value={current.id} variant="outlined" color="assistive" size="small" disabled={blocked || noSource}>
                       {tool.continueLabel}

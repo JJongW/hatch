@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Button, FlexBox } from '@montage-ui/core';
 
+import { useDemo } from '../../_components/demo';
 import IdeaForm from '../../_components/idea-form';
 import PageHeader from '../../_components/page-header';
 import SectionTitle from '../../_components/section-title';
@@ -37,6 +38,7 @@ export default function IdeaDetail({
 }: Props) {
   // 이 화면에서 시작한 생성 (서버 running이 갱신되기 전에도 다른 카드를 막는다)
   const [busy, setBusy] = useState<DocKey | null>(null);
+  const demo = useDemo();
   // 다른 탭 · 새로고침 뒤의 생성 중 표시는 서버 값을 3초마다 다시 받아 맞춘다
   useRefreshWhile(running !== null && busy === null);
   // Server Action은 클라이언트에서 하나씩 실행되므로 생성 중엔 다른 저장 버튼을 막는다
@@ -50,13 +52,15 @@ export default function IdeaDetail({
       <PageHeader title={idea.title} description="아이디어를 고치고, 아래에서 이어지는 문서를 확인해요." />
       <IdeaForm action={updateAction} submitLabel="수정 저장" initial={idea} disabled={generating} />
 
-      <form action={trashAction} onSubmit={confirmTrash}>
-        <FlexBox justifyContent="flex-end" sx={{ marginTop: '8px' }}>
-          <Button type="submit" variant="outlined" color="assistive" size="small" disabled={generating}>
-            휴지통으로
-          </Button>
-        </FlexBox>
-      </form>
+      {!demo && (
+        <form action={trashAction} onSubmit={confirmTrash}>
+          <FlexBox justifyContent="flex-end" sx={{ marginTop: '8px' }}>
+            <Button type="submit" variant="outlined" color="assistive" size="small" disabled={generating}>
+              휴지통으로
+            </Button>
+          </FlexBox>
+        </form>
+      )}
 
       <SectionTitle>문서</SectionTitle>
       <FlexBox flexDirection="column" gap="12px">
