@@ -15,6 +15,7 @@ import {
   updateIdeaContext,
 } from '.';
 import { getDocs } from './docs';
+import { UNFILED } from './folders';
 
 let dir: string;
 
@@ -39,7 +40,7 @@ describe('createIdea', () => {
 
     const raw = await fs.readFile(path.join(dir, 'ideas', idea.id, 'idea.md'), 'utf8');
     expect(raw).toContain('title: 동네 클래스 추천');
-    expect(raw).toContain('version: 2');
+    expect(raw).toContain('version: 3');
   });
 
   it('빈 제목은 화면에 보여 줄 StorageError로 거부한다', async () => {
@@ -203,5 +204,36 @@ describe('맥락', () => {
     await updateIdeaContext(idea.id, { customer: '직장인', goal: '', constraints: '', facts: '' });
     await updateIdea(idea.id, { memo: '새 메모' });
     expect((await getIdea(idea.id))?.context.customer).toBe('직장인');
+  });
+});
+
+describe('폴더', () => {
+  it('새 아이디어는 미분류, 폴더를 정하면 다시 읽힌다', async () => {
+    const idea = await createIdea({ title: 'x', memo: '' });
+    expect(idea.folder).toBe('');
+    await updateIdea(idea.id, { folder: '  퇴근 후   취미 ' });
+    expect((await getIdea(idea.id))!.folder).toBe('퇴근 후 취미');
+  });
+
+  it('만들 때 폴더를 정할 수 있고, 미분류는 빈 값', async () => {
+    expect((await createIdea({ title: 'a', memo: '', folder: '회의' })).folder).toBe('회의');
+    expect((await createIdea({ title: 'b', memo: '', folder: UNFILED })).folder).toBe('');
+  });
+
+  it('30자 넘는 이름은 거부', async () => {
+    await expect(createIdea({ title: 'x', memo: '', folder: '가'.repeat(31) })).rejects.toThrow(StorageError);
+  });
+
+  it('2판 idea.md(folder 없음)는 미분류로 읽는다', async () => {
+    const idea = await createIdea({ title: 'x', memo: '' });
+    const file = path.join(dir, 'ideas', idea.id, 'idea.md');
+    await fs.writeFile(file, (await fs.readFile(file, 'utf8')).replace(/^folder:.*\n/m, '').replace('version: 3', 'version: 2'));
+    expect((await getIdea(idea.id))!.folder).toBe('');
+  });
+
+  it('폴더를 안 넘기고 고치면 폴더는 그대로', async () => {
+    const idea = await createIdea({ title: 'x', memo: '', folder: '회의' });
+    await updateIdea(idea.id, { title: 'y' });
+    expect((await getIdea(idea.id))!.folder).toBe('회의');
   });
 });

@@ -7,6 +7,8 @@ export type Idea = {
   /** ISO 8601 */
   updatedAt: string;
   context: IdeaContext;
+  /** 폴더(묶음) 이름. '' = 미분류 */
+  folder: string;
 };
 
 export type IdeaContext = { customer: string; goal: string; constraints: string; facts: string };
@@ -47,7 +49,8 @@ export const DOC_FILE_VERSION = 1;
 
 /** idea.md 머리말 형식 버전. 형식을 바꾸면 올리고 읽을 때 변환한다. */
 // 2: context 머리말 추가 (1판은 빈 맥락으로 읽음)
-export const IDEA_FILE_VERSION = 2;
+// 3: folder 머리말 추가 (2판 이하는 미분류로 읽음)
+export const IDEA_FILE_VERSION = 3;
 
 export type Decision = {
   /** 4자 랜덤 (목록 안에서만 유일) */
