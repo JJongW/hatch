@@ -21,6 +21,7 @@ export {
   updateDocBody,
 } from './docs';
 export { listDecisions, removeDecision, saveDecision } from './decisions';
+export { FOLDER_MAX, UNFILED, folderNames, groupFolders, pickFolder, type FolderCount } from './folders';
 export { getQuestions, saveQuestions } from './questions';
 export { isValidId } from './ids';
 export { progressOf } from './progress';

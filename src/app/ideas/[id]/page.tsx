@@ -3,7 +3,7 @@ import { connection } from 'next/server';
 
 import { GENERATABLE } from '@/lib/chain';
 import { collectUnknowns } from '@/lib/questions';
-import { CONTEXT_FIELDS, getDocs, getIdea, getQuestions, getRunning, isValidId, listDecisions, listToolResults } from '@/lib/storage';
+import { CONTEXT_FIELDS, folderNames, getDocs, getIdea, getQuestions, getRunning, groupFolders, isValidId, listDecisions, listIdeas, listToolResults } from '@/lib/storage';
 import { questionView, summarize, vocEvidence } from '@/lib/summary';
 
 import { generateDocAction, makeQuestionsAction, removeDecisionAction, saveContextAction, saveDecisionAction, trashIdeaAction, updateDocAction, updateIdeaAction } from '../../actions';
@@ -20,14 +20,16 @@ export default async function IdeaPage({ params }: { params: Promise<{ id: strin
   const idea = await getIdea(id);
   if (!idea) notFound();
   // 결과 파일을 못 읽으면 근거 · 리뷰 여부만 없는 것으로 보고 나머지는 그린다 (spec §5)
-  const [docs, running, vocs, reviews, decisions, questionSet] = await Promise.all([
+  const [docs, running, vocs, reviews, decisions, questionSet, all] = await Promise.all([
     getDocs(id),
     getRunning(id),
     listToolResults('voc', id).catch(() => []),
     listToolResults('prd-review', id, 'prd').catch(() => []),
     listDecisions(id).catch(() => []),
     getQuestions(id).catch(() => null),
+    listIdeas().catch(() => ({ ideas: [], unreadable: 0 })),
   ]);
+  const folders = folderNames(groupFolders(all.ideas));
   const runningKey = running?.key ?? null;
   const summary = summarize({
     idea: { title: idea.title, memo: idea.memo },
@@ -41,7 +43,8 @@ export default async function IdeaPage({ params }: { params: Promise<{ id: strin
 
   return (
     <IdeaDetail
-      idea={{ title: idea.title, memo: idea.memo }}
+      idea={{ title: idea.title, memo: idea.memo, folder: idea.folder }}
+      folders={folders}
       ideaId={id}
       context={idea.context}
       contextFields={CONTEXT_FIELDS}

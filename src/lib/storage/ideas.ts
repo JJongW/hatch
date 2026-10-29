@@ -6,6 +6,7 @@ import matter from 'gray-matter';
 
 import { assertValidId, isValidId, newId } from './ids';
 import { getDocs } from './docs';
+import { FOLDER_MAX, UNFILED } from './folders';
 import { ideaDir, ideaFile, ideasDir, isMissing, dataDir } from './paths';
 import { progressOf } from './progress';
 import { CONTEXT_FIELDS, CONTEXT_MAX, EMPTY_CONTEXT, IDEA_FILE_VERSION, type Idea, type IdeaContext } from './types';
@@ -17,6 +18,12 @@ function cleanTitle(title: string) {
   const t = title.trim();
   if (!t) throw new StorageError('제목을 적어 주세요.');
   return t;
+}
+
+function cleanFolder(folder: string) {
+  const f = folder.trim().replace(/\s+/g, ' ');
+  if (f.length > FOLDER_MAX) throw new StorageError('폴더 이름은 30자까지예요.');
+  return f === UNFILED ? '' : f;
 }
 
 async function writeIdea(idea: Idea) {
@@ -42,7 +49,8 @@ async function readIdea(id: string): Promise<Idea> {
   if (typeof title !== 'string' || typeof createdAt !== 'string' || typeof updatedAt !== 'string') {
     throw new Error(`idea.md 머리말이 올바르지 않아요: ${id}`);
   }
-  return { id, title, memo: content.replace(/^\n/, '').trimEnd(), createdAt, updatedAt, context: readContext(data.context) };
+  const folder = typeof data.folder === 'string' ? data.folder : '';
+  return { id, title, memo: content.replace(/^\n/, '').trimEnd(), createdAt, updatedAt, context: readContext(data.context), folder };
 }
 
 export async function listIdeas(): Promise<{ ideas: Idea[]; unreadable: number }> {
@@ -72,21 +80,30 @@ export async function getIdea(id: string): Promise<Idea | null> {
   }
 }
 
-export async function createIdea(input: { title: string; memo: string }): Promise<Idea> {
+export async function createIdea(input: { title: string; memo: string; folder?: string }): Promise<Idea> {
   const now = new Date();
   const at = now.toISOString();
-  const idea: Idea = { id: newId(now), title: cleanTitle(input.title), memo: input.memo.trim(), createdAt: at, updatedAt: at, context: EMPTY_CONTEXT };
+  const idea: Idea = {
+    id: newId(now),
+    title: cleanTitle(input.title),
+    memo: input.memo.trim(),
+    createdAt: at,
+    updatedAt: at,
+    context: EMPTY_CONTEXT,
+    folder: cleanFolder(input.folder ?? ''),
+  };
   await writeIdea(idea);
   return idea;
 }
 
-export async function updateIdea(id: string, patch: { title?: string; memo?: string }): Promise<Idea> {
+export async function updateIdea(id: string, patch: { title?: string; memo?: string; folder?: string }): Promise<Idea> {
   const current = await getIdea(id);
   if (!current) throw new StorageError('아이디어를 찾을 수 없어요. 이미 휴지통으로 옮겼을 수 있어요.');
   const next: Idea = {
     ...current,
     title: patch.title === undefined ? current.title : cleanTitle(patch.title),
     memo: patch.memo === undefined ? current.memo : patch.memo.trim(),
+    folder: patch.folder === undefined ? current.folder : cleanFolder(patch.folder),
     updatedAt: new Date().toISOString(),
   };
   await writeIdea(next);

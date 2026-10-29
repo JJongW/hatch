@@ -26,7 +26,7 @@ import { ChainError as ToolError, runTool, TOOLS, type ToolKey, type ToolSource 
 export type FormState = {
   error?: string;
   /** 오류일 때 입력을 되살리기 위해 (React 19 폼은 제출 후 비워진다) */
-  values?: { title: string; memo: string };
+  values?: { title: string; memo: string; folder: string };
   /** 성공할 때마다 바뀌는 값 — 폼을 다시 그리는 key로 쓴다 */
   savedAt?: number;
 };
@@ -34,6 +34,7 @@ export type FormState = {
 const readForm = (formData: FormData) => ({
   title: String(formData.get('title') ?? ''),
   memo: String(formData.get('memo') ?? ''),
+  folder: String(formData.get('folder') ?? ''),
 });
 
 // storage가 사용자용으로 던진 문구만 그대로, 나머지(파일 시스템 · 파서)는 한 줄 안내로

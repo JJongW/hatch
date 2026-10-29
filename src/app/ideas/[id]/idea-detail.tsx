@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Box, Button, FlexBox } from '@montage-ui/core';
+import { Box, Button, ContentBadge, FlexBox } from '@montage-ui/core';
 
 import { useDemo } from '../../_components/demo';
 import IdeaForm from '../../_components/idea-form';
@@ -21,7 +21,8 @@ import type { QuestionView, Summary } from '@/lib/summary';
 import type { ContextState, DecisionState, DocActionState, FormState, QuestionsState } from '../../actions';
 
 type Props = {
-  idea: { title: string; memo: string };
+  idea: { title: string; memo: string; folder: string };
+  folders: string[];
   ideaId: string;
   context: IdeaContext;
   contextFields: ReadonlyArray<{ key: keyof IdeaContext; label: string }>;
@@ -43,6 +44,7 @@ type Props = {
 
 export default function IdeaDetail({
   idea,
+  folders,
   ideaId,
   context,
   contextFields,
@@ -87,7 +89,14 @@ export default function IdeaDetail({
         <PageHeader title="아이디어 수정" />
       ) : (
         <FlexBox justifyContent="space-between" alignItems="flex-start" gap="12px">
-          <PageHeader title={idea.title} description={idea.memo || undefined} />
+          <Box>
+            {idea.folder && (
+              <ContentBadge size="xsmall" variant="outlined" color="neutral" sx={{ marginBottom: '8px' }}>
+                {idea.folder}
+              </ContentBadge>
+            )}
+            <PageHeader title={idea.title} description={idea.memo || undefined} />
+          </Box>
           {!demo && (
             <Button size="small" variant="outlined" color="assistive" onClick={() => setEditing(true)} disabled={generating}>
               수정
@@ -98,7 +107,7 @@ export default function IdeaDetail({
 
       {editing && (
         <Box sx={{ marginBottom: '24px' }}>
-          <IdeaForm action={saveIdea} submitLabel="수정 저장" initial={idea} disabled={generating} />
+          <IdeaForm action={saveIdea} submitLabel="수정 저장" initial={idea} folders={folders} disabled={generating} />
           <FlexBox justifyContent="space-between" sx={{ marginTop: '8px' }}>
             <form action={trashAction} onSubmit={confirmTrash}>
               <Button type="submit" variant="outlined" color="assistive" size="small" disabled={generating}>
