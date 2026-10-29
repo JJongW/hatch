@@ -108,13 +108,17 @@ describe('computeVoc', () => {
 });
 
 describe('renderVoc', () => {
-  it('요약 → 우선순위 → 주제별 대표 VOC → 분류 안 됨 순서', () => {
+  it('요약 → 출발 순위 → 볼 것 → 주제별 대표 VOC → 분류 안 됨 순서, "점수"는 쓰지 않는다', () => {
     const md = renderVoc(computeVoc(out, { lines }));
     const order = [
       '## 요약\nVOC 6건 · 주제 3개 · 분류 안 됨 2건',
-      '## 우선순위\n- **1위** 결제 — 점수 8 (건수 2 · 평균 심각도 4)',
+      '## 출발 순위\n건수 × 평균 심각도로 매긴 출발점이에요. 실제 우선순위는 아래 질문을 보고 정해요.',
+      '- **1** 결제 — 건수 2 · 평균 심각도 4 (합 8)',
+      '## 순위를 정하기 전에 볼 것\n- 고객군:',
+      '- 제품 목표:',
+      '- 해결 비용:',
       '## 주제별 대표 VOC',
-      '### 1위 · 결제 · 점수 8',
+      '### 1 · 결제\n',
       '- **심각도 5** (1번) 결제가 실패해요',
       '## 분류 안 됨 · 2건',
       '- **주제 없음** (6번) 앱이 꺼져요',
@@ -125,6 +129,8 @@ describe('renderVoc', () => {
       expect(i, s).toBeGreaterThan(at);
       at = i;
     }
+    expect(md).not.toContain('점수');
+    expect(md).not.toMatch(/\d위/);
   });
   it('분류 안 됨이 없으면 칸을 빼고, 빈 주제는 안내한다', () => {
     const md = renderVoc(computeVoc({ topics: out.topics, items: lines.map((_, i) => ({ line: i + 1, topic: '결제', severity: 2 })) }, { lines }));
@@ -154,7 +160,7 @@ describe('runTool + FAKE_CLAUDE=voc', () => {
     const r = await getToolResult(null, resultId);
     expect(r?.tool).toBe('voc');
     expect(r?.source).toBe('none');
-    expect(r?.body).toContain('### 1위 · 결제 · 점수 9');
+    expect(r?.body).toContain('### 1 · 결제');
     expect(r?.body).toContain('## 분류 안 됨 · 2건'); // 5번 없는 주제 + 6번 빠짐
   });
   it('붙여넣은 맥락 문서와 함께 실행한다', async () => {

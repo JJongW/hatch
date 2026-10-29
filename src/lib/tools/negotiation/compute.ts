@@ -97,24 +97,22 @@ export function renderNegotiation(r: NegotiationResult) {
   const now = r.rounds.at(-1)!;
   const before = r.rounds.at(-2);
   const p = r.persona;
-  const parts = [
-    `## 상대\n` + (p ? `- 역할: ${p.role}\n- 목표: ${p.goal}\n- 압박: ${p.pressure}` : '- 응답 없음'),
-  ];
+  const parts = [`## 상대\n` + (p ? `- 역할: ${p.role}\n- 목표: ${p.goal}\n- 압박: ${p.pressure}` : '- 응답 없음')];
   if (now.round > 1) {
     parts.push(
       `## ${now.round}라운드 내 답\n${quote(now.answer ?? '')}`,
       `## 상대 반응\n${now.reaction ?? '응답 없음'}`,
-      `## 점수 · ${totalText(now)}${r.delta !== null && before ? ` (이전 ${before.total} → ${signed(r.delta)})` : ''}\n` +
+      `## 피드백\n${now.feedback ?? '응답 없음'}`,
+      // 점수는 판단 대신이 아니라 참고 (피드백 8) — 반응 · 피드백 뒤에 둔다
+      `## 참고 점수 · ${totalText(now)}${r.delta !== null && before ? ` (이전 ${before.total} → ${signed(r.delta)})` : ''}\n` +
         `- 세션 평균 ${r.average === null ? '응답 없음' : `${r.average} / ${MAX_TOTAL}`}\n` +
         CRITERIA.map((c) => {
           const s = now.scores?.[c];
           const d = r.criteriaDelta?.[c];
           return s ? `- ${c} ${s.score} — ${s.reason}${d != null ? ` (이전 ${before?.scores?.[c]?.score} → ${signed(d)})` : ''}` : `- ${c} 응답 없음`;
         }).join('\n'),
-      `## 피드백\n${now.feedback ?? '응답 없음'}`,
     );
   }
-  parts.push(`## ${now.round === 1 ? '상대 요청' : '다음 요청'}\n${now.request}\n\n위 '도구 입력'에 내 답을 적고 '내 답 보내기'를 눌러 주세요.`);
   if (r.rounds.length > 1) {
     parts.push(
       `## 지난 대화\n` +
@@ -129,5 +127,7 @@ export function renderNegotiation(r: NegotiationResult) {
           .join('\n\n'),
     );
   }
+  // 요청이 맨 끝 — 결과 바로 아래 '내 답' 칸과 붙는다
+  parts.push(`## ${now.round === 1 ? '상대 요청' : '다음 요청'}\n${now.request}`);
   return parts.join('\n\n');
 }

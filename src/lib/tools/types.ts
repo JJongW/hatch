@@ -10,7 +10,8 @@ export type ToolDef<In, Out, Res> = {
   accepts: DocKey[]; // 받는 아이디어 문서, 첫 번째가 기본
   continueLabel?: string; // 결과에서 이어 실행하는 버튼 (재리뷰 · 다음 라운드)
   runningLabel?: string; // 실행 중 안내. 기본 '실행 중이에요 (1~2분)'
-  sourceOptional?: true; // 입력 문서 없이도 실행 (VOC). 프레임에 '문서 없이' 선택이 생기고 프롬프트에 문서 블록이 빠진다
+  inputLabel?: string; // 도구 입력 칸 제목. 기본 '도구 입력'
+  sourceOptional?: true; // 입력 문서 없이도 실행 (VOC). 프레임에 '문서 없이' 선택이 생기고 프롬프트에 문서 블록이 빠진다 · 입력 칸이 문서 칸보다 위, 처음 고른 값은 '문서 없이' (성질이 갈리는 도구가 생기면 플래그를 나눈다)
   inputSchema: z.ZodType<In>; // 폼 문자열 → 도구 입력. 메시지는 한국어로
   /** 입력 칸 검사 뒤 · claude 실행 전에 부른다. 문자열을 돌려주면 그 메시지로 거절 (이전 결과에 따라 규칙이 다를 때) */
   validate?: (input: In, prev: Res | null) => string | undefined;

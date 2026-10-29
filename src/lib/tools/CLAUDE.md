@@ -10,7 +10,7 @@
 
 ## 선택 훅 (`ToolDef`)
 
-- `sourceOptional: true` — '문서 없이'(`{ none: true }`, `?source=none`) 탭으로 실행 (VOC). 프롬프트에서 `SOURCE_HEADING` 블록이 빠진다. 아이디어 문서를 못 읽으면 이 훅이 있어도 막는다
+- `sourceOptional: true` — '문서 없이'(`{ none: true }`, URL param 없음 · 붙여넣기는 `?source=pasted`) 탭으로 실행 (VOC). 프롬프트에서 `SOURCE_HEADING` 블록이 빠진다. 아이디어 문서를 못 읽으면 이 훅이 있어도 막는다
 - `validate(input, prev)` — 문자열을 돌려주면 그 메시지가 `ChainError`로 나간다. claude 실행 전에 불린다
   - C-4 협상: 라운드별 입력 검사는 validate (1라운드는 내 답 없음, 다음 라운드는 내 답 필수)
 - `runningLabel` · `continueLabel` — 실행 중 안내 · 이어 실행 버튼

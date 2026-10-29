@@ -51,16 +51,25 @@ export function computeVoc(out: VocOutput, { lines }: VocInput): VocResult {
 const vocLine = (v: { line: number; text: string; severity: number | null }) =>
   `- ${v.severity === null ? '**주제 없음**' : `**심각도 ${v.severity}**`} (${v.line}번) ${v.text}`;
 
+// 점수는 출발점일 뿐 — 최종 우선순위는 사람이 고객군 · 목표 · 비용을 보고 정한다 (피드백 8)
+const CHECKS = [
+  '고객군: 이 불만은 어느 고객군에서 나왔고, 그 고객군이 지금 목표 고객인가?',
+  '제품 목표: 고치면 이번 목표 지표가 움직이나?',
+  '해결 비용: 고치는 데 얼마나 드나? 작게 먼저 풀 방법이 있나?',
+];
+
 export function renderVoc(r: VocResult) {
   const topics = r.topics.map(
     (t) =>
-      `### ${t.rank}위 · ${t.name} · 점수 ${t.score}\n${t.description}\n\n` +
+      `### ${t.rank} · ${t.name}\n${t.description}\n\n` +
       `건수 ${t.count} · 평균 심각도 ${t.average ?? '없음'}\n\n` +
       (t.top.length ? t.top.map(vocLine).join('\n') : '- 이 주제로 분류된 VOC 없음'),
   );
   return [
-    `## 요약\nVOC ${r.total}건 · 주제 ${r.topics.length}개 · ${UNCLASSIFIED} ${r.unclassified.count}건\n\n점수 = 건수 × 평균 심각도`,
-    `## 우선순위\n${r.topics.map((t) => `- **${t.rank}위** ${t.name} — 점수 ${t.score} (건수 ${t.count} · 평균 심각도 ${t.average ?? '없음'})`).join('\n') || '- 주제 없음'}`,
+    `## 요약\nVOC ${r.total}건 · 주제 ${r.topics.length}개 · ${UNCLASSIFIED} ${r.unclassified.count}건`,
+    `## 출발 순위\n건수 × 평균 심각도로 매긴 출발점이에요. 실제 우선순위는 아래 질문을 보고 정해요.\n\n` +
+      (r.topics.map((t) => `- **${t.rank}** ${t.name} — 건수 ${t.count} · 평균 심각도 ${t.average ?? '없음'} (합 ${t.score})`).join('\n') || '- 주제 없음'),
+    `## 순위를 정하기 전에 볼 것\n${CHECKS.map((c) => `- ${c}`).join('\n')}`,
     `## 주제별 대표 VOC`,
     ...topics,
     ...(r.unclassified.count ? [`## ${UNCLASSIFIED} · ${r.unclassified.count}건\n${r.unclassified.top.map(vocLine).join('\n')}`] : []),

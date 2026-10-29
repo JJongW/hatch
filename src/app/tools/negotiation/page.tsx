@@ -18,7 +18,7 @@ export default async function NegotiationPage({ searchParams }: { searchParams: 
     <ToolFrame
       {...data}
       run={runToolAction.bind(null, 'negotiation')}
-      inputFields={<NegotiationInputs resultId={data.current?.id ?? null} maxChars={MAX_ANSWER_CHARS} />}
+      continueFields={data.current ? <NegotiationInputs resultId={data.current.id} maxChars={MAX_ANSWER_CHARS} /> : undefined}
     />
   );
 }
