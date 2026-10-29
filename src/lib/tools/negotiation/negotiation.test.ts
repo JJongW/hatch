@@ -94,14 +94,15 @@ describe('computeNegotiation', () => {
 });
 
 describe('renderNegotiation', () => {
-  it('1라운드: 상대 → 상대 요청, 점수 칸 없음', () => {
+  it('1라운드: 상대 → 상대 요청(맨 끝), 점수 칸 없음', () => {
     const md = renderNegotiation(round1());
     expect(md.indexOf('## 상대\n- 역할: 영업 본부장')).toBe(0);
     expect(md).toContain('## 상대 요청\n엑셀 내보내기를 넣어 주세요.');
-    expect(md).not.toContain('## 점수');
+    expect(md.trimEnd().endsWith("아래에 내 답을 적고 '내 답 보내기'를 눌러 주세요.")).toBe(true);
+    expect(md).not.toContain('점수');
     expect(md).not.toContain('## 지난 대화');
   });
-  it('다음 라운드: 내 답 → 상대 반응 → 점수(변화 · 평균) → 피드백 → 다음 요청 → 지난 대화', () => {
+  it('다음 라운드: 내 답 → 상대 반응 → 피드백 → 참고 점수 → 지난 대화 → 다음 요청(맨 끝)', () => {
     const r2 = computeNegotiation(scored([2, 2, 2, 2, 2]), { answer: '첫 답' }, round1());
     const r3 = computeNegotiation(scored([3, 3, 3, 3]), { answer: '둘째\n답' }, r2);
     const md = renderNegotiation(r3);
@@ -109,15 +110,15 @@ describe('renderNegotiation', () => {
       '## 상대',
       '## 3라운드 내 답\n> 둘째\n> 답',
       '## 상대 반응',
-      '## 점수 · 15 / 25 (응답 없음 1개 빼고 환산) (이전 10 → +5)',
+      '## 피드백',
+      '## 참고 점수 · 15 / 25 (응답 없음 1개 빼고 환산) (이전 10 → +5)',
       '- 세션 평균 12.5 / 25',
       '- 공감 3 — 이유 (이전 2 → +1)',
       '- 명확성 응답 없음',
-      '## 피드백',
-      '## 다음 요청',
       '## 지난 대화',
       '### 1라운드\n- 상대 요청: 엑셀',
       '### 2라운드 · 10 / 25\n- 내 답: 첫 답',
+      '## 다음 요청',
     ];
     let at = -1;
     for (const s of order) {
@@ -125,6 +126,7 @@ describe('renderNegotiation', () => {
       expect(i, s).toBeGreaterThan(at);
       at = i;
     }
+    expect(md).not.toContain('## 점수');
   });
 });
 
@@ -168,7 +170,7 @@ describe('runTool + FAKE_CLAUDE=negotiation', () => {
     expect(second.resultId).not.toBe(first.resultId);
     const r2 = await getToolResult(null, second.resultId);
     expect(r2?.prevId).toBe(first.resultId);
-    expect(r2?.body).toContain('## 점수 · 15 / 25'); // fake 점수 1~5
+    expect(r2?.body).toContain('## 참고 점수 · 15 / 25'); // fake 점수 1~5
     expect(r2?.body).toContain('## 지난 대화');
   });
 });

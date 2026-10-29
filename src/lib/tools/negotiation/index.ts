@@ -41,7 +41,7 @@ export const negotiationInputSchema = z
 export const negotiationTool: ToolDef<NegotiationInput, NegotiationOutput, NegotiationResult> = {
   key: 'negotiation',
   label: '이해관계자 협상',
-  description: '문서와 부딪히는 요청을 하는 이해관계자와 라운드마다 협상해요. 내 답을 기준 5개로 채점하고 라운드 간 변화를 보여 줘요.',
+  description: '문서와 부딪히는 요청을 하는 이해관계자와 라운드마다 협상을 연습해요. 상대 반응과 피드백을 보고 답을 다듬어요. 점수는 참고로만 보여 줘요.',
   accepts: ['prd', 'plan'],
   continueLabel: '내 답 보내기',
   runningLabel: '상대가 답을 읽는 중이에요 (1~2분)',
