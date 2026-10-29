@@ -7,6 +7,7 @@ import matter from 'gray-matter';
 
 import { PROJECT_BLOCK } from '@/lib/prompts/context';
 
+import { keepHistory } from './history';
 import { getIdea, StorageError } from './ideas';
 import { assertValidId } from './ids';
 import { ideaDir, isMissing } from './paths';
@@ -28,7 +29,6 @@ export const hashOf = (text: string) => crypto.createHash('sha256').update(text.
 
 const stepOf = (key: DocKey) => DOC_STEPS.find((s) => s.key === key)!;
 const docPath = (id: string, key: DocKey) => path.join(ideaDir(id), stepOf(key).file);
-const stamp = () => new Date().toISOString().replace(/[-:]/g, '').replace(/\..+/, ''); // 20261028T091500
 
 /** 본문을 stringify에 넣으면 `---`로 시작할 때 머리말로 다시 읽히므로, 머리말만 만들고 본문은 이어 붙인다 */
 const withFront = (data: Record<string, unknown>, body: string) => matter.stringify('', data) + '\n' + body.trim() + '\n';
@@ -38,16 +38,6 @@ async function readRaw(id: string, key: DocKey) {
     if (isMissing(e)) return null;
     throw e;
   });
-}
-
-/** 덮어쓰기 전에 이전 판을 .history/로 (지우지 않는다) */
-async function keepHistory(id: string, key: DocKey) {
-  const from = docPath(id, key);
-  const exists = await fs.stat(from).then(() => true, () => false);
-  if (!exists) return;
-  const dir = path.join(ideaDir(id), '.history');
-  await fs.mkdir(dir, { recursive: true });
-  await fs.rename(from, path.join(dir, `${key}-${stamp()}-${crypto.randomBytes(2).toString('hex')}.md`));
 }
 
 export async function getDocs(id: string): Promise<Doc[]> {
@@ -78,7 +68,7 @@ export async function getDocs(id: string): Promise<Doc[]> {
 
 export async function saveDoc(id: string, key: DocKey, body: string, meta: { sourceHash: string }) {
   assertValidId(id);
-  await keepHistory(id, key);
+  await keepHistory(id, docPath(id, key), key);
   const front = { generatedAt: new Date().toISOString(), sourceHash: meta.sourceHash, version: DOC_FILE_VERSION };
   await fs.writeFile(docPath(id, key), withFront(front, body));
 }
@@ -93,7 +83,7 @@ export async function updateDocBody(id: string, key: DocKey, body: string) {
   } catch {
     // 깨진 머리말은 버리고 본문만 새로 쓴다 (이전 판은 .history에 남음)
   }
-  await keepHistory(id, key);
+  await keepHistory(id, docPath(id, key), key);
   await fs.writeFile(docPath(id, key), withFront(data, body));
 }
 
