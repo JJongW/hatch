@@ -5,6 +5,7 @@
 ## 파일 지도
 - `chain/<단계>.ts` — 체인 단계 프롬프트
 - `tools/<도구>.ts` — PO 도구 프롬프트
+- `questions.ts` — 확인 질문 (4b): `[확인 필요]` 라벨 → 고객 질문 · 담당자 확인
 - 공통 규칙은 `context.ts` 하나로 (상수: `CHAIN_RULES` · `INPUT_HEADING`, 도구용 `TOOL_RULES` · `SOURCE_HEADING`)
 
 ## 규칙
