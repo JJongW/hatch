@@ -170,7 +170,7 @@ export default function ToolFrame({ tool, ideas, ideaId, none, results, current,
             </Select>
             {idea &&
               (idea.docs.length === 0 ? (
-                <SectionMessage variant="info">이 도구가 받는 문서({tool.acceptsLabels.join(' · ')})가 아직 없어요.</SectionMessage>
+                <SectionMessage variant="info">이 도구가 받는 문서({tool.acceptsLabels.join(', ')})가 아직 없어요.</SectionMessage>
               ) : (
                 <Select value={selectedDoc} onChange={(k) => k && setDocKey(k)} disabled={blocked} width="100%" aria-label="문서">
                   {idea.docs.map((d) => (
@@ -199,7 +199,7 @@ export default function ToolFrame({ tool, ideas, ideaId, none, results, current,
               placeholder="검토할 문서를 붙여넣어 주세요."
             />
             <Typography variant="caption1" color="semantic.foreground.neutral.tertiary">
-              최대 30,000자 · {pasted.length.toLocaleString('ko-KR')}자
+              {pasted.length.toLocaleString('ko-KR')}자 / 최대 30,000자
             </Typography>
           </FlexBox>
         )}

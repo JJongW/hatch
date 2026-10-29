@@ -29,19 +29,19 @@ const list = (items: React.ReactNode[]) => (
 export default function StartGuide({ repoUrl }: { repoUrl: string }) {
   return (
     <FlexBox flexDirection="column" gap="8px">
-      <SectionTitle>데모에서 되는 것 · 안 되는 것</SectionTitle>
+      <SectionTitle>데모에서 되는 것과 안 되는 것</SectionTitle>
       {list([
         <>
           <b>됨</b> — 샘플 아이디어 3개, 이어진 문서 6종, PO 도구 4종의 샘플 결과 둘러보기
         </>,
         <>
-          <b>안 됨</b> — 아이디어 저장 · 문서 만들기 · 도구 실행. 생성은 각자 맥의 Claude Code(<code>claude -p</code>)가 하므로 인터넷 데모에선 할 수 없어요
+          <b>안 됨</b> — 아이디어 저장, 문서 만들기, 도구 실행. 생성은 각자 맥의 Claude Code(<code>claude -p</code>)가 하므로 인터넷 데모에선 할 수 없어요
         </>,
       ])}
 
       <SectionTitle>준비물</SectionTitle>
       {list([
-        'macOS · Node.js 20.9 이상',
+        'macOS, Node.js 20.9 이상',
         <>
           Claude Code 설치 후 로그인 — 터미널에서 <code>claude -p &quot;안녕&quot;</code>이 답하면 준비 끝
         </>,

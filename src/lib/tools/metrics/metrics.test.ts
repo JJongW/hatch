@@ -87,8 +87,8 @@ describe('render', () => {
   it('빠진 입력은 [확인 필요]로 남긴다', () => {
     const md = renderMetrics(computeMetrics(out, { ...none, dailyTraffic: 1000 }));
     expect(md).toContain('- 기준 전환율 [확인 필요: 기준 전환율]');
-    expect(md).toContain('- 변형당 표본: [확인 필요: 기준 전환율 · 최소 감지 효과]');
-    expect(md).toContain('- 필요 기간: [확인 필요: 기준 전환율 · 최소 감지 효과]');
+    expect(md).toContain('- 변형당 표본: [확인 필요: 기준 전환율, 최소 감지 효과]');
+    expect(md).toContain('- 필요 기간: [확인 필요: 기준 전환율, 최소 감지 효과]');
     const md2 = renderMetrics(computeMetrics(out, { ...full, dailyTraffic: null }));
     expect(md2).toContain('- 필요 기간: [확인 필요: 하루 실험 대상 수]');
   });

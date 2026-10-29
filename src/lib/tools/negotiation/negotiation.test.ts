@@ -112,13 +112,13 @@ describe('renderNegotiation', () => {
       '## 3라운드 내 답\n> 둘째\n> 답',
       '## 상대 반응',
       '## 피드백',
-      '## 참고 점수 · 15 / 25 (응답 없음 1개 빼고 환산) (이전 10 → +5)',
+      '## 참고 점수: 15 / 25 (응답 없음 1개 빼고 환산) (이전 10 → +5)',
       '- 세션 평균 12.5 / 25',
       '- 공감 3 — 이유 (이전 2 → +1)',
       '- 명확성 응답 없음',
       '## 지난 대화',
       '### 1라운드\n- 상대 요청: 엑셀',
-      '### 2라운드 · 10 / 25\n- 내 답: 첫 답',
+      '### 2라운드: 10 / 25\n- 내 답: 첫 답',
       '## 다음 요청',
     ];
     let at = -1;
@@ -171,7 +171,7 @@ describe('runTool + FAKE_CLAUDE=negotiation', () => {
     expect(second.resultId).not.toBe(first.resultId);
     const r2 = await getToolResult(null, second.resultId);
     expect(r2?.prevId).toBe(first.resultId);
-    expect(r2?.body).toContain('## 참고 점수 · 15 / 25'); // fake 점수 1~5
+    expect(r2?.body).toContain('## 참고 점수: 15 / 25'); // fake 점수 1~5
     expect(r2?.body).toContain('## 지난 대화');
   });
 });

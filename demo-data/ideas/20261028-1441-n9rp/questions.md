@@ -148,7 +148,7 @@ items:
   - label: 지도와 경로 기술 선택
     kind: owner
     role: 개발
-    question: 퇴근 경로 계산에 쓸 지도·경로 서비스는 무엇인가요?
+    question: 퇴근 경로 계산에 쓸 지도, 경로 서비스는 무엇인가요?
   - label: 우회 허용 기준
     kind: owner
     role: 기획

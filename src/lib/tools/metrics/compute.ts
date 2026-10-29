@@ -1,4 +1,4 @@
-// α 0.05(양측) · 검정력 0.8 고정. 바꾸게 되면 입력 칸으로 빼고 이 상수는 기본값으로
+// α 0.05(양측), 검정력 0.8 고정. 바꾸게 되면 입력 칸으로 빼고 이 상수는 기본값으로
 const Z_ALPHA = 1.959963984540054; // 정규분포 0.975 분위수
 const Z_BETA = 0.8416212335729143; // 정규분포 0.8 분위수
 const MAX = { secondary: 4, guardrails: 3, experiments: 2, variants: 4 };
@@ -54,7 +54,7 @@ export function computeMetrics(out: MetricsOutput, input: MetricsInput): Metrics
 }
 
 const num = (n: number) => n.toLocaleString('ko-KR');
-const check = (labels: string[]) => `[확인 필요: ${labels.join(' · ')}]`;
+const check = (labels: string[]) => `[확인 필요: ${labels.join(', ')}]`;
 const missingFor = (input: MetricsInput, withTraffic: boolean) =>
   [
     input.baselineRate === null && '기준 전환율',
@@ -91,7 +91,7 @@ export function renderMetrics(r: MetricsResult) {
     `## 핵심 지표\n${metricLines([r.core])}`,
     `## 보조 지표\n${metricLines(r.secondary)}`,
     `## 가드레일\n${metricLines(r.guardrails)}`,
-    `## 실험 조건\n${conditionLines(r.input).join('\n')}\n- 유의수준 α 0.05 (양측) · 검정력 0.8\n- 변형당 표본: ${sample}`,
+    `## 실험 조건\n${conditionLines(r.input).join('\n')}\n- 유의수준 α 0.05 (양측), 검정력 0.8\n- 변형당 표본: ${sample}`,
     `## 실험 설계`,
     ...experiments,
   ].join('\n\n');

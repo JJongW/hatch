@@ -15,7 +15,7 @@ export default async function IdeasPage() {
 
   return (
     <>
-      <PageHeader title="아이디어 모음" description={`${items.length}개 · 누르면 기획안으로 이어져요.`} />
+      <PageHeader title="아이디어 모음" description={`${items.length}개, 누르면 기획안으로 이어져요.`} />
       <IdeaList cards={items.map(toCard)} unreadable={unreadable} emptyAction />
     </>
   );

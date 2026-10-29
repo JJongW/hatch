@@ -45,7 +45,7 @@ export async function listDecisions(id: string): Promise<Decision[]> {
 }
 
 function clean(input: DecisionInput): DecisionInput {
-  if (input.status !== 'decided' && input.status !== 'deferred') throw new StorageError('정함 · 보류 중 하나를 골라 주세요.');
+  if (input.status !== 'decided' && input.status !== 'deferred') throw new StorageError('정함이나 보류 중 하나를 골라 주세요.');
   const question = input.question.trim();
   const answer = input.status === 'decided' ? input.answer.trim() : '';
   const reason = input.reason.trim();
@@ -53,7 +53,7 @@ function clean(input: DecisionInput): DecisionInput {
   if (input.status === 'decided' && !answer) throw new StorageError('고른 답을 적어 주세요.');
   if (!reason) throw new StorageError('이유를 적어 주세요.');
   if (question.length > LIMIT.question || answer.length > LIMIT.answer || reason.length > LIMIT.reason) {
-    throw new StorageError('정할 것은 200자, 답 · 이유는 500자까지예요.');
+    throw new StorageError('정할 것은 200자, 답과 이유는 500자까지예요.');
   }
   return {
     question,

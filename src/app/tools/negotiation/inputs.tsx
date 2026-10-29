@@ -24,7 +24,7 @@ export default function NegotiationInputs({ resultId, maxChars }: { resultId: st
         placeholder="상대 요청에 대한 내 답을 적어 주세요."
       />
       <Typography variant="caption1" color="semantic.foreground.neutral.tertiary">
-        최대 {maxChars.toLocaleString('ko-KR')}자 · {answer.length.toLocaleString('ko-KR')}자
+        {answer.length.toLocaleString('ko-KR')}자 / 최대 {maxChars.toLocaleString('ko-KR')}자
       </Typography>
     </FlexBox>
   );

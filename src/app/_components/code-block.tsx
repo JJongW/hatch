@@ -73,7 +73,7 @@ export default function CodeBlock({ lang, code }: { lang: string; code: string }
           leadingContent={state === 'copied' ? <IconCheck /> : <IconCopy />}
           aria-live="polite"
         >
-          {state === 'copied' ? '복사했어요' : state === 'selected' ? '선택했어요 · ⌘C' : '복사'}
+          {state === 'copied' ? '복사했어요' : state === 'selected' ? '선택했어요 (⌘C)' : '복사'}
         </TextButton>
       </FlexBox>
       <Box sx={body}>

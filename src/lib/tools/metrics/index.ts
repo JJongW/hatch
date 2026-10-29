@@ -45,8 +45,8 @@ export const metricsInputSchema = z
 
 export const metricsTool: ToolDef<MetricsInput, MetricsOutput, MetricsResult> = {
   key: 'metrics',
-  label: '지표 · 실험 설계',
-  description: '핵심 · 보조 지표와 가드레일, A/B 실험안을 짜요. 전환율 · 효과 · 하루 대상 수를 넣으면 표본 크기와 기간을 계산해요.',
+  label: '지표와 실험 설계',
+  description: '핵심 지표, 보조 지표, 가드레일과 A/B 실험안을 짜요. 전환율, 효과, 하루 대상 수를 넣으면 표본 크기와 기간을 계산해요.',
   accepts: ['prd', 'plan'],
   runningLabel: '지표와 실험을 설계하는 중이에요 (1~2분)',
   inputSchema: metricsInputSchema,

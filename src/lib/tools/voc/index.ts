@@ -30,7 +30,7 @@ export const vocOutputSchema = z.object({
 export const vocTool: ToolDef<VocInput, VocOutput, VocResult> = {
   key: 'voc',
   label: 'VOC 우선순위',
-  description: 'VOC를 한 줄에 하나씩 붙여넣으면 주제로 묶고 건수 × 심각도로 출발 순위를 매겨요. 최종 우선순위는 고객군 · 목표 · 비용을 보고 직접 정해요.',
+  description: 'VOC를 한 줄에 하나씩 붙여넣으면 주제로 묶고 건수 × 심각도로 출발 순위를 매겨요. 최종 우선순위는 고객군, 목표, 비용을 보고 직접 정해요.',
   inputLabel: '고객 의견',
   accepts: ['plan', 'prd'],
   sourceOptional: true,

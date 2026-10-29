@@ -65,7 +65,7 @@ const sub = (t: string) => (
 function DecisionLine({ d }: { d: Decision }) {
   return (
     <>
-      {d.status === 'decided' ? `${d.question} → ${d.answer}` : `${d.question} · 보류`}
+      {d.status === 'decided' ? `${d.question} → ${d.answer}` : `${d.question} (보류)`}
       <Typography as="span" variant="caption1" color="semantic.foreground.neutral.secondary" sx={{ display: 'block' }}>
         {d.status === 'decided' ? '이유' : '보류 이유'}: {d.reason}
       </Typography>
@@ -137,9 +137,9 @@ export default function IdeaSummary({ summary, docs, ideaId, onOpenDoc, saveDeci
   return (
     <Box sx={gridStyle}>
       <Cell title="해결하려는 문제">{text(problem.text)}</Cell>
-      <Cell title="확인된 근거 · 모르는 것">
+      <Cell title="확인된 근거와 모르는 것">
         <FlexBox flexDirection="column" gap="8px">
-          {text(evidence.voc ? `고객 의견 ${evidence.voc.total}줄 · 출발 순위 1번 ${evidence.voc.top}` : '아직 고객 근거가 없어요.')}
+          {text(evidence.voc ? `고객 의견 ${evidence.voc.total}줄, 출발 순위 1번 ${evidence.voc.top}` : '아직 고객 근거가 없어요.')}
           {unknowns.length > 0 &&
             items([...unknowns.map((u) => `${u.label} ${u.count}곳`), ...(rest > 0 ? [`외 ${rest}개`] : [])])}
         </FlexBox>
@@ -169,7 +169,7 @@ export default function IdeaSummary({ summary, docs, ideaId, onOpenDoc, saveDeci
             )}
             {recorded.length > 0 && (
               <Box>
-                {sub('정한 것 · 보류한 것')}
+                {sub('정한 것과 보류한 것')}
                 {items(
                   recorded.map((d) => (
                     <>
