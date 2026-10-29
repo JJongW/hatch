@@ -1,6 +1,6 @@
 'use client';
 
-import { Box, FlexBox, Tab, TabList, TabListItem, TabPanel, Typography } from '@montage-ui/core';
+import { Box, Tab, TabList, TabListItem, TabPanel, Typography } from '@montage-ui/core';
 
 import type { Theme } from '@montage-ui/core';
 import type { ReactNode } from 'react';
@@ -38,22 +38,23 @@ export default function DocTabs({ docs, running, value, onChange, render }: Prop
           const status = statusOf(doc, running);
           return (
             <TabListItem key={doc.key} value={doc.key}>
-              <FlexBox alignItems="center" gap="6px">
+              <Box as="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                 <Box
+                  as="span"
                   aria-hidden
-                  sx={(theme: Theme) => ({ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: dotColor(status)(theme) })}
+                  sx={(theme: Theme) => ({ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', backgroundColor: dotColor(status)(theme) })}
                 />
                 {doc.label}
-                <Typography variant="caption2" color="semantic.foreground.neutral.tertiary">
+                <Typography as="span" variant="caption2" color="semantic.foreground.neutral.tertiary">
                   {LABELS[status]}
                 </Typography>
-              </FlexBox>
+              </Box>
             </TabListItem>
           );
         })}
       </TabList>
       {docs.map((doc) => (
-        <TabPanel key={doc.key} value={doc.key} mountMode="only-active" sx={{ paddingTop: '16px' }}>
+        <TabPanel key={doc.key} value={doc.key} sx={{ paddingTop: '16px' }}>
           {render(doc)}
         </TabPanel>
       ))}

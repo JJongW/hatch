@@ -21,7 +21,7 @@ const gridStyle = { display: 'grid', gap: '12px', gridTemplateColumns: '1fr', [r
 
 const Cell = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <Box sx={cellStyle}>
-    <Typography as="h3" variant="label1" weight="bold" color="semantic.foreground.neutral.secondary" sx={{ marginBottom: '8px' }}>
+    <Typography as="h2" variant="label1" weight="bold" color="semantic.foreground.neutral.secondary" sx={{ marginBottom: '8px' }}>
       {title}
     </Typography>
     {children}
