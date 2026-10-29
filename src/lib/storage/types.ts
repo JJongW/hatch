@@ -6,7 +6,21 @@ export type Idea = {
   createdAt: string;
   /** ISO 8601 */
   updatedAt: string;
+  context: IdeaContext;
 };
+
+export type IdeaContext = { customer: string; goal: string; constraints: string; facts: string };
+
+/** 맥락 칸 순서 · 이름. 화면과 프롬프트 블록이 같이 쓴다 */
+export const CONTEXT_FIELDS: ReadonlyArray<{ key: keyof IdeaContext; label: string }> = [
+  { key: 'customer', label: '목표 고객' },
+  { key: 'goal', label: '목표 지표' },
+  { key: 'constraints', label: '제약' },
+  { key: 'facts', label: '이미 아는 사실' },
+];
+
+export const EMPTY_CONTEXT: IdeaContext = { customer: '', goal: '', constraints: '', facts: '' };
+export const CONTEXT_MAX = 1000;
 
 export type DocKey = 'plan' | 'roadmap' | 'prd' | 'spec' | 'dev-prompt' | 'design-prompt';
 
@@ -32,4 +46,5 @@ export const DOC_STEPS: ReadonlyArray<DocStep> = [
 export const DOC_FILE_VERSION = 1;
 
 /** idea.md 머리말 형식 버전. 형식을 바꾸면 올리고 읽을 때 변환한다. */
-export const IDEA_FILE_VERSION = 1;
+// 2: context 머리말 추가 (1판은 빈 맥락으로 읽음)
+export const IDEA_FILE_VERSION = 2;

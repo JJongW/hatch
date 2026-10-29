@@ -13,3 +13,8 @@ export const TOOL_RULES = `너는 한국 IT 회사의 시니어 PO를 돕는 동
 - 문장은 짧은 한국어 평서문. 마크다운 문법은 쓰지 않는다 (형식은 코드가 만든다).`;
 
 export const SOURCE_HEADING = '### 입력 문서';
+
+/** 아이디어 맥락 · 결정 블록 제목 (기획안 입력과 도구 입력에 같이 붙는다) */
+export const PROJECT_BLOCK = {
+  context: '### 프로젝트 맥락',
+} as const;

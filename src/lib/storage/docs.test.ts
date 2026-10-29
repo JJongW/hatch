@@ -8,13 +8,16 @@ import {
   createIdea,
   getDocs,
   getRunning,
+  EMPTY_CONTEXT,
   hashOf,
   ideaSource,
   markRunning,
+  projectBlock,
   saveDoc,
   StorageError,
   updateDocBody,
   updateIdea,
+  updateIdeaContext,
 } from '.';
 
 let dir: string;
@@ -128,5 +131,24 @@ describe('running', () => {
     const idea = await createIdea({ title: 'x', memo: '' });
     await fs.writeFile(path.join(dir, 'ideas', idea.id, '.running.json'), content);
     expect(await getRunning(idea.id)).toBeNull();
+  });
+});
+
+describe('ideaSource · projectBlock', () => {
+  it('맥락이 비면 지금 형식과 같다', () => {
+    expect(ideaSource({ title: '동네 클래스', memo: '주말', context: EMPTY_CONTEXT })).toBe('# 동네 클래스\n\n주말');
+    expect(projectBlock(EMPTY_CONTEXT)).toBe('');
+  });
+  it('채운 칸만, 정해진 순서로, 줄바꿈은 한 칸 공백으로', () => {
+    const ctx = { customer: '', goal: '예약\n전환율', constraints: '', facts: '조사 3건' };
+    expect(projectBlock(ctx)).toBe('### 프로젝트 맥락\n- 목표 지표: 예약 전환율\n- 이미 아는 사실: 조사 3건');
+    expect(ideaSource({ title: 't', memo: 'm', context: ctx })).toBe(`# t\n\nm\n\n${projectBlock(ctx)}`);
+  });
+  it('맥락을 바꾸면 기획안이 stale', async () => {
+    const idea = await createIdea({ title: 'x', memo: '' });
+    await saveDoc(idea.id, 'plan', '기획', { sourceHash: hashOf(ideaSource(idea)) });
+    expect((await getDocs(idea.id))[0].stale).toBe(false);
+    await updateIdeaContext(idea.id, { customer: '직장인', goal: '', constraints: '', facts: '' });
+    expect((await getDocs(idea.id))[0].stale).toBe(true);
   });
 });

@@ -5,14 +5,25 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import matter from 'gray-matter';
 
+import { PROJECT_BLOCK } from '@/lib/prompts/context';
+
 import { getIdea, StorageError } from './ideas';
 import { assertValidId } from './ids';
 import { ideaDir, isMissing } from './paths';
-import { DOC_FILE_VERSION, DOC_STEPS, type Doc, type DocKey, type Idea } from './types';
+import { CONTEXT_FIELDS, DOC_FILE_VERSION, DOC_STEPS, type Doc, type DocKey, type Idea, type IdeaContext } from './types';
 
 const RUNNING_TTL_MS = 10 * 60_000;
 
-export const ideaSource = (idea: Pick<Idea, 'title' | 'memo'>) => `# ${idea.title}\n\n${idea.memo}`.trim();
+const oneLine = (s: string) => s.trim().replace(/\s*\n\s*/g, ' ');
+
+/** 맥락 블록. 채운 칸이 없으면 '' — 그래야 맥락 없는 아이디어의 입력 · 해시가 그대로다 */
+export function projectBlock(context: IdeaContext): string {
+  const lines = CONTEXT_FIELDS.filter((f) => context[f.key].trim()).map((f) => `- ${f.label}: ${oneLine(context[f.key])}`);
+  return lines.length ? `${PROJECT_BLOCK.context}\n${lines.join('\n')}` : '';
+}
+
+export const ideaSource = (idea: Pick<Idea, 'title' | 'memo' | 'context'>) =>
+  [`# ${idea.title}\n\n${idea.memo}`.trim(), projectBlock(idea.context)].filter(Boolean).join('\n\n');
 export const hashOf = (text: string) => crypto.createHash('sha256').update(text.trim()).digest('hex').slice(0, 12);
 
 const stepOf = (key: DocKey) => DOC_STEPS.find((s) => s.key === key)!;
