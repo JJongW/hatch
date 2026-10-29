@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import localFont from 'next/font/local';
 import type { PropsWithChildren } from 'react';
 
-import { isDemo, REPO_URL } from '@/lib/demo';
+import { isDemo } from '@/lib/demo';
 
 import AppShell from './_components/app-shell';
 import Providers from './providers';
@@ -34,7 +34,7 @@ export default function RootLayout({ children }: PropsWithChildren) {
       </head>
       <body>
         <Providers>
-          <AppShell demo={isDemo() ? { repoUrl: REPO_URL } : undefined}>{children}</AppShell>
+          <AppShell demo={isDemo()}>{children}</AppShell>
         </Providers>
       </body>
     </html>

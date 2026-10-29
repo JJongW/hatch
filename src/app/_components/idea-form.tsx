@@ -5,6 +5,8 @@ import { Button, FlexBox, SectionMessage, TextArea, TextField, Typography } from
 
 import type { FormState } from '../actions';
 
+import { UseLocallyButton, useDemo } from './demo';
+
 type Props = {
   action: (prev: FormState, formData: FormData) => Promise<FormState>;
   submitLabel: string;
@@ -16,6 +18,7 @@ type Props = {
 };
 
 export default function IdeaForm({ action, submitLabel, initial, resetOnSave = false, disabled = false }: Props) {
+  const demo = useDemo();
   const [state, formAction, pending] = useActionState(action, {});
   const values = state.values ?? (resetOnSave ? undefined : initial);
 
@@ -29,9 +32,10 @@ export default function IdeaForm({ action, submitLabel, initial, resetOnSave = f
           defaultValue={values?.title}
           status={state.error ? 'negative' : 'normal'}
           aria-label="아이디어 제목"
-          autoFocus={resetOnSave}
+          autoFocus={resetOnSave && !demo}
+          disabled={demo}
         />
-        <TextArea name="memo" placeholder="메모 (선택)" defaultValue={values?.memo} minRows={3} width="100%" aria-label="메모" />
+        <TextArea name="memo" placeholder="메모 (선택)" defaultValue={values?.memo} minRows={3} width="100%" aria-label="메모" disabled={demo} />
         {state.error && <SectionMessage variant="negative">{state.error}</SectionMessage>}
         {!state.error && state.savedAt && !resetOnSave && (
           <Typography variant="caption1" color="semantic.foreground.positive.primary">
@@ -39,9 +43,13 @@ export default function IdeaForm({ action, submitLabel, initial, resetOnSave = f
           </Typography>
         )}
         <FlexBox justifyContent="flex-end">
-          <Button type="submit" loading={pending} disabled={disabled}>
-            {submitLabel}
-          </Button>
+          {demo ? (
+            <UseLocallyButton />
+          ) : (
+            <Button type="submit" loading={pending} disabled={disabled}>
+              {submitLabel}
+            </Button>
+          )}
         </FlexBox>
       </FlexBox>
     </form>
