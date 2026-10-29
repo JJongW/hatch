@@ -39,7 +39,7 @@ Spec: [docs/specs/2026-10-29-tool-input-order-design.md](../specs/2026-10-29-too
 
 **Interfaces:** `renderVoc(r: VocResult): string` 시그니처 그대로. Task 2 · 3과 독립.
 
-- [ ] **Step 1: 테스트를 새 형식으로** — `voc.test.ts`의 첫 `it` 순서 배열과 이름을 바꾸고 질문 · 점수 없음 검사를 더한다
+- [x] **Step 1: 테스트를 새 형식으로** — `voc.test.ts`의 첫 `it` 순서 배열과 이름을 바꾸고 질문 · 점수 없음 검사를 더한다
 
 ```ts
   it('요약 → 출발 순위 → 볼 것 → 주제별 대표 VOC → 분류 안 됨 순서, "점수"는 쓰지 않는다', () => {
@@ -69,9 +69,9 @@ Spec: [docs/specs/2026-10-29-tool-input-order-design.md](../specs/2026-10-29-too
 ```
   두 번째 `it`(분류 안 됨 없음 · 빈 주제)는 그대로 둔다.
 
-- [ ] **Step 2: 실패 확인** — `npx vitest run src/lib/tools/voc/voc.test.ts` → renderVoc 첫 테스트 FAIL (`## 출발 순위` 없음)
+- [x] **Step 2: 실패 확인** — `npx vitest run src/lib/tools/voc/voc.test.ts` → renderVoc 첫 테스트 FAIL (`## 출발 순위` 없음)
 
-- [ ] **Step 3: `renderVoc` 바꾸기** (`vocLine` · `computeVoc`는 그대로)
+- [x] **Step 3: `renderVoc` 바꾸기** (`vocLine` · `computeVoc`는 그대로)
 
 ```ts
 // 점수는 출발점일 뿐 — 최종 우선순위는 사람이 고객군 · 목표 · 비용을 보고 정한다 (피드백 8)
@@ -101,15 +101,15 @@ export function renderVoc(r: VocResult) {
 ```
   주의: 순서 배열의 `'## 출발 순위\n건수 × …정해요.'` 다음 줄은 빈 줄 뒤 목록이다 — 테스트는 각 조각을 따로 찾으므로 맞는다.
 
-- [ ] **Step 4: 설명 문구** — `src/lib/tools/voc/index.ts`의 `description`을 아래로, 그리고 `inputLabel: '고객 의견',` 줄을 `description` 아래에 추가 (타입은 Task 3에서 생긴다 → **이 줄은 Task 3에서 넣는다**. 여기선 description만)
+- [x] **Step 4: 설명 문구** — `src/lib/tools/voc/index.ts`의 `description`을 아래로, 그리고 `inputLabel: '고객 의견',` 줄을 `description` 아래에 추가 (타입은 Task 3에서 생긴다 → **이 줄은 Task 3에서 넣는다**. 여기선 description만)
 
 ```ts
   description: 'VOC를 한 줄에 하나씩 붙여넣으면 주제로 묶고 건수 × 심각도로 출발 순위를 매겨요. 최종 우선순위는 고객군 · 목표 · 비용을 보고 직접 정해요.',
 ```
 
-- [ ] **Step 5: 통과 확인** — `npx vitest run src/lib/tools/voc` → PASS. 다른 테스트가 옛 문구(`점수 8` · `1위`)를 찾으면 `grep -rn "1위\|점수 " src --include=*.test.ts`로 찾아 새 형식에 맞춘다
+- [x] **Step 5: 통과 확인** — `npx vitest run src/lib/tools/voc` → PASS. 다른 테스트가 옛 문구(`점수 8` · `1위`)를 찾으면 `grep -rn "1위\|점수 " src --include=*.test.ts`로 찾아 새 형식에 맞춘다
 
-- [ ] **Step 6: 커밋**
+- [x] **Step 6: 커밋**
 ```bash
 git add src/lib/tools/voc
 git commit -m "feat(tools): VOC 결과를 출발 순위 + 볼 질문으로 (#41)"
@@ -123,7 +123,7 @@ git commit -m "feat(tools): VOC 결과를 출발 순위 + 볼 질문으로 (#41)
 
 **Interfaces:** `renderNegotiation(r: NegotiationResult): string` 그대로. 독립.
 
-- [ ] **Step 1: 테스트 바꾸기** — `renderNegotiation`의 두 `it`을 아래로
+- [x] **Step 1: 테스트 바꾸기** — `renderNegotiation`의 두 `it`을 아래로
 
 ```ts
   it('1라운드: 상대 → 상대 요청(맨 끝), 점수 칸 없음', () => {
@@ -162,9 +162,9 @@ git commit -m "feat(tools): VOC 결과를 출발 순위 + 볼 질문으로 (#41)
   });
 ```
 
-- [ ] **Step 2: 실패 확인** — `npx vitest run src/lib/tools/negotiation/negotiation.test.ts` → FAIL
+- [x] **Step 2: 실패 확인** — `npx vitest run src/lib/tools/negotiation/negotiation.test.ts` → FAIL
 
-- [ ] **Step 3: `renderNegotiation` 바꾸기** (`totalText` · `quote` · `signed`는 그대로)
+- [x] **Step 3: `renderNegotiation` 바꾸기** (`totalText` · `quote` · `signed`는 그대로)
 
 ```ts
 export function renderNegotiation(r: NegotiationResult) {
@@ -207,16 +207,16 @@ export function renderNegotiation(r: NegotiationResult) {
 }
 ```
 
-- [ ] **Step 4: 설명 문구** — `src/lib/tools/negotiation/index.ts`
+- [x] **Step 4: 설명 문구** — `src/lib/tools/negotiation/index.ts`
 
 ```ts
   description: '문서와 부딪히는 요청을 하는 이해관계자와 라운드마다 협상을 연습해요. 상대 반응과 피드백을 보고 답을 다듬어요. 점수는 참고로만 보여 줘요.',
 ```
   `validate`의 1라운드 안내 `"…상대 요청을 받은 뒤 '내 답 보내기'를 눌러 주세요."`는 그대로 맞다.
 
-- [ ] **Step 5: 통과 확인** — `npx vitest run src/lib/tools/negotiation` → PASS (옛 문구를 찾는 다른 테스트가 있으면 새 형식으로)
+- [x] **Step 5: 통과 확인** — `npx vitest run src/lib/tools/negotiation` → PASS (옛 문구를 찾는 다른 테스트가 있으면 새 형식으로)
 
-- [ ] **Step 6: 커밋**
+- [x] **Step 6: 커밋**
 ```bash
 git add src/lib/tools/negotiation
 git commit -m "feat(tools): 협상 결과는 요청을 맨 끝 · 점수는 참고로 (#41)"
@@ -234,7 +234,7 @@ git commit -m "feat(tools): 협상 결과는 요청을 맨 끝 · 점수는 참�
 - `ToolFrame` props: `continueFields?: React.ReactNode` — 결과 상자 안, 본문 아래 · 이어 실행 버튼 위. 데모면 보이지 않음
 - URL: `sourceOptional` 도구는 `?source=pasted`가 붙여넣기, 파라미터 없음이 문서 없이. 다른 도구는 지금 그대로(없음 = 붙여넣기)
 
-- [ ] **Step 1: 타입 · VOC 정의**
+- [x] **Step 1: 타입 · VOC 정의**
   `types.ts` `ToolDef`에 `runningLabel` 줄 아래:
 ```ts
   inputLabel?: string; // 도구 입력 칸 제목. 기본 '도구 입력'
@@ -242,7 +242,7 @@ git commit -m "feat(tools): 협상 결과는 요청을 맨 끝 · 점수는 참�
   `sourceOptional` 주석 끝에 ` · 입력 칸이 문서 칸보다 위, 처음 고른 값은 '문서 없이' (성질이 갈리는 도구가 생기면 플래그를 나눈다)` 덧붙임.
   `voc/index.ts` description 아래 `inputLabel: '고객 의견',`
 
-- [ ] **Step 2: `load.ts`**
+- [x] **Step 2: `load.ts`**
   - `ToolFrameData.tool`에 `inputLabel: string;` 추가, 반환에 `inputLabel: tool.inputLabel ?? '도구 입력',`
   - `none` 계산을 바꾼다:
 ```ts
@@ -251,7 +251,7 @@ git commit -m "feat(tools): 협상 결과는 요청을 맨 끝 · 점수는 참�
 ```
   - `none` 필드 주석을 "아이디어가 없고 sourceOptional이면 기본 true, ?source=pasted면 false"로
 
-- [ ] **Step 3: `tool-frame.tsx`**
+- [x] **Step 3: `tool-frame.tsx`**
   1. Props에 `continueFields?: React.ReactNode;` (주석: `결과 상자 안 이어 실행 입력 (협상 내 답). 이어 실행 버튼과 같은 조건에서 보인다`) 추가하고 구조 분해에 넣는다
   2. `hrefOf`: 아이디어가 없을 때
 ```ts
@@ -299,16 +299,16 @@ git commit -m "feat(tools): 협상 결과는 요청을 맨 끝 · 점수는 참�
                 )}
 ```
 
-- [ ] **Step 4: 협상 페이지 · 입력**
+- [x] **Step 4: 협상 페이지 · 입력**
   `negotiation/page.tsx`: `inputFields=…` 대신
 ```tsx
       continueFields={data.current ? <NegotiationInputs resultId={data.current.id} maxChars={MAX_ANSWER_CHARS} /> : undefined}
 ```
   `negotiation/inputs.tsx`: `resultId: string`(null 없음)으로, 주석 "내 답 칸. 결과 상자 안에 놓인다 — 새 라운드 결과로 바뀌면 비운다", placeholder `'상대 요청에 대한 내 답을 적어 주세요.'`, 안내 줄 `최대 {N}자 · {n}자`(“새 협상은 비워 두고…” 문구 삭제), `aria-label="내 답"` 유지.
 
-- [ ] **Step 5: 검사** — `npm run lint && npm run typecheck && npm test && npm run build` 모두 통과
+- [x] **Step 5: 검사** — `npm run lint && npm run typecheck && npm test && npm run build` 모두 통과
 
-- [ ] **Step 6: 커밋**
+- [x] **Step 6: 커밋**
 ```bash
 git add src/lib/tools/types.ts src/lib/tools/voc/index.ts src/app/tools
 git commit -m "feat(tools): VOC는 고객 의견 먼저 · 협상 내 답은 결과 안에서 (#41)"
@@ -320,7 +320,7 @@ git commit -m "feat(tools): VOC는 고객 의견 먼저 · 협상 내 답은 결
 
 **Files:** Modify `demo-data/ideas/20261028-1441-n9rp/tools/voc-20261028T092554-ba66.md`, `negotiation-20261028T092711-2bd4.md`, `negotiation-20261028T092812-05bb.md` (본문만) · Create `docs/decisions/2026-10-29_도구-입력-순서.md` · Modify `docs/decisions/README.md`
 
-- [ ] **Step 1: 본문 다시 만들기** — 일회성 스크립트를 git이 무시하는 곳(`.superpowers/sdd/2026-10-29-tool-input-order/rerender.ts`)에 두고 `npx vite-node -c vitest.config.ts <그 경로>`로 실행. 머리말은 gray-matter로 읽어 그대로 다시 쓰고 `body`만 `render(data)`로:
+- [x] **Step 1: 본문 다시 만들기** — 일회성 스크립트를 git이 무시하는 곳(`.superpowers/sdd/2026-10-29-tool-input-order/rerender.ts`)에 두고 `npx vite-node -c vitest.config.ts <그 경로>`로 실행. 머리말은 gray-matter로 읽어 그대로 다시 쓰고 `body`만 `render(data)`로:
 ```ts
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -342,13 +342,13 @@ for (const f of await fs.readdir(dir)) {
 ```
   `git diff --stat demo-data`로 세 파일만 바뀌었는지, `git diff demo-data | grep '^[-+]data'`가 비었는지(데이터 줄 내용 불변) 확인. 머리말 접힘 모양만 바뀌었으면 괜찮다 — `getToolResult`로 읽히는지는 Step 2 화면에서 확인
 
-- [ ] **Step 2: 화면 확인**
+- [x] **Step 2: 화면 확인**
   - 일반 모드(임시 데이터 폴더 dev): `/tools/voc` → 칸 순서(고객 의견 → 제품 맥락 (선택)) · 기본 "문서 없이" · "직접 붙여넣기" → URL `?source=pasted` · 뒤로 가기 시 문서 없이로 · `/tools/voc?idea=<id>` → 아이디어 탭 · 기획안
   - `/tools/negotiation` 결과 없을 때: 도구 입력 칸 없음. 결과 있을 때: 결과 상자 안 내 답 칸 + "내 답 보내기"
   - `/tools/prd-review` · `/tools/metrics`: 칸 순서 · 붙여넣기 기본 지금과 같음
   - 데모(prod build, `hatch-demo`): VOC 샘플 결과가 새 형식(출발 순위 · 볼 것), 협상 결과 요청이 맨 끝 · 참고 점수, 답 칸 없음. 콘솔(기존 #418 제외)
 
-- [ ] **Step 3: why 기록** — `docs/decisions/2026-10-29_도구-입력-순서.md` (What: VOC는 고객 의견부터 · 협상 답은 요청 바로 아래 · 점수는 출발점/참고 / Why: 피드백 5 · 8 — 실제 작업 순서와 화면 순서가 달랐고, 점수가 사람의 판단을 앞질렀다 / 판단 근거: 사람이 고른 순위 저장은 4a로, 지금은 볼 질문만) + README 표 한 줄. 실수 · 프롬프트 변경이 있었으면 `docs/ai-usage/`도
+- [x] **Step 3: why 기록** — `docs/decisions/2026-10-29_도구-입력-순서.md` (What: VOC는 고객 의견부터 · 협상 답은 요청 바로 아래 · 점수는 출발점/참고 / Why: 피드백 5 · 8 — 실제 작업 순서와 화면 순서가 달랐고, 점수가 사람의 판단을 앞질렀다 / 판단 근거: 사람이 고른 순위 저장은 4a로, 지금은 볼 질문만) + README 표 한 줄. 실수 · 프롬프트 변경이 있었으면 `docs/ai-usage/`도
 
 - [ ] **Step 4: 전체 검증 · 커밋 · PR**
 ```bash
