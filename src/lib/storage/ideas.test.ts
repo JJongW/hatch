@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
   createIdea,
+  EMPTY_CONTEXT,
   getIdea,
   isValidId,
   listIdeas,
@@ -16,6 +17,7 @@ import {
 } from '.';
 import { getDocs } from './docs';
 import { UNFILED } from './folders';
+import { indexMarkdown } from './index-file';
 
 let dir: string;
 
@@ -235,5 +237,32 @@ describe('폴더', () => {
     const idea = await createIdea({ title: 'x', memo: '', folder: '회의' });
     await updateIdea(idea.id, { title: 'y' });
     expect((await getIdea(idea.id))!.folder).toBe('회의');
+  });
+});
+
+describe('목록.md', () => {
+  const read = () => fs.readFile(path.join(dir, '목록.md'), 'utf8');
+
+  it('만들면 쓰이고, 폴더별 · 미분류 맨 끝 · 링크', async () => {
+    const a = await createIdea({ title: '클래스 추천', memo: '퇴근길 도예\n둘째 줄', folder: '취미' });
+    const b = await createIdea({ title: '회의록', memo: '', folder: '' });
+    const md = await read();
+    expect(md.split('\n').slice(0, 2)).toEqual(['# Hatch 아이디어 목록', '자동으로 만든 파일이에요. 고쳐도 다음 저장 때 다시 쓰여요.']);
+    expect(md.indexOf('## 취미')).toBeLessThan(md.indexOf('## 미분류'));
+    expect(md).toContain(`- [클래스 추천](ideas/${a.id}/idea.md) — 퇴근길 도예`);
+    expect(md).toContain(`- [회의록](ideas/${b.id}/idea.md)`);
+  });
+
+  it('고치거나 휴지통으로 보내면 다시 쓰인다', async () => {
+    const a = await createIdea({ title: '처음', memo: '' });
+    await updateIdea(a.id, { title: '바꿈' });
+    expect(await read()).toContain('[바꿈]');
+    await trashIdea(a.id);
+    expect(await read()).not.toContain('[바꿈]');
+  });
+
+  it('메모 첫 줄은 40자까지', () => {
+    const md = indexMarkdown([{ id: '20261029-0000-aaaa', title: 't', memo: '가'.repeat(50), createdAt: '', updatedAt: '', context: EMPTY_CONTEXT, folder: '' }]);
+    expect(md).toContain(`— ${'가'.repeat(40)}…`);
   });
 });
