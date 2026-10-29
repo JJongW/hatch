@@ -86,3 +86,5 @@ export function summarize(input: SummaryInput): Summary {
     next: nextOf(input, unknowns.length),
   };
 }
+
+export { questionView, type QuestionLine, type QuestionView } from './questions';
