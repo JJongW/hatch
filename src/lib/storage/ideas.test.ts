@@ -265,4 +265,21 @@ describe('목록.md', () => {
     const md = indexMarkdown([{ id: '20261029-0000-aaaa', title: 't', memo: '가'.repeat(50), createdAt: '', updatedAt: '', context: EMPTY_CONTEXT, folder: '' }]);
     expect(md).toContain(`— ${'가'.repeat(40)}…`);
   });
+
+  const at = (id: string, memo: string, updatedAt: string, folder = '') =>
+    ({ id, title: id, memo, createdAt: '', updatedAt, context: EMPTY_CONTEXT, folder });
+
+  it('자른 끝 공백은 빼고, 이모지는 반으로 안 잘린다', () => {
+    const md = indexMarkdown([
+      at('a', `${'가'.repeat(39)} 나머지`, ''),
+      at('b', `${'가'.repeat(39)}😀😀`, ''),
+    ]);
+    expect(md).toContain(`— ${'가'.repeat(39)}…`);
+    expect(md).toContain(`— ${'가'.repeat(39)}😀…`);
+  });
+
+  it('폴더 안은 최근 수정순', () => {
+    const md = indexMarkdown([at('old', '', '2026-10-01', '취미'), at('new', '', '2026-10-29', '취미')]);
+    expect(md.indexOf('[new]')).toBeLessThan(md.indexOf('[old]'));
+  });
 });

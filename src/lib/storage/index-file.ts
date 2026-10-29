@@ -18,8 +18,9 @@ export function indexMarkdown(ideas: Idea[]): string {
     lines.push('', `## ${name || UNFILED}`);
     const inFolder = ideas.filter((i) => i.folder === name).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
     for (const i of inFolder) {
-      const first = i.memo.split('\n')[0].trim();
-      const memo = first.length > MEMO_MAX ? `${first.slice(0, MEMO_MAX)}…` : first;
+      // 글자(코드 포인트) 단위로 잘라 이모지가 반으로 깨지지 않게
+      const chars = Array.from(i.memo.split('\n')[0].trim());
+      const memo = chars.length > MEMO_MAX ? `${chars.slice(0, MEMO_MAX).join('').trimEnd()}…` : chars.join('');
       lines.push(`- [${i.title}](ideas/${i.id}/idea.md)${memo ? ` — ${memo}` : ''}`);
     }
   }
