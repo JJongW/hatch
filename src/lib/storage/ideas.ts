@@ -9,6 +9,7 @@ import { getDocs } from './docs';
 import { FOLDER_MAX, UNFILED } from './folders';
 import { ideaDir, ideaFile, ideasDir, isMissing, dataDir } from './paths';
 import { progressOf } from './progress';
+import { writeIndex } from './index-file';
 import { CONTEXT_FIELDS, CONTEXT_MAX, EMPTY_CONTEXT, IDEA_FILE_VERSION, type Idea, type IdeaContext } from './types';
 
 /** 사용자에게 그대로 보여 줘도 되는 오류 (한국어 한 줄). 나머지 오류는 화면에서 일반 안내로 바꾼다. */
@@ -70,6 +71,12 @@ export async function listIdeas(): Promise<{ ideas: Idea[]; unreadable: number }
   return { ideas, unreadable: dirs.length - ideas.length };
 }
 
+/** 목록.md 다시 쓰기. 목록을 못 읽어도 저장이 실패한 것처럼 보이면 안 되므로 감싼다 */
+const refreshIndex = () =>
+  listIdeas()
+    .then(({ ideas }) => writeIndex(ideas))
+    .catch((e) => console.error('[hatch] 목록.md', e));
+
 export async function getIdea(id: string): Promise<Idea | null> {
   assertValidId(id);
   try {
@@ -93,6 +100,7 @@ export async function createIdea(input: { title: string; memo: string; folder?: 
     folder: cleanFolder(input.folder ?? ''),
   };
   await writeIdea(idea);
+  await refreshIndex();
   return idea;
 }
 
@@ -107,6 +115,7 @@ export async function updateIdea(id: string, patch: { title?: string; memo?: str
     updatedAt: new Date().toISOString(),
   };
   await writeIdea(next);
+  await refreshIndex();
   return next;
 }
 
@@ -134,6 +143,7 @@ export async function trashIdea(id: string): Promise<void> {
     target = path.join(trash, `${id}-${n}`);
   }
   await fs.rename(ideaDir(id), target);
+  await refreshIndex();
 }
 
 /** 목록 화면용: 아이디어 + 진행 배지 문구 */
