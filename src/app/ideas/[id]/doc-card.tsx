@@ -6,35 +6,24 @@ import { Box, Button, ContentBadge, FlexBox, Loading, SectionMessage, TextArea, 
 import { UseLocallyButton, useDemo } from '../../_components/demo';
 import DocMarkdown from '../../_components/doc-markdown';
 
-import type { Theme } from '@montage-ui/core';
-
 import type { Doc, DocKey } from '@/lib/storage';
 import type { DocActionState } from '../../actions';
 
 type Props = {
   doc: Doc;
-  index: number;
   /** 이 단계를 만들 수 있나 (GENERATABLE) */
   ready: boolean;
   /** 앞 문서(또는 아이디어)가 있나 */
   hasSource: boolean;
-  /** 지금 생성 중인 문서 (서버 값 또는 다른 카드의 진행) */
+  /** 지금 생성 중인 문서 (서버 값 또는 이 화면에서 시작한 생성) */
   running: DocKey | null;
-  /** 이 카드가 시작/끝날 때 알린다 — 다른 카드 버튼을 막기 위해 */
+  /** 이 카드가 시작/끝날 때 알린다 — 다른 탭의 버튼을 막기 위해 */
   onBusy: (key: DocKey | null) => void;
   generate: (key: DocKey, prev: DocActionState) => Promise<DocActionState>;
   update: (key: DocKey, prev: DocActionState, formData: FormData) => Promise<DocActionState>;
 };
 
-const boxStyle = (theme: Theme) => ({
-  border: `1px solid ${theme.semantic.line.neutral.primary}`,
-  borderRadius: '12px',
-  padding: '16px',
-});
-
-const bodyStyle = { maxHeight: '480px', overflow: 'auto' };
-
-export default function DocCard({ doc, index, ready, hasSource, running, onBusy, generate, update }: Props) {
+export default function DocCard({ doc, ready, hasSource, running, onBusy, generate, update }: Props) {
   const demo = useDemo();
   const [editing, setEditing] = useState(false);
 
@@ -76,11 +65,8 @@ export default function DocCard({ doc, index, ready, hasSource, running, onBusy,
   );
 
   return (
-    <Box sx={boxStyle}>
+    <Box>
       <FlexBox alignItems="center" gap="8px" sx={{ marginBottom: '8px' }}>
-        <Typography variant="headline2" weight="bold">
-          {index + 1}. {doc.label}
-        </Typography>
         <ContentBadge size="xsmall" variant="outlined" color={doc.content === null ? 'neutral' : 'accent'}>
           {doc.content === null ? '아직 없음' : doc.file}
         </ContentBadge>
@@ -122,7 +108,7 @@ export default function DocCard({ doc, index, ready, hasSource, running, onBusy,
         </form>
       ) : (
         <>
-          <Typography as="div" variant="body2" sx={bodyStyle}>
+          <Typography as="div" variant="body2">
             <DocMarkdown>{doc.content}</DocMarkdown>
           </Typography>
           {/* 데모는 읽기만 — 편집 · 다시 만들기 버튼을 아예 보이지 않는다 */}
