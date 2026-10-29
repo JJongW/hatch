@@ -12,6 +12,7 @@ import {
   StorageError,
   trashIdea,
   updateIdea,
+  updateIdeaContext,
 } from '.';
 import { getDocs } from './docs';
 
@@ -38,7 +39,7 @@ describe('createIdea', () => {
 
     const raw = await fs.readFile(path.join(dir, 'ideas', idea.id, 'idea.md'), 'utf8');
     expect(raw).toContain('title: 동네 클래스 추천');
-    expect(raw).toContain('version: 1');
+    expect(raw).toContain('version: 2');
   });
 
   it('빈 제목은 화면에 보여 줄 StorageError로 거부한다', async () => {
@@ -170,5 +171,37 @@ describe('getDocs', () => {
     expect(docs.map((d) => d.key)).toEqual(['plan', 'roadmap', 'prd', 'spec', 'dev-prompt', 'design-prompt']);
     expect(docs.find((d) => d.key === 'prd')?.content).toBe('# PRD');
     expect(docs.find((d) => d.key === 'plan')?.content).toBeNull();
+  });
+});
+
+describe('맥락', () => {
+  it('새 아이디어는 빈 맥락, 저장하면 다시 읽힌다', async () => {
+    const idea = await createIdea({ title: 'x', memo: '' });
+    expect(idea.context).toEqual({ customer: '', goal: '', constraints: '', facts: '' });
+    await updateIdeaContext(idea.id, { customer: '  직장인  ', goal: '예약 전환율', constraints: '', facts: '' });
+    const read = await getIdea(idea.id);
+    expect(read?.context).toEqual({ customer: '직장인', goal: '예약 전환율', constraints: '', facts: '' });
+    expect(read?.title).toBe('x');
+  });
+  it('1판 idea.md(context 없음)는 빈 맥락으로 읽는다', async () => {
+    const id = '20261029-0900-abcd';
+    await fs.mkdir(path.join(dir, 'ideas', id), { recursive: true });
+    await fs.writeFile(
+      path.join(dir, 'ideas', id, 'idea.md'),
+      "---\nid: 20261029-0900-abcd\ntitle: 옛 아이디어\ncreatedAt: '2026-10-29T00:00:00.000Z'\nupdatedAt: '2026-10-29T00:00:00.000Z'\nversion: 1\n---\n메모\n",
+    );
+    expect((await getIdea(id))?.context).toEqual({ customer: '', goal: '', constraints: '', facts: '' });
+  });
+  it('1,000자 넘는 칸은 거부', async () => {
+    const idea = await createIdea({ title: 'x', memo: '' });
+    await expect(
+      updateIdeaContext(idea.id, { customer: 'a'.repeat(1001), goal: '', constraints: '', facts: '' }),
+    ).rejects.toThrow('맥락 칸은 1,000자까지예요.');
+  });
+  it('제목 · 메모를 고쳐도 맥락은 그대로', async () => {
+    const idea = await createIdea({ title: 'x', memo: '' });
+    await updateIdeaContext(idea.id, { customer: '직장인', goal: '', constraints: '', facts: '' });
+    await updateIdea(idea.id, { memo: '새 메모' });
+    expect((await getIdea(idea.id))?.context.customer).toBe('직장인');
   });
 });

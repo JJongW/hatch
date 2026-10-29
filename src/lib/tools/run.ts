@@ -3,7 +3,7 @@ import 'server-only';
 import { BUSY_MESSAGE, ChainError, isClaudeBusy, runClaude } from '@/lib/claude/run';
 import { toClaudeSchema } from '@/lib/claude/schema';
 import { INPUT_HEADING, SOURCE_HEADING, TOOL_RULES } from '@/lib/prompts/context';
-import { getDocs, getToolResult, hashOf, saveToolResult } from '@/lib/storage';
+import { getDocs, getIdea, getToolResult, hashOf, projectBlock, saveToolResult } from '@/lib/storage';
 
 import type { AnyToolDef, ToolSource } from './types';
 
@@ -40,8 +40,19 @@ export async function runTool(
   const invalid = tool.validate?.(parsed.data, prev);
   if (invalid) throw new ChainError(invalid);
 
+  // 아이디어 문서로 실행할 때만 그 아이디어의 맥락을 같이 넘긴다 (붙여넣기 · 문서 없이는 없음)
+  const idea = ideaId ? await getIdea(ideaId) : null;
+  const project = idea ? projectBlock(idea.context) : '';
+
   if (isClaudeBusy()) throw new ChainError(BUSY_MESSAGE);
-  const prompt = [TOOL_RULES, tool.prompt, INPUT_HEADING, text && `${SOURCE_HEADING}\n${text}`, tool.promptInput(parsed.data, prev)]
+  const prompt = [
+    TOOL_RULES,
+    tool.prompt,
+    INPUT_HEADING,
+    text && `${SOURCE_HEADING}\n${text}`,
+    project,
+    tool.promptInput(parsed.data, prev),
+  ]
     .filter(Boolean)
     .join('\n\n');
   const raw = await runClaude({ prompt, jsonSchema: toClaudeSchema(tool.outputSchema) });
@@ -49,6 +60,7 @@ export async function runTool(
   if (!out.success) throw new ChainError('결과 형식이 맞지 않아요. 다시 만들어 주세요.');
 
   const res = tool.compute(out.data, parsed.data, prev);
+  // sourceHash는 입력 문서만 본다. 도구 결과 stale을 만들면 맥락(projectBlock)도 해시에 넣는다
   const resultId = await saveToolResult({
     tool: tool.key, ideaId, source: label, sourceHash: hashOf(text), prevId, data: res, body: tool.render(res),
   });

@@ -8,7 +8,7 @@ import { assertValidId, isValidId, newId } from './ids';
 import { getDocs } from './docs';
 import { ideaDir, ideaFile, ideasDir, isMissing, dataDir } from './paths';
 import { progressOf } from './progress';
-import { IDEA_FILE_VERSION, type Idea } from './types';
+import { CONTEXT_FIELDS, CONTEXT_MAX, EMPTY_CONTEXT, IDEA_FILE_VERSION, type Idea, type IdeaContext } from './types';
 
 /** 사용자에게 그대로 보여 줘도 되는 오류 (한국어 한 줄). 나머지 오류는 화면에서 일반 안내로 바꾼다. */
 export class StorageError extends Error {}
@@ -25,6 +25,14 @@ async function writeIdea(idea: Idea) {
   await fs.writeFile(ideaFile(idea.id), matter.stringify(memo, { ...front, version: IDEA_FILE_VERSION }));
 }
 
+/** 머리말 context → 네 칸 문자열. 없거나 깨진 칸은 '' (1판 호환) */
+function readContext(raw: unknown): IdeaContext {
+  const obj = typeof raw === 'object' && raw !== null ? (raw as Record<string, unknown>) : {};
+  return Object.fromEntries(
+    CONTEXT_FIELDS.map((f) => [f.key, typeof obj[f.key] === 'string' ? (obj[f.key] as string) : '']),
+  ) as IdeaContext;
+}
+
 /** 머리말이 깨졌거나 필수 칸이 없으면 throw */
 async function readIdea(id: string): Promise<Idea> {
   const { data, content } = matter(await fs.readFile(ideaFile(id), 'utf8'));
@@ -34,7 +42,7 @@ async function readIdea(id: string): Promise<Idea> {
   if (typeof title !== 'string' || typeof createdAt !== 'string' || typeof updatedAt !== 'string') {
     throw new Error(`idea.md 머리말이 올바르지 않아요: ${id}`);
   }
-  return { id, title, memo: content.replace(/^\n/, '').trimEnd(), createdAt, updatedAt };
+  return { id, title, memo: content.replace(/^\n/, '').trimEnd(), createdAt, updatedAt, context: readContext(data.context) };
 }
 
 export async function listIdeas(): Promise<{ ideas: Idea[]; unreadable: number }> {
@@ -67,7 +75,7 @@ export async function getIdea(id: string): Promise<Idea | null> {
 export async function createIdea(input: { title: string; memo: string }): Promise<Idea> {
   const now = new Date();
   const at = now.toISOString();
-  const idea: Idea = { id: newId(now), title: cleanTitle(input.title), memo: input.memo.trim(), createdAt: at, updatedAt: at };
+  const idea: Idea = { id: newId(now), title: cleanTitle(input.title), memo: input.memo.trim(), createdAt: at, updatedAt: at, context: EMPTY_CONTEXT };
   await writeIdea(idea);
   return idea;
 }
@@ -81,6 +89,16 @@ export async function updateIdea(id: string, patch: { title?: string; memo?: str
     memo: patch.memo === undefined ? current.memo : patch.memo.trim(),
     updatedAt: new Date().toISOString(),
   };
+  await writeIdea(next);
+  return next;
+}
+
+export async function updateIdeaContext(id: string, ctx: IdeaContext): Promise<Idea> {
+  const current = await getIdea(id);
+  if (!current) throw new StorageError('아이디어를 찾을 수 없어요. 이미 휴지통으로 옮겼을 수 있어요.');
+  const context = Object.fromEntries(CONTEXT_FIELDS.map((f) => [f.key, (ctx[f.key] ?? '').trim()])) as IdeaContext;
+  if (Object.values(context).some((v) => v.length > CONTEXT_MAX)) throw new StorageError('맥락 칸은 1,000자까지예요.');
+  const next: Idea = { ...current, context, updatedAt: new Date().toISOString() };
   await writeIdea(next);
   return next;
 }

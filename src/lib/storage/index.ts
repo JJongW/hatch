@@ -7,6 +7,7 @@ export {
   StorageError,
   trashIdea,
   updateIdea,
+  updateIdeaContext,
 } from './ideas';
 export {
   clearRunning,
@@ -15,10 +16,21 @@ export {
   hashOf,
   ideaSource,
   markRunning,
+  projectBlock,
   saveDoc,
   updateDocBody,
 } from './docs';
 export { isValidId } from './ids';
 export { progressOf } from './progress';
 export { getToolResult, isValidResultId, listToolResults, saveToolResult, type ToolResult } from './tools';
-export { DOC_STEPS, type Doc, type DocKey, type DocStep, type Idea } from './types';
+export {
+  CONTEXT_FIELDS,
+  CONTEXT_MAX,
+  DOC_STEPS,
+  EMPTY_CONTEXT,
+  type Doc,
+  type DocKey,
+  type DocStep,
+  type Idea,
+  type IdeaContext,
+} from './types';

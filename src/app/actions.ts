@@ -5,7 +5,18 @@ import { redirect } from 'next/navigation';
 
 import { ChainError, generateDoc } from '@/lib/chain';
 import { DEMO_MESSAGE, isDemo } from '@/lib/demo';
-import { createIdea, isValidId, StorageError, trashIdea, updateDocBody, updateIdea, type DocKey } from '@/lib/storage';
+import {
+  CONTEXT_FIELDS,
+  createIdea,
+  isValidId,
+  StorageError,
+  trashIdea,
+  updateDocBody,
+  updateIdea,
+  updateIdeaContext,
+  type DocKey,
+  type IdeaContext,
+} from '@/lib/storage';
 import { ChainError as ToolError, runTool, TOOLS, type ToolKey, type ToolSource } from '@/lib/tools';
 
 export type FormState = {
@@ -54,6 +65,20 @@ export async function updateIdeaAction(id: string, _prev: FormState, formData: F
   }
   revalidateIdeas();
   return { values, savedAt: Date.now() };
+}
+
+export type ContextState = { error?: string; values?: IdeaContext; savedAt?: number };
+
+export async function saveContextAction(id: string, _prev: ContextState, formData: FormData): Promise<ContextState> {
+  const values = Object.fromEntries(CONTEXT_FIELDS.map((f) => [f.key, String(formData.get(f.key) ?? '')])) as IdeaContext;
+  if (isDemo()) return { error: DEMO_MESSAGE, values };
+  try {
+    await updateIdeaContext(id, values);
+  } catch (e) {
+    return { error: toMessage(e), values };
+  }
+  revalidateIdeas();
+  return { savedAt: Date.now() };
 }
 
 export async function trashIdeaAction(id: string) {
