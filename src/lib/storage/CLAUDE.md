@@ -10,7 +10,7 @@
 ## 저장 형식
 `$HATCH_DATA_DIR`(기본 `~/Hatch`)`/ideas/<id>/idea.md` (머리말 + 메모, 머리말 `context` = 맥락 4칸 · 2판) · 같은 폴더에 문서 `plan.md` 등 · 삭제는 `.trash/`로 이동
 문서 머리말 `generatedAt · sourceHash · version`(머리말 없는 손글 문서는 stale 아님) · 덮어쓰기 전 이전 판은 `<id>/.history/<key>-<시각>.md` · 생성 중 표시 `<id>/.running.json`(10분 넘으면 무시)
-결정 `<id>/decisions.md` (머리말 `items` = 결정 목록, 고치기 전 판은 `.history/decisions-<시각>.md`)
+결정 `<id>/decisions.md` (머리말 `items` = 결정 목록, `from` = plan · manual · question, 고치기 전 판은 `.history/decisions-<시각>.md`)
 확인 질문 `<id>/questions.md` (머리말 `labels` · `items`, 다시 만들기 전 판은 `.history/questions-<시각>.md`)
 도구 결과 `<id>/tools/<도구>-<시각>-<rand>.md` (붙여넣기는 `$HATCH_DATA_DIR/tools/`) · 머리말 `data` = 계산 결과 JSON
 
