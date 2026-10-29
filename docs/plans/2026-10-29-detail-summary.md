@@ -49,7 +49,7 @@ Spec: [docs/specs/2026-10-29-detail-summary-design.md](../specs/2026-10-29-detai
 - Produces: `TBD: RegExp` (`/\[확인 필요([^\]]*)\]/g`, 그룹 1 = `:` 포함 라벨 부분), `splitTbd` (동작 그대로)
 - Produces: `section(md: string, title: string): string | null` · `firstParagraph(text: string): string` · `countUnknowns(texts: string[]): { label: string; count: number }[]` · `planDecisions(plan: string): string[]` · `UNNAMED = '이름 없음'`
 
-- [ ] **Step 1: 파일 옮기기**
+- [x] **Step 1: 파일 옮기기**
 
 ```bash
 git mv src/app/_components/tbd.ts src/lib/tbd.ts
@@ -64,7 +64,7 @@ git mv src/app/_components/tbd.test.ts src/lib/tbd.test.ts
 export const TBD = /\[확인 필요([^\]]*)\]/g;
 ```
 
-- [ ] **Step 2: 파서 실패 테스트 쓰기** — `src/lib/summary/parse.test.ts`
+- [x] **Step 2: 파서 실패 테스트 쓰기** — `src/lib/summary/parse.test.ts`
 
 ```ts
 import { describe, expect, it } from 'vitest';
@@ -138,12 +138,12 @@ describe('planDecisions', () => {
 });
 ```
 
-- [ ] **Step 3: 실패 확인**
+- [x] **Step 3: 실패 확인**
 
 Run: `npx vitest run src/lib/summary/parse.test.ts`
 Expected: FAIL — `Cannot find module './parse'` (또는 Failed to resolve import)
 
-- [ ] **Step 4: 구현** — `src/lib/summary/parse.ts`
+- [x] **Step 4: 구현** — `src/lib/summary/parse.ts`
 
 ```ts
 import { TBD } from '../tbd';
@@ -192,12 +192,12 @@ export function planDecisions(plan: string): string[] {
 }
 ```
 
-- [ ] **Step 5: 통과 확인**
+- [x] **Step 5: 통과 확인**
 
 Run: `npx vitest run src/lib/summary/parse.test.ts src/lib/tbd.test.ts`
 Expected: PASS (파서 10개 + tbd 5개)
 
-- [ ] **Step 6: 커밋**
+- [x] **Step 6: 커밋**
 
 ```bash
 git add src/lib/tbd.ts src/lib/tbd.test.ts src/app/_components/code-block.tsx src/lib/summary/parse.ts src/lib/summary/parse.test.ts
@@ -237,7 +237,7 @@ export function summarize(input: SummaryInput): Summary;
 export function vocEvidence(data: unknown): VocEvidence | null;
 ```
 
-- [ ] **Step 1: 실패 테스트 쓰기** — `src/lib/summary/index.test.ts`
+- [x] **Step 1: 실패 테스트 쓰기** — `src/lib/summary/index.test.ts`
 
 ```ts
 import { describe, expect, it } from 'vitest';
@@ -337,12 +337,12 @@ describe('vocEvidence', () => {
 });
 ```
 
-- [ ] **Step 2: 실패 확인**
+- [x] **Step 2: 실패 확인**
 
 Run: `npx vitest run src/lib/summary/index.test.ts`
 Expected: FAIL — `./index` 해석 실패
 
-- [ ] **Step 3: 구현** — `src/lib/summary/index.ts`
+- [x] **Step 3: 구현** — `src/lib/summary/index.ts`
 
 ```ts
 // 아이디어 상세 요약 판. 이미 읽은 값만으로 계산한다 — AI 없이 즉시 · 무료 · 같은 문서면 같은 요약
@@ -426,12 +426,12 @@ export function summarize(input: SummaryInput): Summary {
 }
 ```
 
-- [ ] **Step 4: 통과 확인**
+- [x] **Step 4: 통과 확인**
 
 Run: `npx vitest run src/lib/summary`
 Expected: PASS (index 23개 · parse 10개)
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add src/lib/summary/index.ts src/lib/summary/index.test.ts
@@ -449,7 +449,7 @@ git commit -m "feat(bank): 아이디어 요약 · 다음 행동 계산 (#39)"
 - Consumes: `summarize` · `vocEvidence` (`@/lib/summary`), `listToolResults(tool, ideaId, source?)` (`@/lib/storage`, 최신이 [0])
 - Produces: `IdeaDetail`에 새 prop `summary: Summary`, `ideaId: string` (Task 4가 받는다 — 도구 링크용)
 
-- [ ] **Step 1: page.tsx 수정**
+- [x] **Step 1: page.tsx 수정**
 
 import에 추가:
 ```ts
@@ -476,7 +476,7 @@ import { summarize, vocEvidence } from '@/lib/summary';
 ```
 `<IdeaDetail …>`에 `ideaId={id}` · `summary={summary}` 추가, `running={runningKey}`로.
 
-- [ ] **Step 2: 타입 확인** — Task 4 전이라 `IdeaDetail` Props에 없는 prop 오류가 난다. 이 Task는 Task 4와 한 커밋으로 묶는다 (Step 3 없음, Task 4 Step 6에서 같이 커밋).
+- [x] **Step 2: 타입 확인** — Task 4 전이라 `IdeaDetail` Props에 없는 prop 오류가 난다. 이 Task는 Task 4와 한 커밋으로 묶는다 (Step 3 없음, Task 4 Step 6에서 같이 커밋).
 
 ---
 
@@ -491,14 +491,14 @@ import { summarize, vocEvidence } from '@/lib/summary';
 - Montage Tab API (`node_modules/@montage-ui/core/dist/components/tab/types.d.ts`): `Tab {value, onValueChange(tab: string)}` · `TabList {size, resize: 'hug'|'fill'}` · `TabListItem {value}` · `TabPanel {value, mountMode}`
 - Produces: `IdeaSummary({ summary, ideaId, onOpenDoc(key: DocKey) })` · `DocTabs({ docs, value, onChange(key: DocKey), render(doc: Doc): ReactNode })` · `firstTab(docs, next): DocKey`
 
-- [ ] **Step 1: `doc-card.tsx` — 탭 안 내용만**
+- [x] **Step 1: `doc-card.tsx` — 탭 안 내용만**
 
   - `index` prop과 Props 주석 삭제, `boxStyle` · `bodyStyle` 삭제
   - 바깥 `<Box sx={boxStyle}>` → `<Box>`; 제목 `<Typography variant="headline2">{index + 1}. {doc.label}</Typography>` 줄 삭제 (탭 이름이 대신한다). 배지 FlexBox(파일명 · "앞 문서가 바뀌었어요")는 남긴다
   - 본문 `<Typography as="div" variant="body2" sx={bodyStyle}>` → `sx` 없이 (페이지 스크롤 하나로)
   - `Theme` type import가 안 쓰이면 지운다
 
-- [ ] **Step 2: `doc-tabs.tsx` 새로**
+- [x] **Step 2: `doc-tabs.tsx` 새로**
 
 ```tsx
 'use client';
@@ -570,7 +570,7 @@ export default function DocTabs({ docs, running, value, onChange, render }: Prop
 ```
   `theme.semantic.primary.normal`이 없으면 `node_modules/@montage-ui/core`의 테마 타입에서 기본 강조 색 토큰을 찾아 바꾼다 (typecheck가 알려 준다). `findLast`가 lib 설정에 없으면 `[...docs].reverse().find(...)`로.
 
-- [ ] **Step 3: `idea-summary.tsx` 새로**
+- [x] **Step 3: `idea-summary.tsx` 새로**
 
 ```tsx
 'use client';
@@ -688,7 +688,7 @@ export default function IdeaSummary({ summary, docs, ideaId, onOpenDoc }: Props)
 ```
   `Typography`의 `variant="label1"`이 없으면 typecheck 오류 → `body2` + `weight="bold"`로.
 
-- [ ] **Step 4: `idea-detail.tsx` — 머리 · 요약 · 탭 배치**
+- [x] **Step 4: `idea-detail.tsx` — 머리 · 요약 · 탭 배치**
 
   Props에 `ideaId: string` · `summary: Summary` 추가 (`import type { Summary } from '@/lib/summary';`). 본문을 아래로 바꾼다 (busy · generating · useRefreshWhile · confirmTrash는 그대로 둔다):
 
@@ -754,13 +754,14 @@ export default function IdeaSummary({ summary, docs, ideaId, onOpenDoc }: Props)
 ```
   import: `Box` 추가, `IdeaSummary` (`./idea-summary`), `DocTabs, { firstTab }` (`./doc-tabs`), `FormState` 타입은 이미 있음. 메모가 여러 줄이면 PageHeader가 한 덩어리로 보여 준다 — 그대로 둔다(YAGNI).
   탭 패널이 `only-active`라 탭을 옮기면 DocCard 편집 중 상태가 사라진다. 의도된 동작(편집은 탭 하나에서 끝낸다).
+  → **최종 리뷰에서 바꿈**: 탭을 옮기면 생성 오류 문구까지 사라져서 `mountMode`를 빼 기본값(한 번 연 탭은 유지)으로. 탭 안 요소는 Montage가 `<p>`로 감싸므로 모두 span.
 
-- [ ] **Step 5: 검사**
+- [x] **Step 5: 검사**
 
 Run: `npm run lint && npm run typecheck && npm test`
 Expected: 모두 통과. 실패하면 위 Step의 대체 지시(토큰 · variant · findLast)대로 고친다.
 
-- [ ] **Step 6: 커밋 (Task 3 포함)**
+- [x] **Step 6: 커밋 (Task 3 포함)**
 
 ```bash
 git add "src/app/ideas/[id]"
@@ -775,12 +776,12 @@ git commit -m "feat(bank): 상세를 요약 판 + 문서 탭으로 (#39)"
 - Create: `docs/decisions/2026-10-29_상세-요약-판.md`
 - Modify: `docs/decisions/README.md` (표 끝에 한 줄), 이 plan 체크박스
 
-- [ ] **Step 1: 전체 검증**
+- [x] **Step 1: 전체 검증**
 
 Run: `npm run lint && npm run typecheck && npm test && npm run build`
 Expected: 모두 통과 (테스트 146 + 신규)
 
-- [ ] **Step 2: 데모 모드 화면 확인** — launch.json `hatch-demo`(3110, build 필요)로 띄워 샘플 3개를 연다
+- [x] **Step 2: 데모 모드 화면 확인** — launch.json `hatch-demo`(3110, build 필요)로 띄워 샘플 3개를 연다
 
 | 샘플 | 기대 |
 | --- | --- |
@@ -790,9 +791,9 @@ Expected: 모두 통과 (테스트 146 + 신규)
 
   공통: "수정" 버튼 없음, 콘솔 오류 없음(로컬 prod의 기존 React #418은 제외 — main에도 있음), 폭 375px에서 1열 · 탭 가로 스크롤.
 
-- [ ] **Step 3: 일반 모드 확인** — `HATCH_DATA_DIR`를 임시 폴더로 dev 서버, 아이디어 하나 저장 → 상세: "수정" → 폼 · 휴지통 보임 → 저장하면 읽기로 돌아감 · 취소 동작. 기획안 탭의 "기획안 만들기" 버튼이 보이는지만 확인 (실제 생성은 선택).
+- [x] **Step 3: 일반 모드 확인** — `HATCH_DATA_DIR`를 임시 폴더로 dev 서버, 아이디어 하나 저장 → 상세: "수정" → 폼 · 휴지통 보임 → 저장하면 읽기로 돌아감 · 취소 동작. 기획안 탭의 "기획안 만들기" 버튼이 보이는지만 확인 (실제 생성은 선택).
 
-- [ ] **Step 4: why 기록** — `why` 스킬 형식으로 `docs/decisions/2026-10-29_상세-요약-판.md` (What: 상세를 열면 문제 · 근거/모르는 것 · 결정 · 다음 행동이 먼저 보이고 문서는 탭 / Why: 피드백 4 — 문서 나열이라 현재 상태와 다음 행동이 묻힘 / 판단 근거: 코드 요약이라 즉시 · 데모에서도 보임, 결정 칸은 4a 전 임시) + README 표 한 줄
+- [x] **Step 4: why 기록** — `why` 스킬 형식으로 `docs/decisions/2026-10-29_상세-요약-판.md` (What: 상세를 열면 문제 · 근거/모르는 것 · 결정 · 다음 행동이 먼저 보이고 문서는 탭 / Why: 피드백 4 — 문서 나열이라 현재 상태와 다음 행동이 묻힘 / 판단 근거: 코드 요약이라 즉시 · 데모에서도 보임, 결정 칸은 4a 전 임시) + README 표 한 줄
 
 - [ ] **Step 5: 커밋 · push · PR**
 
