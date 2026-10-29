@@ -11,4 +11,5 @@ export const toCard = ({ idea, progress }: { idea: Idea; progress: string }): Id
   summary: idea.memo.split('\n')[0] ?? '',
   date: dateFormat.format(new Date(idea.createdAt)),
   progress,
+  folder: idea.folder,
 });
