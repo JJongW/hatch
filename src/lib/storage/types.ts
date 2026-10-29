@@ -57,8 +57,8 @@ export type Decision = {
   /** 보류면 '' */
   answer: string;
   reason: string;
-  /** 기획안 질문에 답함 / 직접 추가 */
-  from: 'plan' | 'manual';
+  /** 기획안 질문에 답함 / 직접 추가 / 확인 질문에 답함 */
+  from: 'plan' | 'manual' | 'question';
   /** ISO 8601, 고칠 때 갱신 */
   decidedAt: string;
 };

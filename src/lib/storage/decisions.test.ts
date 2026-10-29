@@ -59,4 +59,12 @@ describe('결정', () => {
     await fs.writeFile(file, '---\nitems: [\n---\n');
     expect(await listDecisions(idea.id)).toEqual([]);
   });
+  it("확인 질문에 답한 결정은 from 'question', 모르는 출처는 manual", async () => {
+    const idea = await createIdea({ title: 'x', memo: '' });
+    const a = await saveDecision(idea.id, { ...decided, from: 'question' });
+    expect(a.from).toBe('question');
+    expect((await listDecisions(idea.id))[0].from).toBe('question');
+    const b = await saveDecision(idea.id, { ...decided, from: 'x' as 'manual' });
+    expect(b.from).toBe('manual');
+  });
 });
