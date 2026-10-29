@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import { createIdea, getToolResult, hashOf, listToolResults, saveDoc, updateIdeaContext } from '@/lib/storage';
+import { createIdea, getToolResult, hashOf, listToolResults, saveDecision, saveDoc, updateIdeaContext } from '@/lib/storage';
 
 import { runTool } from './run';
 import type { ToolDef } from './types';
@@ -121,4 +121,14 @@ describe('runTool', () => {
     await expect(runTool(echoTool, { source: { pasted: 'a' }, input: {} })).rejects.toThrow('결과 형식이 맞지 않아요');
     expect(await listToolResults('prd-review', null)).toEqual([]);
   });
+});
+
+it('아이디어 문서로 실행하면 정한 것도 같이 넘긴다', async () => {
+  const idea = await createIdea({ title: 'x', memo: '' });
+  await saveDoc(idea.id, 'prd', 'PRD 본문', { sourceHash: hashOf('x') });
+  await saveDecision(idea.id, { question: '지역은?', status: 'decided', answer: '성수동', reason: '많다', from: 'manual' });
+  const { resultId } = await runTool(echoTool, { source: { ideaId: idea.id, docKey: 'prd' }, input: {} });
+  const prompt = ((await getToolResult(idea.id, resultId))?.data as { echo: string }).echo;
+  expect(prompt).toContain('### 정한 것\n- 지역은? → 성수동 (이유: 많다)');
+  expect(prompt).toContain('"정한 것"은 다시 묻지 말고 따른다');
 });
