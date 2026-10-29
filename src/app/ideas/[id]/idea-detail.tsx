@@ -122,7 +122,13 @@ export default function IdeaDetail({
         removeDecision={removeDecisionAction}
         disabled={generating}
       />
-      <QuestionsPanel view={questions} action={makeQuestionsAction} onBusy={setAsking} disabled={generating} />
+      <QuestionsPanel
+        view={questions}
+        action={makeQuestionsAction}
+        saveDecision={saveDecisionAction}
+        onBusy={setAsking}
+        disabled={generating}
+      />
 
       <SectionTitle>문서</SectionTitle>
       <DocTabs

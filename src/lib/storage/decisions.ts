@@ -21,7 +21,7 @@ function isDecision(v: unknown): v is Decision {
   return (
     ['id', 'question', 'answer', 'reason', 'decidedAt'].every((k) => typeof d[k] === 'string') &&
     (d.status === 'decided' || d.status === 'deferred') &&
-    (d.from === 'plan' || d.from === 'manual')
+    (d.from === 'plan' || d.from === 'manual' || d.from === 'question')
   );
 }
 
@@ -55,7 +55,13 @@ function clean(input: DecisionInput): DecisionInput {
   if (question.length > LIMIT.question || answer.length > LIMIT.answer || reason.length > LIMIT.reason) {
     throw new StorageError('정할 것은 200자, 답 · 이유는 500자까지예요.');
   }
-  return { question, status: input.status, answer, reason, from: input.from === 'plan' ? 'plan' : 'manual' };
+  return {
+    question,
+    status: input.status,
+    answer,
+    reason,
+    from: input.from === 'plan' || input.from === 'question' ? input.from : 'manual',
+  };
 }
 
 async function write(id: string, items: Decision[]) {

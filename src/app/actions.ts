@@ -94,12 +94,13 @@ export async function saveDecisionAction(
   formData: FormData,
 ): Promise<DecisionState> {
   const get = (k: string) => String(formData.get(k) ?? '');
+  const from = get('from');
   const values: DecisionInput = {
     question: get('question'),
     status: get('status') === 'deferred' ? 'deferred' : 'decided',
     answer: get('answer'),
     reason: get('reason'),
-    from: get('from') === 'plan' ? 'plan' : 'manual',
+    from: from === 'plan' || from === 'question' ? from : 'manual',
   };
   if (isDemo()) return { error: DEMO_MESSAGE, values };
   try {

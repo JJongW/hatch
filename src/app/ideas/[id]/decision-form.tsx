@@ -7,8 +7,10 @@ import type { Decision, DecisionInput } from '@/lib/storage';
 import type { DecisionState } from '../../actions';
 
 type Props = {
-  /** 기획안 질문에 답할 때: 질문은 고정 (from='plan') */
+  /** 질문에 답할 때: 질문은 고정 (출처는 `from`) */
   question?: string;
+  /** 질문을 고정할 때의 출처 (기본: 기획안 질문) */
+  from?: 'plan' | 'question';
   /** 수정할 때 처음 값 */
   initial?: Decision;
   action: (prev: DecisionState, formData: FormData) => Promise<DecisionState>;
@@ -16,7 +18,7 @@ type Props = {
   disabled: boolean;
 };
 
-export default function DecisionForm({ question, initial, action, onClose, disabled }: Props) {
+export default function DecisionForm({ question, from: fromProp, initial, action, onClose, disabled }: Props) {
   // 저장에 성공하면 닫는다
   const save = async (prev: DecisionState, fd: FormData) => {
     const next = await action(prev, fd);
@@ -26,8 +28,8 @@ export default function DecisionForm({ question, initial, action, onClose, disab
   const [state, formAction, pending] = useActionState(save, {});
   const v: Partial<DecisionInput> = state.values ?? initial ?? {};
   const [status, setStatus] = useState<Decision['status']>(v.status ?? 'decided');
-  const fixed = question ?? (initial?.from === 'plan' ? initial.question : undefined);
-  const from = question ? 'plan' : (initial?.from ?? 'manual');
+  const fixed = question ?? (initial && initial.from !== 'manual' ? initial.question : undefined);
+  const from = question ? (fromProp ?? 'plan') : (initial?.from ?? 'manual');
 
   return (
     <form action={formAction}>
