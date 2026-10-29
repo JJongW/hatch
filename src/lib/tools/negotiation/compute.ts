@@ -128,6 +128,6 @@ export function renderNegotiation(r: NegotiationResult) {
     );
   }
   // 요청이 맨 끝 — 결과 바로 아래 '내 답' 칸과 붙는다
-  parts.push(`## ${now.round === 1 ? '상대 요청' : '다음 요청'}\n${now.request}\n\n아래에 내 답을 적고 '내 답 보내기'를 눌러 주세요.`);
+  parts.push(`## ${now.round === 1 ? '상대 요청' : '다음 요청'}\n${now.request}`);
   return parts.join('\n\n');
 }

@@ -23,7 +23,7 @@ description: Hatch에 PO 도구(PRD 리뷰 위원회 / VOC 우선순위 / 지표
 
 ## 배운 것
 - `inputSchema`의 모든 제약에 한국어 메시지를 단다. zod 기본 메시지는 영어고 사용자에게 그대로 보인다
-- 도구 입력은 `name`이 있는 평범한 폼 필드를 `inputFields`로 렌더한다. 프레임이 `new FormData(form, submitter)`로 직접 보내므로(`<form action>` 아님) 실행 뒤에도 입력이 남는다
+- 도구 입력은 `name`이 있는 평범한 폼 필드를 `inputFields`로 렌더한다(제목은 `ToolDef.inputLabel`). 결과를 본 뒤에야 의미 있는 입력(협상 내 답)은 `continueFields`로 결과 상자 안 이어 실행 버튼 위에 둔다. 프레임이 `new FormData(form, submitter)`로 직접 보내므로(`<form action>` 아님) 실행 뒤에도 입력이 남는다
 
 - `ToolDef` 훅: 문서 없이도 되는 도구는 `sourceOptional: true` (VOC — 프레임에 '문서 없이' 선택이 생기고 프롬프트에서 문서 블록이 빠진다). C-4 협상: 라운드별 입력 검사는 validate — `validate(input, prev)`가 문자열을 돌려주면 claude 실행 전에 그 메시지로 거절한다. 라운드마다 다른 출력은 한 `outputSchema`에 선택 칸으로 두고 `compute`에서 나눈다. 이어 실행 뒤에도 입력 칸이 남으니 비워야 하면 도구 쪽에서 처리한다
 - 실행 중 안내는 `runningLabel`로 (기본 '실행 중이에요 (1~2분)')

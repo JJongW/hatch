@@ -68,9 +68,8 @@ export default function ToolFrame({ tool, ideas, ideaId, none, results, current,
   const hrefOf = (idea: string | null, result?: string) => {
     const q = new URLSearchParams();
     if (idea) q.set('idea', idea);
-    else if (mode === 'none') {
-      if (!tool.sourceOptional) q.set('source', 'none');
-    } else if (tool.sourceOptional) q.set('source', 'pasted');
+    // 'none' 모드는 sourceOptional 도구에만 있고, 그 기본이 문서 없이라 param이 없다
+    else if (mode === 'pasted' && tool.sourceOptional) q.set('source', 'pasted');
     if (result) q.set('result', result);
     const s = q.toString();
     return s ? `${base}?${s}` : base;
@@ -83,6 +82,8 @@ export default function ToolFrame({ tool, ideas, ideaId, none, results, current,
   // 아이디어가 바뀌면 고른 문서가 목록에 없을 수 있다 → 첫 번째(도구 기본)로
   const selectedDoc = idea?.docs.some((d) => d.key === docKey) ? docKey : (idea?.docs[0]?.key ?? '');
 
+  // 어느 버튼으로 보냈는지: 이어 실행(name=prevId)이면 진행 · 오류를 그 버튼 옆에 보인다
+  const [continued, setContinued] = useState(false);
   const [state, action, pending] = useActionState(async (prev: ToolActionState, fd: FormData) => {
     const next = await run(prev, fd);
     if (next.resultId) router.push(hrefOf(next.ideaId ?? null, next.resultId));
@@ -96,13 +97,29 @@ export default function ToolFrame({ tool, ideas, ideaId, none, results, current,
   const noSource = mode === 'idea' && !selectedDoc; // 아이디어 · 문서를 아직 안 골랐다
   // 받은 결과가 지금 탭의 것일 때만 보인다 (아이디어를 고르기 전 · 탭을 바꿔 이동하는 중엔 숨긴다)
   const showResults = mode === urlMode;
+  const continueVisible = showResults && !!current && !!tool.continueLabel && !demo;
+  // 이어 실행 영역이 안 보이면(결과가 사라진 경우) 위쪽에 보인다
+  const inContinue = continued && continueVisible;
+  const statusNode = (
+    <>
+      {pending && (
+        <FlexBox alignItems="center" gap="8px">
+          <Loading variant="circular" size={20} />
+          <Typography variant="body2">{tool.runningLabel}</Typography>
+        </FlexBox>
+      )}
+    </>
+  );
+  const errorNode = state.error && !pending ? <SectionMessage variant="negative">{state.error}</SectionMessage> : null;
 
   // <form action>은 성공 뒤 form.reset()을 부르고, Montage SegmentedControl · Select가 reset 이벤트에
   // 처음 값으로 돌아가며 onChange를 부른다 (모드 · 아이디어가 바뀌어 페이지 이동). 그래서 onSubmit에서 직접 보낸다.
   // 도구 입력 칸도 실행 뒤 그대로 남는다 (고친 판 다시 실행)
   const submit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const fd = new FormData(e.currentTarget, (e.nativeEvent as SubmitEvent).submitter);
+    const submitter = (e.nativeEvent as SubmitEvent).submitter;
+    setContinued((submitter as HTMLButtonElement | null)?.name === 'prevId');
+    const fd = new FormData(e.currentTarget, submitter);
     startTransition(() => action(fd));
   };
 
@@ -243,19 +260,14 @@ export default function ToolFrame({ tool, ideas, ideaId, none, results, current,
                   실행
                 </Button>
               )}
-              {pending && (
-                <FlexBox alignItems="center" gap="8px">
-                  <Loading variant="circular" size={20} />
-                  <Typography variant="body2">{tool.runningLabel}</Typography>
-                </FlexBox>
-              )}
+              {!inContinue && statusNode}
               {otherBusy && (
                 <Typography variant="body2" color="semantic.foreground.neutral.secondary">
                   다른 문서를 만드는 중이에요. 끝나면 실행할 수 있어요.
                 </Typography>
               )}
             </FlexBox>
-            {state.error && !pending && <SectionMessage variant="negative">{state.error}</SectionMessage>}
+            {!inContinue && errorNode}
           </FlexBox>
 
           {showResults && current && (
@@ -265,14 +277,16 @@ export default function ToolFrame({ tool, ideas, ideaId, none, results, current,
                 <Typography as="div" variant="body2">
                   <DocMarkdown>{current.body}</DocMarkdown>
                 </Typography>
-                {tool.continueLabel && !demo && (
+                {continueVisible && (
                   <FlexBox flexDirection="column" gap="12px" sx={{ marginTop: '12px' }}>
                     {continueFields && (
                       <fieldset disabled={blocked} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
                         {continueFields}
                       </fieldset>
                     )}
-                    <FlexBox justifyContent="flex-end">
+                    {inContinue && errorNode}
+                    <FlexBox justifyContent="flex-end" alignItems="center" gap="12px">
+                      {inContinue && statusNode}
                       <Button type="submit" name="prevId" value={current.id} variant="outlined" color="assistive" size="small" disabled={blocked || noSource}>
                         {tool.continueLabel}
                       </Button>

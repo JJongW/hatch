@@ -98,7 +98,8 @@ describe('renderNegotiation', () => {
     const md = renderNegotiation(round1());
     expect(md.indexOf('## 상대\n- 역할: 영업 본부장')).toBe(0);
     expect(md).toContain('## 상대 요청\n엑셀 내보내기를 넣어 주세요.');
-    expect(md.trimEnd().endsWith("아래에 내 답을 적고 '내 답 보내기'를 눌러 주세요.")).toBe(true);
+    expect(md.trimEnd().endsWith('엑셀 내보내기를 넣어 주세요.')).toBe(true);
+    expect(md).not.toContain('내 답 보내기');
     expect(md).not.toContain('점수');
     expect(md).not.toContain('## 지난 대화');
   });
