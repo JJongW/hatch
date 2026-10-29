@@ -60,6 +60,7 @@ export async function runTool(
   if (!out.success) throw new ChainError('결과 형식이 맞지 않아요. 다시 만들어 주세요.');
 
   const res = tool.compute(out.data, parsed.data, prev);
+  // sourceHash는 입력 문서만 본다. 도구 결과 stale을 만들면 맥락(projectBlock)도 해시에 넣는다
   const resultId = await saveToolResult({
     tool: tool.key, ideaId, source: label, sourceHash: hashOf(text), prevId, data: res, body: tool.render(res),
   });

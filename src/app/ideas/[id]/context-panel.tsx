@@ -25,46 +25,51 @@ const PLACEHOLDER: Record<keyof IdeaContext, string> = {
   facts: '조사 · 데이터로 확인한 것',
 };
 
-export default function ContextPanel({ context, fields, action, disabled }: Props) {
-  const demo = useDemo();
-  const [editing, setEditing] = useState(false);
+/** 수정 중에만 마운트된다 — 열 때마다 useActionState가 새로 시작해 저장본 · 빈 오류로 돌아온다 */
+function ContextForm({ context, fields, action, disabled, onClose }: Props & { onClose: () => void }) {
   // 저장에 성공하면 읽기로 돌아간다
   const save = async (prev: ContextState, fd: FormData) => {
     const next = await action(prev, fd);
-    if (!next.error) setEditing(false);
+    if (!next.error) onClose();
     return next;
   };
   const [state, formAction, pending] = useActionState(save, {});
+  const values = state.values ?? context;
+  return (
+    <Box>
+      <SectionTitle>프로젝트 맥락</SectionTitle>
+      <form action={formAction}>
+        <FlexBox flexDirection="column" gap="12px">
+          {fields.map((f) => (
+            <FlexBox key={f.key} flexDirection="column" gap="4px">
+              <Typography as="label" htmlFor={`ctx-${f.key}`} variant="label1" weight="bold">
+                {f.label}
+              </Typography>
+              <TextArea id={`ctx-${f.key}`} name={f.key} defaultValue={values[f.key]} placeholder={PLACEHOLDER[f.key]} minRows={2} width="100%" />
+            </FlexBox>
+          ))}
+          {state.error && <SectionMessage variant="negative">{state.error}</SectionMessage>}
+          <FlexBox justifyContent="flex-end" gap="8px">
+            <Button size="small" variant="outlined" color="assistive" onClick={onClose} disabled={pending}>
+              취소
+            </Button>
+            <Button type="submit" size="small" loading={pending} disabled={disabled}>
+              맥락 저장
+            </Button>
+          </FlexBox>
+        </FlexBox>
+      </form>
+    </Box>
+  );
+}
+
+export default function ContextPanel({ context, fields, action, disabled }: Props) {
+  const demo = useDemo();
+  const [editing, setEditing] = useState(false);
   const filled = fields.filter((f) => context[f.key]);
 
   if (editing) {
-    const values = state.values ?? context;
-    return (
-      <Box>
-        <SectionTitle>프로젝트 맥락</SectionTitle>
-        <form action={formAction}>
-          <FlexBox flexDirection="column" gap="12px">
-            {fields.map((f) => (
-              <FlexBox key={f.key} flexDirection="column" gap="4px">
-                <Typography as="label" htmlFor={`ctx-${f.key}`} variant="label1" weight="bold">
-                  {f.label}
-                </Typography>
-                <TextArea id={`ctx-${f.key}`} name={f.key} defaultValue={values[f.key]} placeholder={PLACEHOLDER[f.key]} minRows={2} width="100%" />
-              </FlexBox>
-            ))}
-            {state.error && <SectionMessage variant="negative">{state.error}</SectionMessage>}
-            <FlexBox justifyContent="flex-end" gap="8px">
-              <Button size="small" variant="outlined" color="assistive" onClick={() => setEditing(false)}>
-                취소
-              </Button>
-              <Button type="submit" size="small" loading={pending} disabled={disabled}>
-                맥락 저장
-              </Button>
-            </FlexBox>
-          </FlexBox>
-        </form>
-      </Box>
-    );
+    return <ContextForm context={context} fields={fields} action={action} disabled={disabled} onClose={() => setEditing(false)} />;
   }
 
   return (
