@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useEffect } from 'react';
 import { Box, Button, FlexBox, SectionMessage, Typography } from '@montage-ui/core';
 
 import { useDemo } from '../../_components/demo';
@@ -51,14 +51,9 @@ function Lines({ list }: { list: QuestionLine[] }) {
 
 export default function QuestionsPanel({ view, action, onBusy, disabled }: Props) {
   const demo = useDemo();
-  const [state, formAction, pending] = useActionState(async (): Promise<QuestionsState> => {
-    onBusy(true);
-    try {
-      return await action();
-    } finally {
-      onBusy(false);
-    }
-  }, {});
+  const [state, formAction, pending] = useActionState(async (): Promise<QuestionsState> => action(), {});
+  // 액션 안에서 바꾼 상태는 transition이 끝나야 반영되므로, pending을 보고 위에 알린다
+  useEffect(() => onBusy(pending), [pending, onBusy]);
   if (!view.made && (demo || view.labelTotal === 0)) return null;
 
   const make = (label: string) => (
