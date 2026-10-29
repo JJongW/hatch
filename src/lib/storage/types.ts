@@ -64,3 +64,27 @@ export type Decision = {
 };
 export type DecisionInput = Pick<Decision, 'question' | 'status' | 'answer' | 'reason' | 'from'>;
 export const DECISION_FILE_VERSION = 1;
+
+/** 확인 질문 담당 역할 (화면 묶음 순서) */
+export const QUESTION_ROLES = ['기획', '개발', '디자인', '데이터', '법무', '운영'] as const;
+export type QuestionRole = (typeof QUESTION_ROLES)[number];
+
+export type QuestionItem = {
+  /** 문서의 `[확인 필요: 라벨]` 라벨 그대로 */
+  label: string;
+  /** 고객에게 물을 것 / 담당자에게 확인할 것 */
+  kind: 'customer' | 'owner';
+  /** owner면 역할, customer면 '' */
+  role: QuestionRole | '';
+  /** 한 문장, 최대 QUESTION_MAX자 (결정 "정할 것" 한도와 같음) */
+  question: string;
+};
+export type QuestionSet = {
+  /** ISO 8601 */
+  createdAt: string;
+  /** 만들 때 넣은 라벨 (새 라벨 감지용) */
+  labels: string[];
+  items: QuestionItem[];
+};
+export const QUESTION_MAX = 200;
+export const QUESTION_FILE_VERSION = 1;

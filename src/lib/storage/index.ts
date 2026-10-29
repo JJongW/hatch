@@ -21,6 +21,7 @@ export {
   updateDocBody,
 } from './docs';
 export { listDecisions, removeDecision, saveDecision } from './decisions';
+export { getQuestions, saveQuestions } from './questions';
 export { isValidId } from './ids';
 export { progressOf } from './progress';
 export { getToolResult, isValidResultId, listToolResults, saveToolResult, type ToolResult } from './tools';
@@ -29,6 +30,8 @@ export {
   CONTEXT_MAX,
   DOC_STEPS,
   EMPTY_CONTEXT,
+  QUESTION_MAX,
+  QUESTION_ROLES,
   type Decision,
   type DecisionInput,
   type Doc,
@@ -36,4 +39,7 @@ export {
   type DocStep,
   type Idea,
   type IdeaContext,
+  type QuestionItem,
+  type QuestionRole,
+  type QuestionSet,
 } from './types';
