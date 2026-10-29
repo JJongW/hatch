@@ -20,7 +20,7 @@ export const prdReviewOutputSchema = z.object({
 export const prdReviewTool: ToolDef<Record<string, never>, PrdReviewOutput, PrdReviewResult> = {
   key: 'prd-review',
   label: 'PRD 리뷰 위원회',
-  description: '개발 · 디자인 · 마케팅 · CS 위원이 반론부터 내고 기준별로 채점해요. 고친 판을 다시 돌리면 전후 차이를 보여 줘요.',
+  description: '개발, 디자인, 마케팅, CS 위원이 반론부터 내고 기준별로 채점해요. 고친 판을 다시 돌리면 전후 차이를 보여 줘요.',
   accepts: ['prd', 'spec', 'plan'],
   continueLabel: '고친 판 다시 리뷰',
   runningLabel: '위원회가 읽는 중이에요 (1~2분)',

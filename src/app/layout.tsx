@@ -18,7 +18,7 @@ const bodyFont = localFont({ src: './fonts/PretendardVariable.woff2', variable: 
 
 export const metadata: Metadata = {
   title: 'Hatch',
-  description: '아이디어 한 줄을 기획안 · PRD · 기능명세 · 프롬프트로 부화시키는 PO용 아이디어 뱅크',
+  description: '아이디어 한 줄을 기획안, PRD, 기능명세, 프롬프트로 부화시키는 PO용 아이디어 뱅크',
 };
 
 export default function RootLayout({ children }: PropsWithChildren) {

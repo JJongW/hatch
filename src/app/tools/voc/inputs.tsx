@@ -20,7 +20,7 @@ export default function VocInputs() {
         placeholder={'한 줄에 VOC 하나씩 붙여넣어 주세요.\n예) 결제하다가 앱이 꺼져요'}
       />
       <Typography variant="caption1" color={count > 200 ? 'semantic.foreground.negative.primary' : 'semantic.foreground.neutral.tertiary'}>
-        최대 200줄 · {count}줄 (빈 줄 제외)
+        {count}줄 / 최대 200줄 (빈 줄 제외)
       </Typography>
     </FlexBox>
   );

@@ -42,7 +42,7 @@ process.stdin.on('end', () => {
       }),
     );
   } else if (mode === 'voc') {
-    const topics = [{ name: '결제', description: '결제 실패 · 환불 문의' }, { name: '검색', description: '원하는 결과가 안 나온다' }, { name: '알림', description: '알림이 너무 많다' }];
+    const topics = [{ name: '결제', description: '결제 실패와 환불 문의' }, { name: '검색', description: '원하는 결과가 안 나온다' }, { name: '알림', description: '알림이 너무 많다' }];
     const items = [[1, '결제', 5], [2, '검색', 3], [3, '결제', 4], [4, '알림', 2], [5, '없는 주제', 3]].map(([line, topic, severity]) => ({ line, topic, severity }));
     console.log(JSON.stringify({ is_error: false, structured_output: { topics, items } }));
   } else if (mode === 'metrics') {

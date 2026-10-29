@@ -32,9 +32,9 @@ describe('결정', () => {
     await expect(saveDecision(idea.id, { ...decided, question: ' ' })).rejects.toThrow('정할 것을 적어 주세요.');
     await expect(saveDecision(idea.id, { ...decided, answer: '' })).rejects.toThrow('고른 답을 적어 주세요.');
     await expect(saveDecision(idea.id, { ...decided, reason: '' })).rejects.toThrow('이유를 적어 주세요.');
-    await expect(saveDecision(idea.id, { ...decided, question: 'a'.repeat(201) })).rejects.toThrow('정할 것은 200자, 답 · 이유는 500자까지예요.');
-    await expect(saveDecision(idea.id, { ...decided, reason: 'a'.repeat(501) })).rejects.toThrow('정할 것은 200자, 답 · 이유는 500자까지예요.');
-    await expect(saveDecision(idea.id, { ...decided, status: 'x' as 'decided' })).rejects.toThrow('정함 · 보류 중 하나를 골라 주세요.');
+    await expect(saveDecision(idea.id, { ...decided, question: 'a'.repeat(201) })).rejects.toThrow('정할 것은 200자, 답과 이유는 500자까지예요.');
+    await expect(saveDecision(idea.id, { ...decided, reason: 'a'.repeat(501) })).rejects.toThrow('정할 것은 200자, 답과 이유는 500자까지예요.');
+    await expect(saveDecision(idea.id, { ...decided, status: 'x' as 'decided' })).rejects.toThrow('정함이나 보류 중 하나를 골라 주세요.');
   });
   it('수정하면 내용 · 시각이 바뀌고 출처 · id는 그대로, 이전 판은 .history에', async () => {
     const idea = await createIdea({ title: 'x', memo: '' });

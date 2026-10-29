@@ -71,12 +71,12 @@ export function renderPrdReview(r: PrdReviewResult) {
   );
   const scoreLines = r.reviewers.map(
     (v) =>
-      `### ${v.reviewer} 위원 · 평균 ${fmt(v.average)}${diff(v.average, r.prev?.reviewers[v.reviewer])}\n` +
+      `### ${v.reviewer} 위원: 평균 ${fmt(v.average)}${diff(v.average, r.prev?.reviewers[v.reviewer])}\n` +
       CRITERIA.map((c) => (v.scores[c] ? `- ${c} ${v.scores[c]!.score} — ${v.scores[c]!.reason}` : `- ${c} 응답 없음`)).join('\n'),
   );
   return [
     `## 요약\n${r.summary}`,
-    `## 반론\n심각도 3 · ${r.severityCounts[3]}건 / 2 · ${r.severityCounts[2]}건 / 1 · ${r.severityCounts[1]}건`,
+    `## 반론\n심각도 3은 ${r.severityCounts[3]}건, 2는 ${r.severityCounts[2]}건, 1은 ${r.severityCounts[1]}건`,
     ...objections,
     `## 점수\n- 전체 평균 ${fmt(r.overall)}${diff(r.overall, r.prev?.overall)}\n` +
       CRITERIA.map((c) => `- ${c} ${fmt(r.criteria[c])}${diff(r.criteria[c], r.prev?.criteria[c])}`).join('\n'),

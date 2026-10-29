@@ -104,7 +104,7 @@ export function renderNegotiation(r: NegotiationResult) {
       `## 상대 반응\n${now.reaction ?? '응답 없음'}`,
       `## 피드백\n${now.feedback ?? '응답 없음'}`,
       // 점수는 판단 대신이 아니라 참고 (피드백 8) — 반응 · 피드백 뒤에 둔다
-      `## 참고 점수 · ${totalText(now)}${r.delta !== null && before ? ` (이전 ${before.total} → ${signed(r.delta)})` : ''}\n` +
+      `## 참고 점수: ${totalText(now)}${r.delta !== null && before ? ` (이전 ${before.total} → ${signed(r.delta)})` : ''}\n` +
         `- 세션 평균 ${r.average === null ? '응답 없음' : `${r.average} / ${MAX_TOTAL}`}\n` +
         CRITERIA.map((c) => {
           const s = now.scores?.[c];
@@ -120,7 +120,7 @@ export function renderNegotiation(r: NegotiationResult) {
           .slice(0, -1)
           .map(
             (t) =>
-              `### ${t.round}라운드${t.round > 1 ? ` · ${totalText(t)}` : ''}\n` +
+              `### ${t.round}라운드${t.round > 1 ? `: ${totalText(t)}` : ''}\n` +
               (t.answer ? `- 내 답: ${t.answer.replace(/\s*\n\s*/g, ' ')}\n- 상대 반응: ${t.reaction ?? '응답 없음'}\n` : '') +
               `- 상대 요청: ${t.request}`,
           )

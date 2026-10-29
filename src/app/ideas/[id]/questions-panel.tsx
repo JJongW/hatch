@@ -47,7 +47,7 @@ function Lines({ list, aside, below }: { list: QuestionLine[]; aside: (q: Questi
           <FlexBox justifyContent="space-between" alignItems="flex-start" gap="8px">
             <span>
               {q.question}
-              {caption(`${q.label} · ${q.count}곳`)}
+              {caption(`${q.label} (${q.count}곳)`)}
             </span>
             {aside(q)}
           </FlexBox>
@@ -98,7 +98,7 @@ export default function QuestionsPanel({ view, action, saveDecision, onBusy, dis
       <FlexBox flexDirection="column" gap="12px" alignItems="flex-start">
         {!view.made ? (
           <>
-            {text(`[확인 필요] ${view.unknownTotal}곳 · 라벨 ${view.labelTotal}개를 고객에게 물을 것과 담당자에게 확인할 것으로 나눠요. 1분쯤 걸려요.`)}
+            {text(`[확인 필요] ${view.unknownTotal}곳, 라벨 ${view.labelTotal}개를 고객에게 물을 것과 담당자에게 확인할 것으로 나눠요. 1분쯤 걸려요.`)}
             {make('질문 목록 만들기')}
           </>
         ) : (
@@ -130,7 +130,7 @@ export default function QuestionsPanel({ view, action, saveDecision, onBusy, dis
             )}
           </>
         )}
-        {skipped.length > 0 && caption(`질문에서 빠진 것: ${skipped.join(' · ')}`)}
+        {skipped.length > 0 && caption(`질문에서 빠진 것: ${skipped.join(', ')}`)}
         {state.error && <SectionMessage variant="negative">{state.error}</SectionMessage>}
       </FlexBox>
     </Box>

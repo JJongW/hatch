@@ -21,8 +21,8 @@ type Props = {
 const PLACEHOLDER: Record<keyof IdeaContext, string> = {
   customer: '누구의 문제를 푸나요?',
   goal: '무엇이 움직이면 성공인가요?',
-  constraints: '일정 · 인력 · 정책처럼 넘으면 안 되는 선',
-  facts: '조사 · 데이터로 확인한 것',
+  constraints: '일정, 인력, 정책처럼 넘으면 안 되는 선',
+  facts: '조사나 데이터로 확인한 것',
 };
 
 /** 수정 중에만 마운트된다 — 열 때마다 useActionState가 새로 시작해 저장본 · 빈 오류로 돌아온다 */

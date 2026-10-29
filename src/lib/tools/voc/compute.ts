@@ -61,17 +61,17 @@ const CHECKS = [
 export function renderVoc(r: VocResult) {
   const topics = r.topics.map(
     (t) =>
-      `### ${t.rank} · ${t.name}\n${t.description}\n\n` +
-      `건수 ${t.count} · 평균 심각도 ${t.average ?? '없음'}\n\n` +
+      `### ${t.rank}. ${t.name}\n${t.description}\n\n` +
+      `건수 ${t.count}, 평균 심각도 ${t.average ?? '없음'}\n\n` +
       (t.top.length ? t.top.map(vocLine).join('\n') : '- 이 주제로 분류된 VOC 없음'),
   );
   return [
-    `## 요약\nVOC ${r.total}건 · 주제 ${r.topics.length}개 · ${UNCLASSIFIED} ${r.unclassified.count}건`,
+    `## 요약\nVOC ${r.total}건, 주제 ${r.topics.length}개, ${UNCLASSIFIED} ${r.unclassified.count}건`,
     `## 출발 순위\n건수 × 평균 심각도로 매긴 출발점이에요. 실제 우선순위는 아래 질문을 보고 정해요.\n\n` +
-      (r.topics.map((t) => `- **${t.rank}** ${t.name} — 건수 ${t.count} · 평균 심각도 ${t.average ?? '없음'} (합 ${t.score})`).join('\n') || '- 주제 없음'),
+      (r.topics.map((t) => `- **${t.rank}** ${t.name} — 건수 ${t.count}, 평균 심각도 ${t.average ?? '없음'} (합 ${t.score})`).join('\n') || '- 주제 없음'),
     `## 순위를 정하기 전에 볼 것\n${CHECKS.map((c) => `- ${c}`).join('\n')}`,
     `## 주제별 대표 VOC`,
     ...topics,
-    ...(r.unclassified.count ? [`## ${UNCLASSIFIED} · ${r.unclassified.count}건\n${r.unclassified.top.map(vocLine).join('\n')}`] : []),
+    ...(r.unclassified.count ? [`## ${UNCLASSIFIED}: ${r.unclassified.count}건\n${r.unclassified.top.map(vocLine).join('\n')}`] : []),
   ].join('\n\n');
 }
