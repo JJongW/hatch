@@ -15,9 +15,9 @@ type Props = {
   ready: boolean;
   /** 앞 문서(또는 아이디어)가 있나 */
   hasSource: boolean;
-  /** 지금 생성 중인 문서 (서버 값 또는 다른 카드의 진행) */
+  /** 지금 생성 중인 문서 (서버 값 또는 이 화면에서 시작한 생성) */
   running: DocKey | null;
-  /** 이 카드가 시작/끝날 때 알린다 — 다른 카드 버튼을 막기 위해 */
+  /** 이 카드가 시작/끝날 때 알린다 — 다른 탭의 버튼을 막기 위해 */
   onBusy: (key: DocKey | null) => void;
   generate: (key: DocKey, prev: DocActionState) => Promise<DocActionState>;
   update: (key: DocKey, prev: DocActionState, formData: FormData) => Promise<DocActionState>;

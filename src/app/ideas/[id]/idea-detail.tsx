@@ -10,7 +10,8 @@ import SectionTitle from '../../_components/section-title';
 import { useRefreshWhile } from '../../_components/use-refresh-while';
 
 import DocCard from './doc-card';
-import DocTabs, { firstTab } from './doc-tabs';
+import DocTabs from './doc-tabs';
+import { firstTab } from './first-tab';
 import IdeaSummary from './idea-summary';
 
 import type { Doc, DocKey } from '@/lib/storage';
@@ -65,14 +66,18 @@ export default function IdeaDetail({
 
   return (
     <>
-      <FlexBox justifyContent="space-between" alignItems="flex-start" gap="12px">
-        <PageHeader title={idea.title} description={idea.memo || undefined} />
-        {!demo && !editing && (
-          <Button size="small" variant="outlined" color="assistive" onClick={() => setEditing(true)} disabled={generating}>
-            수정
-          </Button>
-        )}
-      </FlexBox>
+      {editing ? (
+        <PageHeader title="아이디어 수정" />
+      ) : (
+        <FlexBox justifyContent="space-between" alignItems="flex-start" gap="12px">
+          <PageHeader title={idea.title} description={idea.memo || undefined} />
+          {!demo && (
+            <Button size="small" variant="outlined" color="assistive" onClick={() => setEditing(true)} disabled={generating}>
+              수정
+            </Button>
+          )}
+        </FlexBox>
+      )}
 
       {editing && (
         <Box sx={{ marginBottom: '24px' }}>

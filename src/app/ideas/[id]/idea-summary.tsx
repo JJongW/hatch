@@ -60,14 +60,14 @@ function NextCell({ next, docs, ideaId, onOpenDoc }: { next: NextAction } & Omit
     case 'check-stale':
       return (
         <FlexBox flexDirection="column" gap="8px" alignItems="flex-start">
-          {text(`앞 문서가 바뀌었어요. ${label(next.doc)}이 아직 예전 내용이에요.`)}
+          {text(`앞 문서가 바뀌어서 ${label(next.doc)} 내용이 예전 기준이에요.`)}
           {open(next.doc, `${label(next.doc)} 확인하기`)}
         </FlexBox>
       );
     case 'make-doc':
       return (
         <FlexBox flexDirection="column" gap="8px" alignItems="flex-start">
-          {text(`다음 문서는 ${label(next.doc)}예요.`)}
+          {text(`다음으로 만들 문서: ${label(next.doc)}`)}
           {open(next.doc, `${label(next.doc)} 열기`)}
         </FlexBox>
       );

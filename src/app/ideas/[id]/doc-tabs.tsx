@@ -1,12 +1,11 @@
 'use client';
 
-import { Box, FlexBox, Tab, TabList, TabListItem, TabPanel } from '@montage-ui/core';
+import { Box, FlexBox, Tab, TabList, TabListItem, TabPanel, Typography } from '@montage-ui/core';
 
 import type { Theme } from '@montage-ui/core';
 import type { ReactNode } from 'react';
 
 import type { Doc, DocKey } from '@/lib/storage';
-import type { NextAction } from '@/lib/summary';
 
 type Status = 'has' | 'none' | 'stale' | 'running';
 
@@ -22,12 +21,6 @@ const dotColor = (status: Status) => (theme: Theme) =>
     stale: theme.semantic.foreground.cautionary.primary,
     running: theme.semantic.foreground.neutral.quaternary,
   })[status];
-
-/** 처음 여는 탭: 다음 행동이 가리키는 문서 → 내용 있는 마지막 문서 → 기획안 */
-export function firstTab(docs: Doc[], next: NextAction): DocKey {
-  if ('doc' in next) return next.doc;
-  return docs.findLast((d) => d.content !== null)?.key ?? 'plan';
-}
 
 type Props = {
   docs: Doc[];
@@ -45,12 +38,15 @@ export default function DocTabs({ docs, running, value, onChange, render }: Prop
           const status = statusOf(doc, running);
           return (
             <TabListItem key={doc.key} value={doc.key}>
-              <FlexBox alignItems="center" gap="6px" aria-label={`${doc.label} · ${LABELS[status]}`}>
+              <FlexBox alignItems="center" gap="6px">
                 <Box
                   aria-hidden
                   sx={(theme: Theme) => ({ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: dotColor(status)(theme) })}
                 />
                 {doc.label}
+                <Typography variant="caption2" color="semantic.foreground.neutral.tertiary">
+                  {LABELS[status]}
+                </Typography>
               </FlexBox>
             </TabListItem>
           );
