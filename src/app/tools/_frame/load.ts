@@ -21,6 +21,7 @@ export type ToolFrameData = {
     description: string;
     continueLabel: string | null;
     runningLabel: string;
+    inputLabel: string;
     sourceOptional: boolean;
     /** accepts의 라벨, 문서가 없을 때 안내에 쓴다 */
     acceptsLabels: string[];
@@ -29,7 +30,7 @@ export type ToolFrameData = {
   ideas: { id: string; title: string; docs: { key: DocKey; label: string }[] }[];
   /** ?idea= (유효하지 않으면 null = 붙여넣기) */
   ideaId: string | null;
-  /** ?source=none (아이디어가 없고 sourceOptional일 때만) — 결과 · 지난 결과가 '문서 없이' 것 */
+  /** 아이디어가 없고 sourceOptional이면 기본 true, ?source=pasted면 false — 결과 · 지난 결과가 '문서 없이' 것 */
   none: boolean;
   /** 이 아이디어(또는 붙여넣기)의 이 도구 결과, 최신순. createdAt · source는 표시용 문자열 (문서 이름 또는 '붙여넣기') */
   results: { id: string; createdAt: string; source: string }[];
@@ -64,7 +65,8 @@ export async function loadToolPage(
   );
 
   // 붙여넣기 · 문서 없이 결과는 같은 tools/ 폴더에 있다 → 탭에 맞는 것만
-  const none = ideaId === null && source === 'none' && tool.sourceOptional === true;
+  // 문서 없이 실행하는 도구는 '문서 없이'가 기본, 붙여넣기는 ?source=pasted (spec §2)
+  const none = ideaId === null && tool.sourceOptional === true && source !== 'pasted';
   const only = ideaId !== null ? undefined : none ? 'none' : 'pasted';
   const list = await listToolResults(key, ideaId, only);
   const results = list.map((r) => ({ id: r.id, createdAt: formatDate(r.createdAt), source: labelOf(r.source) }));
@@ -79,6 +81,7 @@ export async function loadToolPage(
       description: tool.description,
       continueLabel: tool.continueLabel ?? null,
       runningLabel: tool.runningLabel ?? '실행 중이에요 (1~2분)',
+      inputLabel: tool.inputLabel ?? '도구 입력',
       sourceOptional: tool.sourceOptional === true,
       acceptsLabels: tool.accepts.map(labelOf),
     },

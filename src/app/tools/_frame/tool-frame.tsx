@@ -34,6 +34,8 @@ type Props = ToolFrameData & {
   run: (prev: ToolActionState, fd: FormData) => Promise<ToolActionState>;
   /** 도구별 입력 칸. name이 프레임 칸(mode · ideaId · docKey · pasted · prevId) 밖이면 전부 도구 입력으로 간다 */
   inputFields?: React.ReactNode;
+  /** 결과 상자 안 이어 실행 입력 (협상 내 답). 이어 실행 버튼과 같은 조건에서 보인다 */
+  continueFields?: React.ReactNode;
 };
 
 type Mode = 'idea' | 'pasted' | 'none';
@@ -50,7 +52,7 @@ const resultBoxStyle = (theme: Theme) => ({
   padding: '16px',
 });
 
-export default function ToolFrame({ tool, ideas, ideaId, none, results, current, busy, run, inputFields }: Props) {
+export default function ToolFrame({ tool, ideas, ideaId, none, results, current, busy, run, inputFields, continueFields }: Props) {
   const router = useRouter();
   const demo = useDemo();
   const base = `/tools/${tool.key}`;
@@ -66,7 +68,9 @@ export default function ToolFrame({ tool, ideas, ideaId, none, results, current,
   const hrefOf = (idea: string | null, result?: string) => {
     const q = new URLSearchParams();
     if (idea) q.set('idea', idea);
-    else if (mode === 'none') q.set('source', 'none');
+    else if (mode === 'none') {
+      if (!tool.sourceOptional) q.set('source', 'none');
+    } else if (tool.sourceOptional) q.set('source', 'pasted');
     if (result) q.set('result', result);
     const s = q.toString();
     return s ? `${base}?${s}` : base;
@@ -106,9 +110,93 @@ export default function ToolFrame({ tool, ideas, ideaId, none, results, current,
     const next: Mode = v === 'pasted' || v === 'none' ? v : 'idea';
     setMode(next);
     // 아이디어 탭은 아이디어를 고를 때 이동한다
-    if (next === 'none' && urlMode !== 'none') router.push(`${base}?source=none`);
-    if (next === 'pasted' && urlMode !== 'pasted') router.push(base);
+    // 'none' 모드는 sourceOptional 도구에만 있으므로 base가 곧 문서 없이다
+    if (next === 'none' && urlMode !== 'none') router.push(base);
+    if (next === 'pasted' && urlMode !== 'pasted') router.push(tool.sourceOptional ? `${base}?source=pasted` : base);
   };
+
+  const sourceSection = (
+    <section>
+      {sectionTitle(tool.sourceOptional ? '제품 맥락 (선택)' : '입력 문서')}
+      <FlexBox flexDirection="column" gap="12px">
+        <SegmentedControl value={mode} onValueChange={changeMode} size="medium">
+          {/* 실행 중 탭을 바꾸면 결과 링크(hrefOf)가 다른 탭 것이 된다 → 실행 중엔 막는다 */}
+          <SegmentedControlItem value="idea" disabled={blocked}>
+            아이디어 문서
+          </SegmentedControlItem>
+          <SegmentedControlItem value="pasted" disabled={blocked}>
+            직접 붙여넣기
+          </SegmentedControlItem>
+          {tool.sourceOptional && (
+            <SegmentedControlItem value="none" disabled={blocked}>
+              문서 없이
+            </SegmentedControlItem>
+          )}
+        </SegmentedControl>
+
+        {mode === 'idea' ? (
+          <FlexBox flexDirection="column" gap="12px">
+            <Select
+              value={ideaId ?? ''}
+              placeholder={ideas.length ? '아이디어를 골라 주세요' : '아직 아이디어가 없어요'}
+              // 같은 값 · 빈 값으로 불려도 이동하지 않는다
+              onChange={(id) => id && id !== ideaId && router.push(hrefOf(id))}
+              disabled={blocked || ideas.length === 0}
+              width="100%"
+              aria-label="아이디어"
+            >
+              {ideas.map((i) => (
+                <Option key={i.id} value={i.id}>
+                  {i.title}
+                </Option>
+              ))}
+            </Select>
+            {idea &&
+              (idea.docs.length === 0 ? (
+                <SectionMessage variant="info">이 도구가 받는 문서({tool.acceptsLabels.join(' · ')})가 아직 없어요.</SectionMessage>
+              ) : (
+                <Select value={selectedDoc} onChange={(k) => k && setDocKey(k)} disabled={blocked} width="100%" aria-label="문서">
+                  {idea.docs.map((d) => (
+                    <Option key={d.key} value={d.key}>
+                      {d.label}
+                    </Option>
+                  ))}
+                </Select>
+              ))}
+          </FlexBox>
+        ) : mode === 'none' ? (
+          <Typography variant="body2" color="semantic.foreground.neutral.secondary">
+            입력 문서 없이 실행해요.
+          </Typography>
+        ) : (
+          <FlexBox flexDirection="column" gap="4px">
+            <TextArea
+              name="pasted"
+              value={pasted}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setPasted(e.target.value)}
+              minRows={10}
+              maxRows={20}
+              width="100%"
+              disabled={blocked || demo}
+              aria-label="붙여넣을 문서"
+              placeholder="검토할 문서를 붙여넣어 주세요."
+            />
+            <Typography variant="caption1" color="semantic.foreground.neutral.tertiary">
+              최대 30,000자 · {pasted.length.toLocaleString('ko-KR')}자
+            </Typography>
+          </FlexBox>
+        )}
+      </FlexBox>
+    </section>
+  );
+  const inputSection = inputFields && (
+    <section>
+      {sectionTitle(tool.inputLabel)}
+      <fieldset disabled={blocked || demo} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
+        {inputFields}
+      </fieldset>
+    </section>
+  );
 
   return (
     <>
@@ -133,86 +221,17 @@ export default function ToolFrame({ tool, ideas, ideaId, none, results, current,
         <input type="hidden" name="docKey" value={mode === 'idea' ? selectedDoc : ''} />
 
         <FlexBox flexDirection="column" gap="32px">
-          <section>
-            {sectionTitle('입력 문서')}
-            <FlexBox flexDirection="column" gap="12px">
-              <SegmentedControl value={mode} onValueChange={changeMode} size="medium">
-                {/* 실행 중 탭을 바꾸면 결과 링크(hrefOf)가 다른 탭 것이 된다 → 실행 중엔 막는다 */}
-                <SegmentedControlItem value="idea" disabled={blocked}>
-                  아이디어 문서
-                </SegmentedControlItem>
-                <SegmentedControlItem value="pasted" disabled={blocked}>
-                  직접 붙여넣기
-                </SegmentedControlItem>
-                {tool.sourceOptional && (
-                  <SegmentedControlItem value="none" disabled={blocked}>
-                    문서 없이
-                  </SegmentedControlItem>
-                )}
-              </SegmentedControl>
-
-              {mode === 'idea' ? (
-                <FlexBox flexDirection="column" gap="12px">
-                  <Select
-                    value={ideaId ?? ''}
-                    placeholder={ideas.length ? '아이디어를 골라 주세요' : '아직 아이디어가 없어요'}
-                    // 같은 값 · 빈 값으로 불려도 이동하지 않는다
-                    onChange={(id) => id && id !== ideaId && router.push(hrefOf(id))}
-                    disabled={blocked || ideas.length === 0}
-                    width="100%"
-                    aria-label="아이디어"
-                  >
-                    {ideas.map((i) => (
-                      <Option key={i.id} value={i.id}>
-                        {i.title}
-                      </Option>
-                    ))}
-                  </Select>
-                  {idea &&
-                    (idea.docs.length === 0 ? (
-                      <SectionMessage variant="info">이 도구가 받는 문서({tool.acceptsLabels.join(' · ')})가 아직 없어요.</SectionMessage>
-                    ) : (
-                      <Select value={selectedDoc} onChange={(k) => k && setDocKey(k)} disabled={blocked} width="100%" aria-label="문서">
-                        {idea.docs.map((d) => (
-                          <Option key={d.key} value={d.key}>
-                            {d.label}
-                          </Option>
-                        ))}
-                      </Select>
-                    ))}
-                </FlexBox>
-              ) : mode === 'none' ? (
-                <Typography variant="body2" color="semantic.foreground.neutral.secondary">
-                  입력 문서 없이 실행해요.
-                </Typography>
-              ) : (
-                <FlexBox flexDirection="column" gap="4px">
-                  <TextArea
-                    name="pasted"
-                    value={pasted}
-                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setPasted(e.target.value)}
-                    minRows={10}
-                    maxRows={20}
-                    width="100%"
-                    disabled={blocked || demo}
-                    aria-label="붙여넣을 문서"
-                    placeholder="검토할 문서를 붙여넣어 주세요."
-                  />
-                  <Typography variant="caption1" color="semantic.foreground.neutral.tertiary">
-                    최대 30,000자 · {pasted.length.toLocaleString('ko-KR')}자
-                  </Typography>
-                </FlexBox>
-              )}
-            </FlexBox>
-          </section>
-
-          {inputFields && (
-            <section>
-              {sectionTitle('도구 입력')}
-              <fieldset disabled={blocked || demo} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
-                {inputFields}
-              </fieldset>
-            </section>
+          {/* 입력이 주인공인 도구(VOC)는 입력 먼저, 문서가 주인공인 도구는 문서 먼저 */}
+          {tool.sourceOptional ? (
+            <>
+              {inputSection}
+              {sourceSection}
+            </>
+          ) : (
+            <>
+              {sourceSection}
+              {inputSection}
+            </>
           )}
 
           <FlexBox flexDirection="column" gap="12px">
@@ -247,10 +266,17 @@ export default function ToolFrame({ tool, ideas, ideaId, none, results, current,
                   <DocMarkdown>{current.body}</DocMarkdown>
                 </Typography>
                 {tool.continueLabel && !demo && (
-                  <FlexBox justifyContent="flex-end" sx={{ marginTop: '12px' }}>
-                    <Button type="submit" name="prevId" value={current.id} variant="outlined" color="assistive" size="small" disabled={blocked || noSource}>
-                      {tool.continueLabel}
-                    </Button>
+                  <FlexBox flexDirection="column" gap="12px" sx={{ marginTop: '12px' }}>
+                    {continueFields && (
+                      <fieldset disabled={blocked} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
+                        {continueFields}
+                      </fieldset>
+                    )}
+                    <FlexBox justifyContent="flex-end">
+                      <Button type="submit" name="prevId" value={current.id} variant="outlined" color="assistive" size="small" disabled={blocked || noSource}>
+                        {tool.continueLabel}
+                      </Button>
+                    </FlexBox>
                   </FlexBox>
                 )}
               </Box>

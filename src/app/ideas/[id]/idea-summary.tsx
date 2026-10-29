@@ -98,7 +98,7 @@ export default function IdeaSummary({ summary, docs, ideaId, onOpenDoc }: Props)
       <Cell title="해결하려는 문제">{text(problem.text)}</Cell>
       <Cell title="확인된 근거 · 모르는 것">
         <FlexBox flexDirection="column" gap="8px">
-          {text(evidence.voc ? `고객 의견 ${evidence.voc.total}줄 · 1위 ${evidence.voc.top}` : '아직 고객 근거가 없어요.')}
+          {text(evidence.voc ? `고객 의견 ${evidence.voc.total}줄 · 출발 순위 1번 ${evidence.voc.top}` : '아직 고객 근거가 없어요.')}
           {unknowns.length > 0 &&
             items([...unknowns.map((u) => `${u.label} ${u.count}곳`), ...(rest > 0 ? [`외 ${rest}개`] : [])])}
         </FlexBox>
