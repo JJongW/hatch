@@ -1,7 +1,8 @@
 /** 한 줄을 일반 글자와 `[확인 필요: …]` 자리로 나눈다 — 프롬프트를 넘기기 전에 채울 곳을 표시하려고 */
 export type Segment = { text: string; tbd: boolean };
 
-const TBD = /\[확인 필요[^\]]*\]/g;
+/** `[확인 필요]` · `[확인 필요: 라벨]`. 그룹 1 = 라벨 부분(앞의 `:` 포함). 닫는 `]`가 없으면 잡지 않는다 */
+export const TBD = /\[확인 필요([^\]]*)\]/g;
 
 export function splitTbd(line: string): Segment[] {
   const out: Segment[] = [];
