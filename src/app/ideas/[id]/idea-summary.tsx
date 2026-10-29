@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { Box, Button, FlexBox, respondMore, Typography } from '@montage-ui/core';
 
@@ -7,8 +8,21 @@ import type { Theme } from '@montage-ui/core';
 
 import type { Decision, Doc, DocKey } from '@/lib/storage';
 import type { NextAction, Summary } from '@/lib/summary';
+import type { DecisionState } from '../../actions';
+import { useDemo } from '../../_components/demo';
+import DecisionForm from './decision-form';
 
-type Props = { summary: Summary; docs: Doc[]; ideaId: string; onOpenDoc: (key: DocKey) => void };
+type Props = {
+  summary: Summary;
+  docs: Doc[];
+  ideaId: string;
+  onOpenDoc: (key: DocKey) => void;
+  saveDecision: (decisionId: string | null, prev: DecisionState, formData: FormData) => Promise<DecisionState>;
+  removeDecision: (decisionId: string) => Promise<void>;
+  disabled: boolean;
+};
+
+type Opening = { kind: 'plan'; question: string } | { kind: 'edit'; id: string } | { kind: 'new' } | null;
 
 const cellStyle = (theme: Theme) => ({
   border: `1px solid ${theme.semantic.line.neutral.primary}`,
@@ -59,7 +73,7 @@ function DecisionLine({ d }: { d: Decision }) {
   );
 }
 
-function NextCell({ next, docs, ideaId, onOpenDoc }: { next: NextAction } & Omit<Props, 'summary'>) {
+function NextCell({ next, docs, ideaId, onOpenDoc }: { next: NextAction } & Pick<Props, 'docs' | 'ideaId' | 'onOpenDoc'>) {
   const label = (key: DocKey) => docs.find((d) => d.key === key)?.label ?? key;
   const open = (key: DocKey, title: string) => (
     <Button size="small" onClick={() => onOpenDoc(key)}>
@@ -107,11 +121,19 @@ function NextCell({ next, docs, ideaId, onOpenDoc }: { next: NextAction } & Omit
   }
 }
 
-export default function IdeaSummary({ summary, docs, ideaId, onOpenDoc }: Props) {
+export default function IdeaSummary({ summary, docs, ideaId, onOpenDoc, saveDecision, removeDecision, disabled }: Props) {
   const { problem, evidence, unknowns, unknownTotal, decisions, next } = summary;
   const rest = unknownTotal - unknowns.length;
   const { open, openMore, recorded } = decisions;
   const hasDecisions = open.length > 0 || recorded.length > 0;
+  const demo = useDemo();
+  const [opening, setOpening] = useState<Opening>(null);
+  const close = () => setOpening(null);
+  const outlined = (label: string, onClick: () => void) => (
+    <Button size="small" variant="outlined" color="assistive" onClick={onClick} disabled={disabled}>
+      {label}
+    </Button>
+  );
   return (
     <Box sx={gridStyle}>
       <Cell title="해결하려는 문제">{text(problem.text)}</Cell>
@@ -122,21 +144,69 @@ export default function IdeaSummary({ summary, docs, ideaId, onOpenDoc }: Props)
             items([...unknowns.map((u) => `${u.label} ${u.count}곳`), ...(rest > 0 ? [`외 ${rest}개`] : [])])}
         </FlexBox>
       </Cell>
-      {hasDecisions && (
+      {(hasDecisions || !demo) && (
         <Cell title="결정">
           <FlexBox flexDirection="column" gap="12px">
+            {!hasDecisions && !demo && text('정할 게 생기면 여기에 남겨요.')}
             {open.length > 0 && (
               <Box>
                 {sub('아직 안 정한 것')}
-                {items([...open, ...(openMore > 0 ? [`외 ${openMore}개`] : [])])}
+                {items([
+                  ...open.map((q) => (
+                    <>
+                      <FlexBox justifyContent="space-between" alignItems="flex-start" gap="8px">
+                        <span>{q}</span>
+                        {!demo && opening === null && outlined('정하기', () => setOpening({ kind: 'plan', question: q }))}
+                      </FlexBox>
+                      {opening?.kind === 'plan' && opening.question === q && (
+                        <DecisionForm question={q} action={saveDecision.bind(null, null)} onClose={close} disabled={disabled} />
+                      )}
+                    </>
+                  )),
+                  ...(openMore > 0 ? [`외 ${openMore}개`] : []),
+                ])}
               </Box>
             )}
             {recorded.length > 0 && (
               <Box>
                 {sub('정한 것 · 보류한 것')}
-                {items(recorded.map((d) => <DecisionLine key={d.id} d={d} />))}
+                {items(
+                  recorded.map((d) => (
+                    <>
+                      <FlexBox justifyContent="space-between" alignItems="flex-start" gap="8px">
+                        <span>
+                          <DecisionLine d={d} />
+                        </span>
+                        {!demo && opening === null && (
+                          <FlexBox gap="4px">
+                            {outlined('수정', () => setOpening({ kind: 'edit', id: d.id }))}
+                            <form
+                              action={() => removeDecision(d.id)}
+                              onSubmit={(e) => {
+                                if (!window.confirm('이 결정을 지울까요? 이전 판은 .history에 남아요.')) e.preventDefault();
+                              }}
+                            >
+                              <Button type="submit" size="small" variant="outlined" color="assistive" disabled={disabled}>
+                                지우기
+                              </Button>
+                            </form>
+                          </FlexBox>
+                        )}
+                      </FlexBox>
+                      {opening?.kind === 'edit' && opening.id === d.id && (
+                        <DecisionForm initial={d} action={saveDecision.bind(null, d.id)} onClose={close} disabled={disabled} />
+                      )}
+                    </>
+                  )),
+                )}
               </Box>
             )}
+            {!demo &&
+              (opening?.kind === 'new' ? (
+                <DecisionForm action={saveDecision.bind(null, null)} onClose={close} disabled={disabled} />
+              ) : (
+                opening === null && <Box>{outlined('결정 직접 추가', () => setOpening({ kind: 'new' }))}</Box>
+              ))}
           </FlexBox>
         </Cell>
       )}

@@ -17,7 +17,7 @@ import IdeaSummary from './idea-summary';
 
 import type { Doc, DocKey, IdeaContext } from '@/lib/storage';
 import type { Summary } from '@/lib/summary';
-import type { ContextState, DocActionState, FormState } from '../../actions';
+import type { ContextState, DecisionState, DocActionState, FormState } from '../../actions';
 
 type Props = {
   idea: { title: string; memo: string };
@@ -25,6 +25,8 @@ type Props = {
   context: IdeaContext;
   contextFields: ReadonlyArray<{ key: keyof IdeaContext; label: string }>;
   saveContextAction: (prev: ContextState, formData: FormData) => Promise<ContextState>;
+  saveDecisionAction: (decisionId: string | null, prev: DecisionState, formData: FormData) => Promise<DecisionState>;
+  removeDecisionAction: (decisionId: string) => Promise<void>;
   summary: Summary;
   docs: Doc[];
   generatable: DocKey[];
@@ -42,6 +44,8 @@ export default function IdeaDetail({
   context,
   contextFields,
   saveContextAction,
+  saveDecisionAction,
+  removeDecisionAction,
   summary,
   docs,
   generatable,
@@ -103,7 +107,15 @@ export default function IdeaDetail({
       )}
 
       <ContextPanel context={context} fields={contextFields} action={saveContextAction} disabled={generating} />
-      <IdeaSummary summary={summary} docs={docs} ideaId={ideaId} onOpenDoc={setTab} />
+      <IdeaSummary
+        summary={summary}
+        docs={docs}
+        ideaId={ideaId}
+        onOpenDoc={setTab}
+        saveDecision={saveDecisionAction}
+        removeDecision={removeDecisionAction}
+        disabled={generating}
+      />
 
       <SectionTitle>문서</SectionTitle>
       <DocTabs

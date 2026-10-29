@@ -5,7 +5,7 @@ import { GENERATABLE } from '@/lib/chain';
 import { CONTEXT_FIELDS, getDocs, getIdea, getRunning, isValidId, listDecisions, listToolResults } from '@/lib/storage';
 import { summarize, vocEvidence } from '@/lib/summary';
 
-import { generateDocAction, saveContextAction, trashIdeaAction, updateDocAction, updateIdeaAction } from '../../actions';
+import { generateDocAction, removeDecisionAction, saveContextAction, saveDecisionAction, trashIdeaAction, updateDocAction, updateIdeaAction } from '../../actions';
 import IdeaDetail from './idea-detail';
 
 // 로컬 전용 · 항상 요청 시 렌더라 정적 셸 검증을 끈다 (docs: route-segment-config/instant, 'Disabling instant')
@@ -43,6 +43,8 @@ export default async function IdeaPage({ params }: { params: Promise<{ id: strin
       context={idea.context}
       contextFields={CONTEXT_FIELDS}
       saveContextAction={saveContextAction.bind(null, id)}
+      saveDecisionAction={saveDecisionAction.bind(null, id)}
+      removeDecisionAction={removeDecisionAction.bind(null, id)}
       summary={summary}
       docs={docs}
       generatable={GENERATABLE}
