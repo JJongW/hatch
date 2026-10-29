@@ -7,7 +7,7 @@ import type { Decision, DecisionInput } from '@/lib/storage';
 import type { DecisionState } from '../../actions';
 
 type Props = {
-  /** 기획안 질문에 답할 때: 질문은 고정 (from='plan') */
+  /** 질문에 답할 때: 질문은 고정 (출처는 `from`) */
   question?: string;
   /** 질문을 고정할 때의 출처 (기본: 기획안 질문) */
   from?: 'plan' | 'question';
