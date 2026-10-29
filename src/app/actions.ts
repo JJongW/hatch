@@ -9,11 +9,14 @@ import {
   CONTEXT_FIELDS,
   createIdea,
   isValidId,
+  removeDecision,
+  saveDecision,
   StorageError,
   trashIdea,
   updateDocBody,
   updateIdea,
   updateIdeaContext,
+  type DecisionInput,
   type DocKey,
   type IdeaContext,
 } from '@/lib/storage';
@@ -79,6 +82,38 @@ export async function saveContextAction(id: string, _prev: ContextState, formDat
   }
   revalidateIdeas();
   return { savedAt: Date.now() };
+}
+
+export type DecisionState = { error?: string; values?: DecisionInput; savedAt?: number };
+
+export async function saveDecisionAction(
+  id: string,
+  decisionId: string | null,
+  _prev: DecisionState,
+  formData: FormData,
+): Promise<DecisionState> {
+  const get = (k: string) => String(formData.get(k) ?? '');
+  const values: DecisionInput = {
+    question: get('question'),
+    status: get('status') === 'deferred' ? 'deferred' : 'decided',
+    answer: get('answer'),
+    reason: get('reason'),
+    from: get('from') === 'plan' ? 'plan' : 'manual',
+  };
+  if (isDemo()) return { error: DEMO_MESSAGE, values };
+  try {
+    await saveDecision(id, values, decisionId ?? undefined);
+  } catch (e) {
+    return { error: toMessage(e), values };
+  }
+  revalidateIdeas();
+  return { savedAt: Date.now() };
+}
+
+export async function removeDecisionAction(id: string, decisionId: string) {
+  if (isDemo()) return;
+  await removeDecision(id, decisionId);
+  revalidateIdeas();
 }
 
 export async function trashIdeaAction(id: string) {

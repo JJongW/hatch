@@ -20,6 +20,7 @@ export {
   saveDoc,
   updateDocBody,
 } from './docs';
+export { listDecisions, removeDecision, saveDecision } from './decisions';
 export { isValidId } from './ids';
 export { progressOf } from './progress';
 export { getToolResult, isValidResultId, listToolResults, saveToolResult, type ToolResult } from './tools';
@@ -28,6 +29,8 @@ export {
   CONTEXT_MAX,
   DOC_STEPS,
   EMPTY_CONTEXT,
+  type Decision,
+  type DecisionInput,
   type Doc,
   type DocKey,
   type DocStep,

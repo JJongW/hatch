@@ -3,7 +3,7 @@ import 'server-only';
 import { BUSY_MESSAGE, ChainError, isClaudeBusy, runClaude } from '@/lib/claude/run';
 import { toClaudeSchema } from '@/lib/claude/schema';
 import { INPUT_HEADING, SOURCE_HEADING, TOOL_RULES } from '@/lib/prompts/context';
-import { getDocs, getIdea, getToolResult, hashOf, projectBlock, saveToolResult } from '@/lib/storage';
+import { getDocs, getIdea, getToolResult, hashOf, listDecisions, projectBlock, saveToolResult } from '@/lib/storage';
 
 import type { AnyToolDef, ToolSource } from './types';
 
@@ -42,7 +42,7 @@ export async function runTool(
 
   // 아이디어 문서로 실행할 때만 그 아이디어의 맥락을 같이 넘긴다 (붙여넣기 · 문서 없이는 없음)
   const idea = ideaId ? await getIdea(ideaId) : null;
-  const project = idea ? projectBlock(idea.context) : '';
+  const project = idea ? projectBlock(idea.context, await listDecisions(idea.id)) : '';
 
   if (isClaudeBusy()) throw new ChainError(BUSY_MESSAGE);
   const prompt = [

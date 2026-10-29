@@ -13,11 +13,13 @@ import {
   ideaSource,
   markRunning,
   projectBlock,
+  saveDecision,
   saveDoc,
   StorageError,
   updateDocBody,
   updateIdea,
   updateIdeaContext,
+  type Decision,
 } from '.';
 
 let dir: string;
@@ -135,6 +137,25 @@ describe('running', () => {
 });
 
 describe('ideaSource · projectBlock', () => {
+  const d = (over: Partial<Decision>): Decision => ({
+    id: 'ab12', question: '지역은?', status: 'decided', answer: '성수동', reason: '공방이 많다', from: 'plan', decidedAt: '2026-10-29T00:00:00.000Z', ...over,
+  });
+  it('정한 것 · 보류한 것 블록, 맥락 다음 순서', () => {
+    const block = projectBlock({ ...EMPTY_CONTEXT, customer: '직장인' }, [
+      d({}),
+      d({ id: 'cd34', question: '결제는?', status: 'deferred', answer: '', reason: '파트너 미정' }),
+    ]);
+    expect(block).toBe(
+      '### 프로젝트 맥락\n- 목표 고객: 직장인\n\n### 정한 것\n- 지역은? → 성수동 (이유: 공방이 많다)\n\n### 보류한 것\n- 결제는? (보류 이유: 파트너 미정)',
+    );
+    expect(projectBlock(EMPTY_CONTEXT, [])).toBe('');
+  });
+  it('결정을 남기면 기획안이 stale', async () => {
+    const idea = await createIdea({ title: 'x', memo: '' });
+    await saveDoc(idea.id, 'plan', '기획', { sourceHash: hashOf(ideaSource(idea)) });
+    await saveDecision(idea.id, { question: '지역은?', status: 'decided', answer: '성수동', reason: '많다', from: 'plan' });
+    expect((await getDocs(idea.id))[0].stale).toBe(true);
+  });
   it('맥락이 비면 지금 형식과 같다', () => {
     expect(ideaSource({ title: '동네 클래스', memo: '주말', context: EMPTY_CONTEXT })).toBe('# 동네 클래스\n\n주말');
     expect(projectBlock(EMPTY_CONTEXT)).toBe('');

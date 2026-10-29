@@ -7,28 +7,34 @@ import matter from 'gray-matter';
 
 import { PROJECT_BLOCK } from '@/lib/prompts/context';
 
+import { listDecisions } from './decisions';
+import { keepHistory } from './history';
 import { getIdea, StorageError } from './ideas';
 import { assertValidId } from './ids';
 import { ideaDir, isMissing } from './paths';
-import { CONTEXT_FIELDS, DOC_FILE_VERSION, DOC_STEPS, type Doc, type DocKey, type Idea, type IdeaContext } from './types';
+import { CONTEXT_FIELDS, DOC_FILE_VERSION, DOC_STEPS, type Decision, type Doc, type DocKey, type Idea, type IdeaContext } from './types';
 
 const RUNNING_TTL_MS = 10 * 60_000;
 
 const oneLine = (s: string) => s.trim().replace(/\s*\n\s*/g, ' ');
 
-/** 맥락 블록. 채운 칸이 없으면 '' — 그래야 맥락 없는 아이디어의 입력 · 해시가 그대로다 */
-export function projectBlock(context: IdeaContext): string {
-  const lines = CONTEXT_FIELDS.filter((f) => context[f.key].trim()).map((f) => `- ${f.label}: ${oneLine(context[f.key])}`);
-  return lines.length ? `${PROJECT_BLOCK.context}\n${lines.join('\n')}` : '';
+/** 맥락 · 정한 것 · 보류한 것 블록. 모두 비면 '' — 그래야 기존 아이디어의 입력 · 해시가 그대로다 */
+export function projectBlock(context: IdeaContext, decisions: Decision[] = []): string {
+  const B = PROJECT_BLOCK;
+  const parts: [string, string[]][] = [
+    [B.context, CONTEXT_FIELDS.filter((f) => context[f.key].trim()).map((f) => `- ${f.label}: ${oneLine(context[f.key])}`)],
+    [B.decided, decisions.filter((d) => d.status === 'decided').map((d) => `- ${oneLine(d.question)} → ${oneLine(d.answer)} (${B.reason}: ${oneLine(d.reason)})`)],
+    [B.deferred, decisions.filter((d) => d.status === 'deferred').map((d) => `- ${oneLine(d.question)} (${B.deferReason}: ${oneLine(d.reason)})`)],
+  ];
+  return parts.filter(([, lines]) => lines.length).map(([h, lines]) => `${h}\n${lines.join('\n')}`).join('\n\n');
 }
 
-export const ideaSource = (idea: Pick<Idea, 'title' | 'memo' | 'context'>) =>
-  [`# ${idea.title}\n\n${idea.memo}`.trim(), projectBlock(idea.context)].filter(Boolean).join('\n\n');
+export const ideaSource = (idea: Pick<Idea, 'title' | 'memo' | 'context'>, decisions: Decision[] = []) =>
+  [`# ${idea.title}\n\n${idea.memo}`.trim(), projectBlock(idea.context, decisions)].filter(Boolean).join('\n\n');
 export const hashOf = (text: string) => crypto.createHash('sha256').update(text.trim()).digest('hex').slice(0, 12);
 
 const stepOf = (key: DocKey) => DOC_STEPS.find((s) => s.key === key)!;
 const docPath = (id: string, key: DocKey) => path.join(ideaDir(id), stepOf(key).file);
-const stamp = () => new Date().toISOString().replace(/[-:]/g, '').replace(/\..+/, ''); // 20261028T091500
 
 /** 본문을 stringify에 넣으면 `---`로 시작할 때 머리말로 다시 읽히므로, 머리말만 만들고 본문은 이어 붙인다 */
 const withFront = (data: Record<string, unknown>, body: string) => matter.stringify('', data) + '\n' + body.trim() + '\n';
@@ -40,19 +46,9 @@ async function readRaw(id: string, key: DocKey) {
   });
 }
 
-/** 덮어쓰기 전에 이전 판을 .history/로 (지우지 않는다) */
-async function keepHistory(id: string, key: DocKey) {
-  const from = docPath(id, key);
-  const exists = await fs.stat(from).then(() => true, () => false);
-  if (!exists) return;
-  const dir = path.join(ideaDir(id), '.history');
-  await fs.mkdir(dir, { recursive: true });
-  await fs.rename(from, path.join(dir, `${key}-${stamp()}-${crypto.randomBytes(2).toString('hex')}.md`));
-}
-
 export async function getDocs(id: string): Promise<Doc[]> {
   assertValidId(id);
-  const idea = await getIdea(id);
+  const [idea, decisions] = await Promise.all([getIdea(id), listDecisions(id)]);
   const parsed = await Promise.all(
     DOC_STEPS.map(async (step) => {
       const raw = await readRaw(id, step.key);
@@ -67,7 +63,7 @@ export async function getDocs(id: string): Promise<Doc[]> {
     }),
   );
   const bodyOf = (from: DocKey | 'idea') =>
-    from === 'idea' ? (idea ? ideaSource(idea) : null) : (parsed.find((p) => p.step.key === from)?.body ?? null);
+    from === 'idea' ? (idea ? ideaSource(idea, decisions) : null) : (parsed.find((p) => p.step.key === from)?.body ?? null);
 
   return parsed.map(({ step, body, sourceHash }) => {
     const source = bodyOf(step.from);
@@ -78,7 +74,7 @@ export async function getDocs(id: string): Promise<Doc[]> {
 
 export async function saveDoc(id: string, key: DocKey, body: string, meta: { sourceHash: string }) {
   assertValidId(id);
-  await keepHistory(id, key);
+  await keepHistory(id, docPath(id, key), key);
   const front = { generatedAt: new Date().toISOString(), sourceHash: meta.sourceHash, version: DOC_FILE_VERSION };
   await fs.writeFile(docPath(id, key), withFront(front, body));
 }
@@ -93,7 +89,7 @@ export async function updateDocBody(id: string, key: DocKey, body: string) {
   } catch {
     // 깨진 머리말은 버리고 본문만 새로 쓴다 (이전 판은 .history에 남음)
   }
-  await keepHistory(id, key);
+  await keepHistory(id, docPath(id, key), key);
   await fs.writeFile(docPath(id, key), withFront(data, body));
 }
 

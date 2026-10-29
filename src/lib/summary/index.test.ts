@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { DOC_STEPS, type Doc, type DocKey } from '@/lib/storage/types';
+import { DOC_STEPS, type Decision, type Doc, type DocKey } from '@/lib/storage/types';
 
 import { summarize, vocEvidence, type SummaryInput } from './index';
 
@@ -16,6 +16,7 @@ const input = (over: Partial<SummaryInput> = {}): SummaryInput => ({
   running: null,
   voc: { total: 30, top: '예약' },
   reviewedPrd: true,
+  decisions: [],
   ...over,
 });
 
@@ -75,10 +76,27 @@ describe('모르는 것 · 결정', () => {
   it('결정은 꼬리표를 뗀 기획안 확인 필요 항목, 최대 5개', () => {
     const plan = '## 확인 필요\n' + Array.from({ length: 6 }, (_, i) => `- 질문${i} [확인 필요: x]`).join('\n');
     const s = summarize(input({ docs: docsWith({ ...ALL, plan }) }));
-    expect(s.decisions).toEqual(['질문0', '질문1', '질문2', '질문3', '질문4']);
+    expect(s.decisions.open).toEqual(['질문0', '질문1', '질문2', '질문3', '질문4']);
   });
   it('기획안이 없으면 결정 없음', () => {
-    expect(summarize(input({ docs: docsWith({}) })).decisions).toEqual([]);
+    expect(summarize(input({ docs: docsWith({}) })).decisions.open).toEqual([]);
+  });
+});
+
+describe('결정 칸', () => {
+  const rec = (question: string, from: Decision['from'] = 'plan'): Decision => ({
+    id: question, question, status: 'decided', answer: 'a', reason: 'r', from, decidedAt: '2026-10-29T00:00:00.000Z',
+  });
+  const plan = '## 확인 필요\n- 지역은? [확인 필요: 지역]\n- 결제는?\n- 1\n- 2\n- 3\n- 4\n- 5\n';
+  it('답한 질문은 아직 안 정한 것에서 빠진다 (공백 차이 무시)', () => {
+    const s = summarize(input({ docs: docsWith({ ...ALL, plan }), decisions: [rec('  지역은?  ')] }));
+    expect(s.decisions.open).toEqual(['결제는?', '1', '2', '3', '4']);
+    expect(s.decisions.openMore).toBe(1);
+    expect(s.decisions.recorded.map((d) => d.question)).toEqual(['  지역은?  ']);
+  });
+  it('직접 추가한 결정은 recorded에만, 기획안 없으면 open은 비어 있다', () => {
+    const s = summarize(input({ docs: docsWith({}), decisions: [rec('가격은?', 'manual')] }));
+    expect(s.decisions).toEqual({ open: [], openMore: 0, recorded: [rec('가격은?', 'manual')] });
   });
 });
 

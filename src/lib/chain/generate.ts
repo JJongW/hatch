@@ -3,7 +3,7 @@ import 'server-only';
 import { toClaudeSchema } from '@/lib/claude/schema';
 import { BUSY_MESSAGE, ChainError, isClaudeBusy, runClaude } from '@/lib/claude/run';
 import {
-  clearRunning, DOC_STEPS, getDocs, getIdea, hashOf, ideaSource, markRunning, saveDoc, type DocKey,
+  clearRunning, DOC_STEPS, getDocs, getIdea, hashOf, ideaSource, listDecisions, markRunning, saveDoc, type DocKey,
 } from '@/lib/storage';
 
 import { buildPrompt } from './build-prompt';
@@ -20,9 +20,10 @@ export async function generateDoc(id: string, key: DocKey) {
   const idea = await getIdea(id);
   if (!idea) throw new ChainError('아이디어를 찾을 수 없어요.');
   const docs = await getDocs(id);
+  const decisions = await listDecisions(id);
   const bodyOf = (k: DocKey) => docs.find((d) => d.key === k)?.content ?? null;
 
-  const source = meta.from === 'idea' ? ideaSource(idea) : bodyOf(meta.from);
+  const source = meta.from === 'idea' ? ideaSource(idea, decisions) : bodyOf(meta.from);
   if (!source) throw new ChainError('앞 문서를 먼저 만들어 주세요.');
 
   const labelOf = (k: DocKey | 'idea') => (k === 'idea' ? '아이디어' : DOC_STEPS.find((s) => s.key === k)!.label);

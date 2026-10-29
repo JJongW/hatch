@@ -32,7 +32,7 @@ export function countUnknowns(texts: string[]): { label: string; count: number }
   return [...counts].map(([label, count]) => ({ label, count })).sort((a, b) => b.count - a.count);
 }
 
-/** 기획안 `## 확인 필요` 절의 `- ` 항목 (끝 꼬리표 뗌). 4a(결정 기록)에서 사람이 고른 결정으로 바뀐다 */
+/** 기획안 `## 확인 필요` 절의 `- ` 항목 (끝 꼬리표 뗌). 답한 질문은 summary가 뺀다 */
 export function planDecisions(plan: string): string[] {
   const body = section(plan, '확인 필요');
   if (!body) return [];
