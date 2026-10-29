@@ -22,6 +22,11 @@ describe('collectUnknowns', () => {
   it('라벨 없는 표시는 수만, 형식 설명(○○)은 제외', () => {
     expect(collectUnknowns([doc('기획안', '[확인 필요] 하나\n[확인 필요 ] 둘\n"[확인 필요: ○○]"로 남긴다')])).toEqual({ groups: [], unnamed: 2 });
   });
+  it('줄이 바뀐 표시도 한 번으로 세고, 예시는 표시가 시작한 줄', () => {
+    const c = collectUnknowns([doc('PRD', '앞 [확인 필요: 목표\n수치] 뒤')]);
+    expect(c.groups.map((g) => [g.label, g.count])).toEqual([['목표 수치', 1]]);
+    expect(c.groups[0].examples).toEqual([{ doc: 'PRD', line: '앞 [확인 필요: 목표' }]);
+  });
   it('예시 줄은 공백을 정리하고 200자에서 자른다', () => {
     const line = '  ' + '가'.repeat(250) + '   [확인 필요: 길이]';
     expect(collectUnknowns([doc('PRD', line)]).groups[0].examples[0].line).toBe('가'.repeat(200));
