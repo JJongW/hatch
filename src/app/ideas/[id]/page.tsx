@@ -2,10 +2,11 @@ import { notFound } from 'next/navigation';
 import { connection } from 'next/server';
 
 import { GENERATABLE } from '@/lib/chain';
-import { CONTEXT_FIELDS, getDocs, getIdea, getRunning, isValidId, listDecisions, listToolResults } from '@/lib/storage';
-import { summarize, vocEvidence } from '@/lib/summary';
+import { collectUnknowns } from '@/lib/questions';
+import { CONTEXT_FIELDS, getDocs, getIdea, getQuestions, getRunning, isValidId, listDecisions, listToolResults } from '@/lib/storage';
+import { questionView, summarize, vocEvidence } from '@/lib/summary';
 
-import { generateDocAction, removeDecisionAction, saveContextAction, saveDecisionAction, trashIdeaAction, updateDocAction, updateIdeaAction } from '../../actions';
+import { generateDocAction, makeQuestionsAction, removeDecisionAction, saveContextAction, saveDecisionAction, trashIdeaAction, updateDocAction, updateIdeaAction } from '../../actions';
 import IdeaDetail from './idea-detail';
 
 // 로컬 전용 · 항상 요청 시 렌더라 정적 셸 검증을 끈다 (docs: route-segment-config/instant, 'Disabling instant')
@@ -19,12 +20,13 @@ export default async function IdeaPage({ params }: { params: Promise<{ id: strin
   const idea = await getIdea(id);
   if (!idea) notFound();
   // 결과 파일을 못 읽으면 근거 · 리뷰 여부만 없는 것으로 보고 나머지는 그린다 (spec §5)
-  const [docs, running, vocs, reviews, decisions] = await Promise.all([
+  const [docs, running, vocs, reviews, decisions, questionSet] = await Promise.all([
     getDocs(id),
     getRunning(id),
     listToolResults('voc', id).catch(() => []),
     listToolResults('prd-review', id, 'prd').catch(() => []),
     listDecisions(id).catch(() => []),
+    getQuestions(id).catch(() => null),
   ]);
   const runningKey = running?.key ?? null;
   const summary = summarize({
@@ -35,6 +37,7 @@ export default async function IdeaPage({ params }: { params: Promise<{ id: strin
     reviewedPrd: reviews.length > 0,
     decisions,
   });
+  const questions = questionView(questionSet, collectUnknowns(docs), decisions);
 
   return (
     <IdeaDetail
@@ -46,6 +49,8 @@ export default async function IdeaPage({ params }: { params: Promise<{ id: strin
       saveDecisionAction={saveDecisionAction.bind(null, id)}
       removeDecisionAction={removeDecisionAction.bind(null, id)}
       summary={summary}
+      questions={questions}
+      makeQuestionsAction={makeQuestionsAction.bind(null, id)}
       docs={docs}
       generatable={GENERATABLE}
       running={runningKey}

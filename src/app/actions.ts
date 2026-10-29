@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 
 import { ChainError, generateDoc } from '@/lib/chain';
 import { DEMO_MESSAGE, isDemo } from '@/lib/demo';
+import { makeQuestions } from '@/lib/questions';
 import {
   CONTEXT_FIELDS,
   createIdea,
@@ -139,6 +140,23 @@ export async function generateDocAction(id: string, key: DocKey): Promise<DocAct
   } catch (e) {
     if (!(e instanceof ChainError)) console.error('[hatch] generateDoc', e);
     return { error: chainMessage(e) };
+  }
+  revalidateIdeas();
+  return { savedAt: Date.now() };
+}
+
+export type QuestionsState = { error?: string; savedAt?: number };
+
+// 1분쯤 걸리는 긴 Server Action. 문서 생성과 같은 claude 잠금을 쓴다
+export async function makeQuestionsAction(id: string): Promise<QuestionsState> {
+  if (isDemo()) return { error: DEMO_MESSAGE };
+  try {
+    await makeQuestions(id);
+  } catch (e) {
+    if (!(e instanceof ChainError)) console.error('[hatch] makeQuestions', e);
+    return {
+      error: e instanceof ChainError || e instanceof StorageError ? e.message : '질문을 만들지 못했어요. 서버 로그를 확인해 주세요.',
+    };
   }
   revalidateIdeas();
   return { savedAt: Date.now() };

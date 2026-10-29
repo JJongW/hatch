@@ -19,11 +19,13 @@ type Props = {
   running: DocKey | null;
   /** 이 카드가 시작/끝날 때 알린다 — 다른 탭의 버튼을 막기 위해 */
   onBusy: (key: DocKey | null) => void;
+  /** 질문 만들기처럼 다른 긴 작업 중이면 막는다 */
+  locked: boolean;
   generate: (key: DocKey, prev: DocActionState) => Promise<DocActionState>;
   update: (key: DocKey, prev: DocActionState, formData: FormData) => Promise<DocActionState>;
 };
 
-export default function DocCard({ doc, ready, hasSource, running, onBusy, generate, update }: Props) {
+export default function DocCard({ doc, ready, hasSource, running, onBusy, locked, generate, update }: Props) {
   const demo = useDemo();
   const [editing, setEditing] = useState(false);
 
@@ -43,7 +45,7 @@ export default function DocCard({ doc, ready, hasSource, running, onBusy, genera
   }, {});
 
   const busy = genPending || running === doc.key;
-  const blocked = running !== null || genPending; // 어떤 생성이든 진행 중이면 다른 버튼은 막는다
+  const blocked = running !== null || genPending || locked; // 어떤 생성이든 진행 중이면 다른 버튼은 막는다
   const error = genState.error ?? saveState.error;
 
   const confirmRegenerate = (e: React.FormEvent) => {
