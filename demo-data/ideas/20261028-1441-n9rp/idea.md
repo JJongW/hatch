@@ -8,6 +8,7 @@ context:
   goal: 추천 클릭 후 예약 전환율
   constraints: ''
   facts: ''
-version: 2
+folder: 일상 추천
+version: 3
 ---
 퇴근길에 들르는 도예, 베이킹 같은 동네 클래스를 취향대로 추천. 주말 오전도

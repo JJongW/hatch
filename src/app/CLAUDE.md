@@ -4,7 +4,7 @@
 
 ## 파일 지도
 - `layout.tsx` (서버) → `providers.tsx` (Montage Theme → Cache) → `_components/app-shell.tsx` (네비바 + 본문)
-- `/` `page.tsx` 쓰기 · `/ideas` 모음 · `/ideas/[id]` 상세(`idea-detail.tsx`) · `tools/` PO 도구 (C)
+- `/` `page.tsx` 쓰기 · `/ideas` 모음(`?folder=` 폴더 칩) · `/ideas/[id]` 상세(`idea-detail.tsx`) · `tools/` PO 도구 (C)
 - `actions.ts` — Server Action (쓰기 · 수정 · 휴지통 · 문서 생성/편집). storage · chain 호출 + `revalidatePath`
 - `_components/` — 이 라우트들만 쓰는 화면 조각 (2곳 넘게 쓰이면 `src/components/`로). `doc-markdown` · `use-refresh-while`은 문서 상세와 도구 틀이 공용
 - `tools/_frame/` — 도구 공통 틀 (`load.ts` 서버 로더 · `tool-frame.tsx`). 자세히는 `tools/CLAUDE.md`
