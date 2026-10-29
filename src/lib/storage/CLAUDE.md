@@ -4,12 +4,13 @@
 
 ## 파일 지도
 - `index.ts` — 밖에서 import하는 유일한 입구
-- `ideas.ts` — 아이디어 읽기 · 쓰기 (`server-only`) · `docs.ts` — 문서 저장 · stale · 생성 중 표시 · `paths.ts` — 경로 · `ids.ts` — id 생성 · 검사 · `progress.ts` — 진행 배지 · `tools.ts` — PO 도구 결과 저장 · 목록 · `types.ts`
+- `ideas.ts` — 아이디어 읽기 · 쓰기 (`server-only`) · `docs.ts` — 문서 저장 · stale · 생성 중 표시 · `paths.ts` — 경로 · `ids.ts` — id 생성 · 검사 · `progress.ts` — 진행 배지 · `tools.ts` — PO 도구 결과 저장 · 목록 · `decisions.ts` — 결정 · 보류 기록 · `history.ts` — 덮어쓰기 전 이전 판 보관 · `types.ts`
 - `*.test.ts` — vitest, 임시 폴더를 `HATCH_DATA_DIR`로
 
 ## 저장 형식
 `$HATCH_DATA_DIR`(기본 `~/Hatch`)`/ideas/<id>/idea.md` (머리말 + 메모, 머리말 `context` = 맥락 4칸 · 2판) · 같은 폴더에 문서 `plan.md` 등 · 삭제는 `.trash/`로 이동
 문서 머리말 `generatedAt · sourceHash · version`(머리말 없는 손글 문서는 stale 아님) · 덮어쓰기 전 이전 판은 `<id>/.history/<key>-<시각>.md` · 생성 중 표시 `<id>/.running.json`(10분 넘으면 무시)
+결정 `<id>/decisions.md` (머리말 `items` = 결정 목록, 고치기 전 판은 `.history/decisions-<시각>.md`)
 도구 결과 `<id>/tools/<도구>-<시각>-<rand>.md` (붙여넣기는 `$HATCH_DATA_DIR/tools/`) · 머리말 `data` = 계산 결과 JSON
 
 ## 규칙
