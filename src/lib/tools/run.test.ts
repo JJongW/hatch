@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import { createIdea, getToolResult, hashOf, listToolResults, saveDoc } from '@/lib/storage';
+import { createIdea, getToolResult, hashOf, listToolResults, saveDoc, updateIdeaContext } from '@/lib/storage';
 
 import { runTool } from './run';
 import type { ToolDef } from './types';
@@ -52,6 +52,21 @@ describe('runTool', () => {
     expect(prompt).toContain('PRD 본문');
     expect(prompt).toContain('### 메모\nhi');
     expect(prompt.indexOf('## 할 일')).toBeLessThan(prompt.indexOf('PRD 본문'));
+  });
+  it('아이디어 문서로 실행하면 맥락 블록을 입력 문서 다음에 붙인다', async () => {
+    const idea = await createIdea({ title: 'x', memo: '' });
+    await saveDoc(idea.id, 'prd', 'PRD 본문', { sourceHash: hashOf('x') });
+    await updateIdeaContext(idea.id, { customer: '직장인', goal: '', constraints: '', facts: '' });
+    const { resultId } = await runTool(echoTool, { source: { ideaId: idea.id, docKey: 'prd' }, input: { note: 'hi' } });
+    const prompt = ((await getToolResult(idea.id, resultId))?.data as { echo: string }).echo;
+    expect(prompt).toContain('### 프로젝트 맥락\n- 목표 고객: 직장인');
+    expect(prompt.indexOf('PRD 본문')).toBeLessThan(prompt.indexOf('### 프로젝트 맥락'));
+    expect(prompt.indexOf('### 프로젝트 맥락')).toBeLessThan(prompt.indexOf('### 메모'));
+  });
+  it('붙여넣기 실행에는 맥락 블록이 없다', async () => {
+    const { resultId } = await runTool(echoTool, { source: { pasted: '회사 PRD' }, input: {} });
+    const prompt = ((await getToolResult(null, resultId))?.data as { echo: string }).echo;
+    expect(prompt).not.toContain('### 프로젝트 맥락');
   });
   it('붙여넣기 입력은 전역 tools 폴더에, prevId로 이전 결과를 넘긴다', async () => {
     const first = await runTool(echoTool, { source: { pasted: '회사 PRD' }, input: {} });
