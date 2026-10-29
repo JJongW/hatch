@@ -34,16 +34,29 @@ export const ideaSource = (idea: Pick<Idea, 'title' | 'memo' | 'context'>, decis
 export const hashOf = (text: string) => crypto.createHash('sha256').update(text.trim()).digest('hex').slice(0, 12);
 
 const stepOf = (key: DocKey) => DOC_STEPS.find((s) => s.key === key)!;
-const docPath = (id: string, key: DocKey) => path.join(ideaDir(id), stepOf(key).file);
+// 생성 문서는 <id>/docs/. 예전 자리(<id>/<file>)는 읽기만 대체하고, 쓸 때 keepHistory가 .history/로 옮긴다 (spec 구조화 §4)
+const docPath = (id: string, key: DocKey) => path.join(ideaDir(id), 'docs', stepOf(key).file);
+const oldDocPath = (id: string, key: DocKey) => path.join(ideaDir(id), stepOf(key).file);
 
 /** 본문을 stringify에 넣으면 `---`로 시작할 때 머리말로 다시 읽히므로, 머리말만 만들고 본문은 이어 붙인다 */
 const withFront = (data: Record<string, unknown>, body: string) => matter.stringify('', data) + '\n' + body.trim() + '\n';
 
 async function readRaw(id: string, key: DocKey) {
-  return fs.readFile(docPath(id, key), 'utf8').catch((e) => {
-    if (isMissing(e)) return null;
-    throw e;
-  });
+  for (const p of [docPath(id, key), oldDocPath(id, key)]) {
+    try {
+      return await fs.readFile(p, 'utf8');
+    } catch (e) {
+      if (!isMissing(e)) throw e;
+    }
+  }
+  return null;
+}
+
+/** 쓰기 전: 두 자리의 지금 판을 .history/로 옮기고 docs/ 폴더를 만든다 */
+async function keepOld(id: string, key: DocKey) {
+  await keepHistory(id, docPath(id, key), key);
+  await keepHistory(id, oldDocPath(id, key), key);
+  await fs.mkdir(path.dirname(docPath(id, key)), { recursive: true });
 }
 
 export async function getDocs(id: string): Promise<Doc[]> {
@@ -74,7 +87,7 @@ export async function getDocs(id: string): Promise<Doc[]> {
 
 export async function saveDoc(id: string, key: DocKey, body: string, meta: { sourceHash: string }) {
   assertValidId(id);
-  await keepHistory(id, docPath(id, key), key);
+  await keepOld(id, key);
   const front = { generatedAt: new Date().toISOString(), sourceHash: meta.sourceHash, version: DOC_FILE_VERSION };
   await fs.writeFile(docPath(id, key), withFront(front, body));
 }
@@ -89,7 +102,7 @@ export async function updateDocBody(id: string, key: DocKey, body: string) {
   } catch {
     // 깨진 머리말은 버리고 본문만 새로 쓴다 (이전 판은 .history에 남음)
   }
-  await keepHistory(id, docPath(id, key), key);
+  await keepOld(id, key);
   await fs.writeFile(docPath(id, key), withFront(data, body));
 }
 

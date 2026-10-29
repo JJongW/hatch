@@ -173,3 +173,38 @@ describe('ideaSource · projectBlock', () => {
     expect((await getDocs(idea.id))[0].stale).toBe(true);
   });
 });
+
+describe('문서 자리 docs/', () => {
+  const at = (id: string, ...p: string[]) => path.join(dir, 'ideas', id, ...p);
+  const exists = (p: string) => fs.stat(p).then(() => true, () => false);
+
+  it('새로 만든 문서는 docs/에', async () => {
+    const idea = await createIdea({ title: 'x', memo: '' });
+    await saveDoc(idea.id, 'plan', '# 기획안', { sourceHash: 'h' });
+    expect(await exists(at(idea.id, 'docs', 'plan.md'))).toBe(true);
+    expect(await exists(at(idea.id, 'plan.md'))).toBe(false);
+  });
+
+  it('예전 자리에만 있으면 그대로 읽힌다', async () => {
+    const idea = await createIdea({ title: 'x', memo: '' });
+    await fs.writeFile(at(idea.id, 'plan.md'), '# 예전');
+    expect((await getDocs(idea.id))[0].content).toBe('# 예전');
+  });
+
+  it('예전 자리 문서를 고치면 docs/로 가고, 이전 판은 .history/에', async () => {
+    const idea = await createIdea({ title: 'x', memo: '' });
+    await fs.writeFile(at(idea.id, 'plan.md'), '# 예전');
+    await updateDocBody(idea.id, 'plan', '# 새로');
+    expect(await exists(at(idea.id, 'plan.md'))).toBe(false);
+    expect(await fs.readFile(at(idea.id, 'docs', 'plan.md'), 'utf8')).toContain('# 새로');
+    expect((await fs.readdir(at(idea.id, '.history'))).some((f) => f.startsWith('plan-'))).toBe(true);
+  });
+
+  it('두 곳에 다 있으면 docs/가 이긴다', async () => {
+    const idea = await createIdea({ title: 'x', memo: '' });
+    await fs.writeFile(at(idea.id, 'plan.md'), '# 예전');
+    await fs.mkdir(at(idea.id, 'docs'));
+    await fs.writeFile(at(idea.id, 'docs', 'plan.md'), '# 새 자리');
+    expect((await getDocs(idea.id))[0].content).toBe('# 새 자리');
+  });
+});
