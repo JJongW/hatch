@@ -58,7 +58,7 @@ export default function ToolFrame({ tool, ideas, ideaId, none, results, current,
   const base = `/tools/${tool.key}`;
   const urlMode: Mode = ideaId !== null ? 'idea' : none ? 'none' : 'pasted';
   const [mode, setMode] = useState<Mode>(urlMode);
-  // 앞으로 · 뒤로 가기로 URL(아이디어 · ?source=none)이 바뀌면 모드를 맞춘다 (렌더 중 조정)
+  // 앞으로 · 뒤로 가기로 URL이 바뀌면 모드를 맞춘다 (렌더 중 조정). sourceOptional tools: param 없음 = 문서 없이, ?source=pasted = 붙여넣기
   const [seenMode, setSeenMode] = useState(urlMode);
   if (seenMode !== urlMode) {
     setSeenMode(urlMode);
