@@ -46,7 +46,15 @@ export default function MermaidBlock({ code }: { code: string }) {
     if (view.kind === 'svg' && box) box.scrollLeft = (box.scrollWidth - box.clientWidth) / 2;
   }, [view]);
 
-  if (view.kind === 'error') return <CodeBlock lang="mermaid" code={code} />;
+  if (view.kind === 'error')
+    return (
+      <>
+        <Typography as="p" variant="caption1" color="semantic.foreground.neutral.secondary" sx={{ margin: '0 0 6px' }}>
+          구성도를 그림으로 그리지 못해 코드로 보여 줘요. 코드를 복사해 다른 도구에서 열 수 있어요.
+        </Typography>
+        <CodeBlock lang="mermaid" code={code} />
+      </>
+    );
 
   const copy = () =>
     navigator.clipboard?.writeText(code).then(() => {

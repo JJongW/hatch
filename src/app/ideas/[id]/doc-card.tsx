@@ -1,10 +1,11 @@
 'use client';
 
 import { useActionState, useState } from 'react';
-import { Box, Button, ContentBadge, FlexBox, Loading, SectionMessage, TextArea, Typography } from '@montage-ui/core';
+import { Box, Button, ContentBadge, FlexBox, SectionMessage, TextArea, Typography } from '@montage-ui/core';
 
 import { UseLocallyButton, useDemo } from '../../_components/demo';
 import DocMarkdown from '../../_components/doc-markdown';
+import RunningNote from '../../_components/running-note';
 
 import type { Doc, DocKey } from '@/lib/storage';
 import type { DocActionState } from '../../actions';
@@ -80,10 +81,7 @@ export default function DocCard({ doc, ready, hasSource, running, onBusy, locked
       </FlexBox>
 
       {busy ? (
-        <FlexBox alignItems="center" gap="8px">
-          <Loading variant="circular" size={20} />
-          <Typography variant="body2">만드는 중이에요. 1~2분 걸려요.</Typography>
-        </FlexBox>
+        <RunningNote label="만드는 중이에요. 1~2분 걸려요." />
       ) : doc.content === null ? (
         demo ? (
           <UseLocallyButton size="small" />

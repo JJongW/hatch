@@ -1,1 +1,5 @@
-export { default } from '../../loading';
+'use client';
+
+import { DetailSkeleton } from '../../_components/skeletons';
+
+export default DetailSkeleton;

@@ -8,7 +8,6 @@ import {
   Button,
   FlexBox,
   ListCell,
-  Loading,
   Option,
   SectionMessage,
   SegmentedControl,
@@ -21,6 +20,7 @@ import {
 import { UseLocallyButton, useDemo } from '../../_components/demo';
 import DocMarkdown from '../../_components/doc-markdown';
 import PageHeader from '../../_components/page-header';
+import RunningNote from '../../_components/running-note';
 import { useRefreshWhile } from '../../_components/use-refresh-while';
 
 import { DEMO_SAMPLE_IDEA } from '@/lib/demo';
@@ -102,12 +102,7 @@ export default function ToolFrame({ tool, ideas, ideaId, none, results, current,
   const inContinue = continued && continueVisible;
   const statusNode = (
     <>
-      {pending && (
-        <FlexBox alignItems="center" gap="8px">
-          <Loading variant="circular" size={20} />
-          <Typography variant="body2">{tool.runningLabel}</Typography>
-        </FlexBox>
-      )}
+      {pending && <RunningNote label={tool.runningLabel} />}
     </>
   );
   const errorNode = state.error && !pending ? <SectionMessage variant="negative">{state.error}</SectionMessage> : null;
