@@ -2,7 +2,7 @@
 
 // 데이터 구성 문서의 ```mermaid 펜스를 그림으로 그린다. mermaid는 무거워서 이 블록이 화면에 있을 때만 불러온다.
 // 그리기에 실패하면 코드 블록으로 대신 보여 준다 (복사는 그대로 된다)
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { Box, FlexBox, TextButton, Typography } from '@montage-ui/core';
 import { IconCheck, IconCopy } from '@montage-ui/icon';
 
@@ -16,13 +16,15 @@ export default function MermaidBlock({ code }: { code: string }) {
   const id = `mermaid-${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
   const [view, setView] = useState<View>({ kind: 'loading' });
   const [copied, setCopied] = useState(false);
+  const boxRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let alive = true;
     (async () => {
       try {
         const mermaid = (await import('mermaid')).default;
-        mermaid.initialize({ startOnLoad: false, securityLevel: 'strict', theme: 'neutral' });
+        // 엔티티가 많으면 폭에 맞춰 줄일 때 글자가 안 읽혀서, 원래 크기로 두고 상자 안에서 스크롤한다
+        mermaid.initialize({ startOnLoad: false, securityLevel: 'strict', theme: 'neutral', er: { useMaxWidth: false } });
         const { svg } = await mermaid.render(id, code);
         if (alive) setView({ kind: 'svg', svg });
       } catch (e) {
@@ -34,6 +36,12 @@ export default function MermaidBlock({ code }: { code: string }) {
       alive = false;
     };
   }, [id, code]);
+
+  // 큰 구성도는 왼쪽 위가 빈 자리일 때가 많아, 처음엔 가로 가운데를 보여 준다
+  useEffect(() => {
+    const box = boxRef.current;
+    if (view.kind === 'svg' && box) box.scrollLeft = (box.scrollWidth - box.clientWidth) / 2;
+  }, [view]);
 
   if (view.kind === 'error') return <CodeBlock lang="mermaid" code={code} />;
 
@@ -61,18 +69,26 @@ export default function MermaidBlock({ code }: { code: string }) {
         </TextButton>
       </FlexBox>
       <Box
+        ref={boxRef}
         role="img"
         aria-label="데이터 구성도"
         sx={(theme: Theme) => ({
           minHeight: '160px',
+          maxHeight: '560px',
           padding: '16px',
-          overflowX: 'auto',
+          overflow: 'auto',
           background: theme.semantic.surface.neutral.secondary,
-          '& svg': { display: 'block', margin: '0 auto', maxWidth: '100%', height: 'auto' },
+          '& svg': { display: 'block', margin: '0 auto' },
         })}
         // mermaid securityLevel 'strict'가 라벨의 HTML · 스크립트를 걸러 낸 SVG다
         dangerouslySetInnerHTML={view.kind === 'svg' ? { __html: view.svg } : undefined}
-      />
+      >
+        {view.kind === 'loading' ? (
+          <Typography variant="caption1" color="semantic.foreground.neutral.secondary">
+            구성도를 그리는 중이에요
+          </Typography>
+        ) : undefined}
+      </Box>
     </Box>
   );
 }
