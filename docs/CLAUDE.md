@@ -5,6 +5,7 @@
 - `plans/YYYY-MM-DD-<주제>.md` — 실행 계획 (Task 단위 체크리스트)
 - `decisions/YYYY-MM-DD_<제목>.md` — 결정 하나의 What · Why (구현은 쓰지 않음). 목록은 `decisions/README.md`
 - `ai-usage/` — AI 활용 과정 (제출용): 프롬프트 · 실수 수정 사례 · 토큰 관리
+- `user-test/` — 사용자 테스트: 계획 · 진행 대본 · 기록지 · 결과 (참가자 기록은 `results/pN.md`, 이름 · 회사 쓰지 않음)
 
 ## 이슈
 - 마일스톤 = 단계(A~D). 작업 1개 = 이슈 1 = 브랜치 1 = PR 1
