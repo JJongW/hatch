@@ -26,7 +26,7 @@ export type UsageEntry = UsageTag & {
   at: string;            // ISO 8601, 호출이 끝난 시각
   ok: boolean;           // 결과를 받아 형식까지 통과했나
   ms: number;            // 걸린 시간
-  turns: number | null;  // num_turns. 1보다 크면 모델이 여러 번 돎
+  turns: number | null;  // usage.iterations 길이 = 모델 호출 횟수. 1보다 크면 여러 번 돎
   input: number | null;  // usage.input_tokens
   cacheWrite: number | null;
   cacheRead: number | null;
@@ -78,12 +78,13 @@ export type UsageEntry = UsageTag & {
 
 ## 7. PRD 리뷰 두 번 돎 (PR ① 첫 작업)
 - 원 결과 JSON을 남기도록 한 번 다시 돌려 `num_turns`와 이유를 확인한다
+- 2026-10-30 확인: `num_turns`는 `--json-schema` 호출이면 결과 도구 호출 때문에 늘 2다 (작은 호출로도 2). 실제 모델 호출 횟수는 `usage.iterations` 길이라 `turns`를 그 값으로 남긴다. 다시 돌린 PRD 리뷰는 iterations 1, 캐시 쓰기 3.4만, 0.35달러로 이전(입력 4, 9.6만, 0.99달러)과 달랐다 → 가끔 생기는 재시도로 보고 새 이슈에 적는다
 - 고치는 건 이 이슈에 넣지 않는다. 원인을 적은 새 이슈를 만든다
 
 ## 8. 테스트
 - `usage.ts`: 덧붙이기, 읽기, 깨진 줄 건너뛰기, 빈 장부
 - `summary.ts`: 기능별, 아이디어별 합계와 평균, 신호 네 가지의 경계값, `?idea` 거르기
-- `run.ts`: 가짜 claude(`fake-claude.mjs`)가 `usage`, `num_turns`, `total_cost_usd`를 돌려주게 하고 성공, `is_error`, 시간 초과 때 장부 한 줄씩
+- `run.ts`: 가짜 claude(`fake-claude.mjs`)가 `usage`(`iterations` 포함), `total_cost_usd`를 돌려주게 하고 성공, `is_error`, 시간 초과 때 장부 한 줄씩
 - 호출하는 세 곳이 `tag`를 넘기는지 (기존 테스트에 장부 확인 추가)
 - 실제 claude로 한 번: 문서 하나 만들고 장부 줄 확인
 
