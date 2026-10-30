@@ -24,6 +24,8 @@ import { formatCost, formatTokens, type Signal, type UsageSummary } from '@/lib/
 
 const SIGNAL_LABEL: Record<Signal, string> = { heavy: '비용 큼', loops: '여러 번 돎', redo: '다시 만들기 잦음', fails: '실패 있음' };
 const sec = (ms: number) => `${Math.round(ms / 1000)}초`;
+const NOWRAP = { whiteSpace: 'nowrap' } as const;
+const NAME = { wordBreak: 'keep-all', minWidth: '120px' } as const;
 const pct = (r: number) => `${Math.round(r * 100)}%`;
 
 type Props = {
@@ -68,25 +70,26 @@ export default function UsageView({ summary, labels, titles, ideaFilter, unreada
           </FlexBox>
 
           <Typography as="h2" variant="headline2" weight="bold">기능별</Typography>
+          <Box sx={{ overflowX: 'auto' }}>
           <Table>
             <TableHead>
               <TableRow>
-                {['기능', '호출', '평균 시간', '평균 토큰', '평균 비용', '비중', '신호'].map((h) => <TableHeadCell key={h}>{h}</TableHeadCell>)}
+                {['기능', '호출', '평균 시간', '평균 토큰', '평균 비용', '비중', '신호'].map((h) => <TableHeadCell key={h} sx={NOWRAP}>{h}</TableHeadCell>)}
               </TableRow>
             </TableHead>
             <TableBody>
               {s.features.map((f) => (
                 <TableRow key={`${f.feature}:${f.key}`}>
-                  <TableCell>{labels[`${f.feature}:${f.key}`] ?? f.key}</TableCell>
-                  <TableCell>{f.calls}번</TableCell>
-                  <TableCell>{sec(f.avgMs)}</TableCell>
-                  <TableCell>{f.avgTokens === null ? '없음' : formatTokens(f.avgTokens)}</TableCell>
-                  <TableCell>{f.avgCost === null ? '없음' : formatCost(f.avgCost)}</TableCell>
-                  <TableCell>{pct(f.costShare)}</TableCell>
+                  <TableCell sx={NAME}>{labels[`${f.feature}:${f.key}`] ?? f.key}</TableCell>
+                  <TableCell sx={NOWRAP}>{f.calls}번</TableCell>
+                  <TableCell sx={NOWRAP}>{sec(f.avgMs)}</TableCell>
+                  <TableCell sx={NOWRAP}>{f.avgTokens === null ? '없음' : formatTokens(f.avgTokens)}</TableCell>
+                  <TableCell sx={NOWRAP}>{f.avgCost === null ? '없음' : formatCost(f.avgCost)}</TableCell>
+                  <TableCell sx={NOWRAP}>{pct(f.costShare)}</TableCell>
                   <TableCell>
                     <FlexBox gap="4px" sx={{ flexWrap: 'wrap' }}>
                       {f.signals.map((sg) => (
-                        <ContentBadge key={sg} size="xsmall" variant="outlined" color="accent" accentColor="semantic.foreground.cautionary.primary">
+                        <ContentBadge key={sg} sx={NOWRAP} size="xsmall" variant="outlined" color="accent" accentColor="semantic.foreground.cautionary.primary">
                           {sg === 'loops' ? `${SIGNAL_LABEL[sg]} ${f.loops}번` : SIGNAL_LABEL[sg]}
                         </ContentBadge>
                       ))}
@@ -96,33 +99,36 @@ export default function UsageView({ summary, labels, titles, ideaFilter, unreada
               ))}
             </TableBody>
           </Table>
+          </Box>
 
           {!ideaFilter && s.ideas.length > 0 && (
             <>
               <Typography as="h2" variant="headline2" weight="bold">아이디어별</Typography>
+              <Box sx={{ overflowX: 'auto' }}>
               <Table>
                 <TableHead>
                   <TableRow>
-                    {['아이디어', '호출', '토큰', '예상 비용'].map((h) => <TableHeadCell key={h}>{h}</TableHeadCell>)}
+                    {['아이디어', '호출', '토큰', '예상 비용'].map((h) => <TableHeadCell key={h} sx={NOWRAP}>{h}</TableHeadCell>)}
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {s.ideas.map((i) => (
                     <TableRow key={i.ideaId}>
-                      <TableCell>
+                      <TableCell sx={NAME}>
                         {titles[i.ideaId] ? (
                           <TextButton as={Link} href={`/ideas/${i.ideaId}`} size="small">{titles[i.ideaId]}</TextButton>
                         ) : (
                           '휴지통으로 보낸 아이디어'
                         )}
                       </TableCell>
-                      <TableCell>{i.calls}번</TableCell>
-                      <TableCell>{formatTokens(i.tokens)}</TableCell>
-                      <TableCell>{formatCost(i.cost)}</TableCell>
+                      <TableCell sx={NOWRAP}>{i.calls}번</TableCell>
+                      <TableCell sx={NOWRAP}>{formatTokens(i.tokens)}</TableCell>
+                      <TableCell sx={NOWRAP}>{formatCost(i.cost)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
+              </Box>
             </>
           )}
         </>
