@@ -130,6 +130,12 @@ export function SideNavView({ pathname }: { pathname: string | null }) {
           ),
         )}
       </FlexBox>
+
+      <Divider />
+
+      <ListCell as={Link} href="/usage" selected={isActive('/usage')} verticalPadding="small">
+        사용량
+      </ListCell>
     </Box>
   );
 }
