@@ -5,6 +5,10 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 
+import { appendUsage, type UsageTag } from '@/lib/storage';
+
+import { statsOf } from './stats';
+
 /** 화면에 그대로 보여 줘도 되는 체인 오류 (한국어 한 줄) */
 export class ChainError extends Error {}
 
@@ -20,17 +24,23 @@ export const isClaudeBusy = () => busy;
 export async function runClaude({
   prompt,
   jsonSchema,
+  tag,
   timeoutMs = DEFAULT_TIMEOUT_MS,
   killGraceMs = 3000,
 }: {
   prompt: string;
   jsonSchema: object;
+  /** 장부에 남길 꼬리표 — 필수라 새 기능도 기록을 빠뜨릴 수 없다 */
+  tag: UsageTag;
   timeoutMs?: number;
   /** 시간 초과 시 SIGTERM 뒤 SIGKILL까지 기다리는 시간 */
   killGraceMs?: number;
 }): Promise<unknown> {
-  if (busy) throw new ChainError(BUSY_MESSAGE);
+  if (busy) throw new ChainError(BUSY_MESSAGE); // claude를 부르지 않았으니 기록하지 않는다
   busy = true;
+  const started = Date.now();
+  let stdout: string | null = null;
+  let ok = false;
   let cwd: string | undefined;
   try {
     // 프로젝트 CLAUDE.md를 읽지 않도록 빈 폴더에서 실행
@@ -40,7 +50,7 @@ export async function runClaude({
       console.error('[hatch] 임시 폴더 생성 실패:', e);
       throw new ChainError('임시 폴더를 만들지 못했어요. 디스크 공간을 확인해 주세요.');
     }
-    const stdout = await spawnClaude(prompt, jsonSchema, cwd, timeoutMs, killGraceMs);
+    stdout = await spawnClaude(prompt, jsonSchema, cwd, timeoutMs, killGraceMs);
     let res: { is_error?: boolean; structured_output?: unknown };
     try {
       res = JSON.parse(stdout);
@@ -49,10 +59,13 @@ export async function runClaude({
     }
     if (res.is_error) throw new ChainError(LOGIN_HINT);
     if (res.structured_output === undefined) throw new ChainError('결과 형식이 맞지 않아요. 다시 만들어 주세요.');
+    ok = true;
     return res.structured_output;
   } finally {
     busy = false;
     if (cwd) await fs.rm(cwd, { recursive: true, force: true }); // 방금 만든 빈 임시 폴더
+    // 형식 검사(schema.safeParse)는 호출하는 쪽에 있어, 여기서 ok는 "결과 JSON을 받았나"까지다 (spec §3)
+    await appendUsage({ ...tag, at: new Date().toISOString(), ok, ms: Date.now() - started, promptChars: prompt.length, ...statsOf(stdout) });
   }
 }
 

@@ -61,8 +61,22 @@ process.stdin.on('end', () => {
     const labels = [...list.matchAll(/^- (.+) \(\d+곳\)$/gm)].map((m) => m[1]);
     const items = labels.map((label, i) => ({ label, kind: i % 2 ? 'owner' : 'customer', role: i % 2 ? '개발' : '', question: `${label}은 어떻게 하나요?` }));
     console.log(JSON.stringify({ is_error: false, structured_output: { items } }));
+  } else if (mode === 'usage') {
+    console.log(
+      JSON.stringify({
+        is_error: false,
+        structured_output: { ok: true },
+        num_turns: 3,
+        total_cost_usd: 0.5,
+        usage: {
+          input_tokens: 3, cache_creation_input_tokens: 100, cache_read_input_tokens: 10, output_tokens: 50,
+          iterations: [{ type: 'message' }, { type: 'message' }],
+        },
+        modelUsage: { 'claude-test': { costUSD: 0.5 } },
+      }),
+    );
   } else if (mode === 'error') {
-    console.log(JSON.stringify({ is_error: true, result: 'Not logged in' }));
+    console.log(JSON.stringify({ is_error: true, result: 'Not logged in', num_turns: 1, total_cost_usd: 0, usage: { input_tokens: 1, output_tokens: 0, iterations: [{ type: 'message' }] } }));
   } else if (mode === 'crash') {
     console.error('boom');
     process.exit(2);
