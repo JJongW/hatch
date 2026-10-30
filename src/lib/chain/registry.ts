@@ -1,5 +1,6 @@
 import type { DocKey } from '@/lib/storage';
 
+import { dataStep } from './steps/data';
 import { designPromptStep } from './steps/design-prompt';
 import { devPromptStep } from './steps/dev-prompt';
 import { planStep } from './steps/plan';
@@ -15,6 +16,7 @@ export const CHAIN: Partial<Record<DocKey, ChainStep<any>>> = {
   roadmap: roadmapStep,
   prd: prdStep,
   spec: specStep,
+  data: dataStep,
   'dev-prompt': devPromptStep,
   'design-prompt': designPromptStep,
 };

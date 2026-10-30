@@ -24,7 +24,7 @@ export const CONTEXT_FIELDS: ReadonlyArray<{ key: keyof IdeaContext; label: stri
 export const EMPTY_CONTEXT: IdeaContext = { customer: '', goal: '', constraints: '', facts: '' };
 export const CONTEXT_MAX = 1000;
 
-export type DocKey = 'plan' | 'roadmap' | 'prd' | 'spec' | 'dev-prompt' | 'design-prompt';
+export type DocKey = 'plan' | 'roadmap' | 'prd' | 'spec' | 'data' | 'dev-prompt' | 'design-prompt';
 
 export type DocStep = { key: DocKey; label: string; file: string; from: DocKey | 'idea' };
 
@@ -41,8 +41,9 @@ export const DOC_STEPS: ReadonlyArray<DocStep> = [
   { key: 'roadmap', label: '개발 로드맵', file: 'roadmap.md', from: 'plan' },
   { key: 'prd', label: 'PRD', file: 'prd.md', from: 'roadmap' },
   { key: 'spec', label: '기능명세', file: 'spec.md', from: 'prd' },
+  { key: 'data', label: '데이터 구성', file: 'data.md', from: 'spec' },
   { key: 'dev-prompt', label: '개발 프롬프트', file: 'dev-prompt.md', from: 'spec' },
-  { key: 'design-prompt', label: '디자인 프롬프트', file: 'design-prompt.md', from: 'spec' },
+  { key: 'design-prompt', label: '디자인 프롬프트', file: 'design-prompt.md', from: 'data' },
 ];
 
 export const DOC_FILE_VERSION = 1;

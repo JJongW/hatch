@@ -166,12 +166,12 @@ describe('listIdeasWithProgress', () => {
 });
 
 describe('getDocs', () => {
-  it('6칸을 고정 순서로, 있는 파일만 내용을 채운다', async () => {
+  it('7칸을 고정 순서로, 있는 파일만 내용을 채운다', async () => {
     const idea = await createIdea({ title: '문서', memo: '' });
     await fs.writeFile(path.join(dir, 'ideas', idea.id, 'prd.md'), '# PRD');
 
     const docs = await getDocs(idea.id);
-    expect(docs.map((d) => d.key)).toEqual(['plan', 'roadmap', 'prd', 'spec', 'dev-prompt', 'design-prompt']);
+    expect(docs.map((d) => d.key)).toEqual(['plan', 'roadmap', 'prd', 'spec', 'data', 'dev-prompt', 'design-prompt']);
     expect(docs.find((d) => d.key === 'prd')?.content).toBe('# PRD');
     expect(docs.find((d) => d.key === 'plan')?.content).toBeNull();
   });

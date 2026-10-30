@@ -12,8 +12,8 @@ import type { Theme } from '@montage-ui/core';
 
 import { splitTbd } from '@/lib/tbd';
 
-// 문서에서 나오는 펜스는 지금 프롬프트(~~~text)뿐. 다른 언어가 생기면 여기에 이름을 더한다
-const LABELS: Record<string, string> = { text: '프롬프트' };
+// 문서에서 나오는 펜스: 프롬프트(~~~text), 구성도(```mermaid, 그리기 실패 때만 여기로). 다른 언어가 생기면 이름을 더한다
+const LABELS: Record<string, string> = { text: '프롬프트', mermaid: '구성도' };
 
 type CopyState = 'idle' | 'copied' | 'selected';
 

@@ -3,9 +3,9 @@
 담당: `chain-author` · 단계 추가 절차: `chain-step` 스킬
 
 ## 체인
-아이디어 → 상세 기획안 → 개발 로드맵 → PRD → 기능명세서 → 개발 프롬프트 / 디자인 프롬프트
-`registry.ts`에 6단계 모두 등록 (plan · roadmap · prd · spec · dev-prompt · design-prompt).
-prd만 `extra: ['plan']`으로 기획안을 함께 받는다. 개발/디자인 프롬프트는 둘 다 spec에서 갈라진다.
+아이디어 → 상세 기획안 → 개발 로드맵 → PRD → 기능명세서 → 개발 프롬프트 / (데이터 구성 → 디자인 프롬프트)
+`registry.ts`에 7단계 모두 등록 (plan · roadmap · prd · spec · data · dev-prompt · design-prompt).
+`extra`: prd ← plan, design-prompt ← spec. 개발 프롬프트는 spec에서, 디자인 프롬프트는 data에서 이어진다.
 
 ## 파일 지도
 - `types.ts` — `ChainStep` (key · extra · schema · prompt · render)

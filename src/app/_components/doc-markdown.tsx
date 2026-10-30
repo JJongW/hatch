@@ -7,15 +7,17 @@ import { Typography } from '@montage-ui/core';
 import type { Components } from 'react-markdown';
 
 import CodeBlock from './code-block';
+import MermaidBlock from './mermaid-block';
 
 // Montage 전역 리셋이 태그 기본 스타일을 지우므로 요소마다 Typography로 다시 입힌다.
 // 요소가 더 필요해지면(표 등) remark 플러그인과 함께 별도 정리한다.
 
-// 펜스 코드 블록: <pre><code class="language-text">…</code></pre> → CodeBlock
+// 펜스 코드 블록: <pre><code class="language-text">…</code></pre> → CodeBlock (mermaid는 그림으로)
 function Pre({ children }: { children?: React.ReactNode }) {
   const code = isValidElement<{ className?: string; children?: React.ReactNode }>(children) ? children.props : null;
   const lang = /language-(\S+)/.exec(code?.className ?? '')?.[1] ?? '';
-  return <CodeBlock lang={lang} code={String(code?.children ?? '').replace(/\n$/, '')} />;
+  const text = String(code?.children ?? '').replace(/\n$/, '');
+  return lang === 'mermaid' ? <MermaidBlock code={text} /> : <CodeBlock lang={lang} code={text} />;
 }
 const heading = (variant: 'headline1' | 'headline2', as: 'h1' | 'h2' | 'h3') =>
   function Heading({ children }: { children?: React.ReactNode }) {
