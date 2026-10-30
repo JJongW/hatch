@@ -37,9 +37,9 @@ describe('generateDoc', () => {
     expect(plan.stale).toBe(false);
     expect(await getRunning(idea.id)).toBeNull();
   });
-  it('GENERATABLE은 DOC_STEPS의 6개 key와 같다', () => {
+  it('GENERATABLE은 DOC_STEPS의 7개 key와 같다', () => {
     expect(GENERATABLE).toEqual(DOC_STEPS.map((s) => s.key));
-    expect(GENERATABLE).toHaveLength(6);
+    expect(GENERATABLE).toHaveLength(7);
   });
   it('모르는 단계는 거부', async () => {
     const idea = await createIdea({ title: 'x', memo: '' });
@@ -49,6 +49,11 @@ describe('generateDoc', () => {
     const idea = await createIdea({ title: 'x', memo: '' });
     await saveDoc(idea.id, 'roadmap', '## 개요\n로드맵', { sourceHash: hashOf('x') });
     await expect(generateDoc(idea.id, 'prd')).rejects.toThrow('앞 문서를 먼저 만들어 주세요.');
+  });
+  it('design-prompt: spec만 있고 데이터 구성이 없으면 앞 문서를 먼저 만들라고 한다', async () => {
+    const idea = await createIdea({ title: 'x', memo: '' });
+    await saveDoc(idea.id, 'spec', '## 화면\n명세', { sourceHash: hashOf('x') });
+    await expect(generateDoc(idea.id, 'design-prompt')).rejects.toThrow('앞 문서를 먼저 만들어 주세요.');
   });
   it('prd: plan · roadmap이 모두 있으면 claude까지 가서 형식 검사에서 끝난다', async () => {
     process.env.FAKE_CLAUDE = 'ok';

@@ -5,7 +5,7 @@ import { DOC_STEPS, type Decision, type Doc, type DocKey } from '@/lib/storage/t
 import { summarize, vocEvidence, type SummaryInput } from './index';
 
 const PLAN = '## 문제\n퇴근 후 클래스를 찾기 어렵다. [확인 필요: 불편 빈도]\n\n둘째 문단\n\n## 확인 필요\n- 지역은? [확인 필요: 지역]\n';
-const ALL: Partial<Record<DocKey, string>> = { plan: PLAN, roadmap: 'r', prd: 'p', spec: 's', 'dev-prompt': 'd', 'design-prompt': 'g' };
+const ALL: Partial<Record<DocKey, string>> = { plan: PLAN, roadmap: 'r', prd: 'p', spec: 's', data: 'm', 'dev-prompt': 'd', 'design-prompt': 'g' };
 
 const docsWith = (content: Partial<Record<DocKey, string>>, stale: DocKey[] = []): Doc[] =>
   DOC_STEPS.map((s) => ({ ...s, content: content[s.key] ?? null, stale: stale.includes(s.key) }));
