@@ -10,10 +10,13 @@ import type { Theme } from '@montage-ui/core';
 
 import CodeBlock from './code-block';
 
+// render마다 새 id. 개발 모드에선 effect가 두 번 돌아 같은 id로 겹쳐 그리면 mermaid 임시 DOM이 엉킬 수 있다
+let seq = 0;
+
 type View = { kind: 'loading' } | { kind: 'svg'; svg: string } | { kind: 'error' };
 
 export default function MermaidBlock({ code }: { code: string }) {
-  const id = `mermaid-${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
+  const base = `mermaid-${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
   const [view, setView] = useState<View>({ kind: 'loading' });
   const [copied, setCopied] = useState(false);
   const boxRef = useRef<HTMLDivElement>(null);
@@ -25,7 +28,7 @@ export default function MermaidBlock({ code }: { code: string }) {
         const mermaid = (await import('mermaid')).default;
         // 엔티티가 많으면 폭에 맞춰 줄일 때 글자가 안 읽혀서, 원래 크기로 두고 상자 안에서 스크롤한다
         mermaid.initialize({ startOnLoad: false, securityLevel: 'strict', theme: 'neutral', er: { useMaxWidth: false } });
-        const { svg } = await mermaid.render(id, code);
+        const { svg } = await mermaid.render(`${base}-${++seq}`, code);
         if (alive) setView({ kind: 'svg', svg });
       } catch (e) {
         console.error('구성도를 그리지 못했어요', e);
@@ -35,7 +38,7 @@ export default function MermaidBlock({ code }: { code: string }) {
     return () => {
       alive = false;
     };
-  }, [id, code]);
+  }, [base, code]);
 
   // 큰 구성도는 왼쪽 위가 빈 자리일 때가 많아, 처음엔 가로 가운데를 보여 준다
   useEffect(() => {
@@ -81,14 +84,13 @@ export default function MermaidBlock({ code }: { code: string }) {
           '& svg': { display: 'block', margin: '0 auto' },
         })}
         // mermaid securityLevel 'strict'가 라벨의 HTML · 스크립트를 걸러 낸 SVG다
-        dangerouslySetInnerHTML={view.kind === 'svg' ? { __html: view.svg } : undefined}
-      >
-        {view.kind === 'loading' ? (
-          <Typography variant="caption1" color="semantic.foreground.neutral.secondary">
-            구성도를 그리는 중이에요
-          </Typography>
-        ) : undefined}
-      </Box>
+        dangerouslySetInnerHTML={{ __html: view.kind === 'svg' ? view.svg : '' }}
+      />
+      {view.kind === 'loading' && (
+        <Typography variant="caption1" color="semantic.foreground.neutral.secondary" sx={{ display: 'block', padding: '8px 16px' }}>
+          구성도를 그리는 중이에요
+        </Typography>
+      )}
     </Box>
   );
 }
