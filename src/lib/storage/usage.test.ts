@@ -48,6 +48,13 @@ describe('usage 장부', () => {
     expect(unreadable).toBe(2);
   });
 
+  it('필드 타입이 틀린 줄도 건너뛰고 센다 (예: 비용이 문자열)', async () => {
+    await fs.writeFile(path.join(dir, 'usage.jsonl'), `${JSON.stringify({ ...entry(), v: 1, costUSD: '0.1' })}\n`);
+    const { entries, unreadable } = await listUsage();
+    expect(entries).toHaveLength(0);
+    expect(unreadable).toBe(1);
+  });
+
   it('데이터 폴더가 아직 없어도 만들어 쓴다', async () => {
     process.env.HATCH_DATA_DIR = path.join(dir, 'new');
     await appendUsage(entry());

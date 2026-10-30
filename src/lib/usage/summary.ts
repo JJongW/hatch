@@ -102,7 +102,8 @@ export function summarizeUsage(all: UsageEntry[], ideaId?: string): UsageSummary
 
 const one = (n: number) => (Math.round(n * 10) / 10).toString();
 export function formatTokens(n: number): string {
-  if (n >= 10_000) return `${one(n / 10_000)}만`;
+  // 단위는 반올림 전 값으로 고른다. 9950 이상은 10.0천이 되니 만으로 올린다
+  if (n >= 9_950) return `${one(n / 10_000)}만`;
   if (n >= 1_000) return `${one(n / 1_000)}천`;
   return String(Math.round(n));
 }

@@ -14,6 +14,7 @@ export function statsOf(stdout: string | null): RunStats {
   } catch {
     return EMPTY;
   }
+  if (!r || typeof r !== 'object') return EMPTY; // null이나 숫자면 finally에서 터지지 않게
   const u = r.usage ?? {};
   return {
     // num_turns는 --json-schema면 결과 도구 호출 때문에 늘 2다. 실제 모델 호출 횟수는 iterations 길이 (2026-10-30 확인)

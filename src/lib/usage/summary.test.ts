@@ -100,6 +100,10 @@ describe('표시', () => {
     expect(formatTokens(4683)).toBe('4.7천');
     expect(formatTokens(98900)).toBe('9.9만');
     expect(formatTokens(260736)).toBe('26.1만');
+    expect(formatTokens(0)).toBe('0');
+    expect(formatTokens(999)).toBe('999');
+    expect(formatTokens(9999)).toBe('1만'); // 반올림으로 10.0천이 되면 만으로 올린다
+    expect(formatTokens(99999)).toBe('10만');
   });
   it('formatCost', () => {
     expect(formatCost(0.0712)).toBe('0.07달러');

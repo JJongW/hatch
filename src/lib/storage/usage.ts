@@ -18,11 +18,17 @@ export async function appendUsage(entry: Omit<UsageEntry, 'v'>): Promise<void> {
   }
 }
 
+// 화면 계산이 믿고 쓰는 필드만 검사한다. 어긋나면 건너뛰고 개수에 넣는다
 const isEntry = (x: unknown): x is UsageEntry => {
   const e = x as Partial<UsageEntry> | null;
+  const num = (v: unknown) => v === null || typeof v === 'number';
+  const str = (v: unknown) => v === null || typeof v === 'string';
   return (
     !!e && e.v === USAGE_FILE_VERSION && typeof e.feature === 'string' && typeof e.key === 'string' &&
-    typeof e.at === 'string' && typeof e.ok === 'boolean' && typeof e.ms === 'number'
+    typeof e.at === 'string' && typeof e.ok === 'boolean' && typeof e.ms === 'number' &&
+    typeof e.again === 'boolean' && str(e.ideaId) && typeof e.promptChars === 'number' &&
+    num(e.turns) && num(e.input) && num(e.cacheWrite) && num(e.cacheRead) && num(e.output) &&
+    num(e.costUSD) && str(e.model)
   );
 };
 

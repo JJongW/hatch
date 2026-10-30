@@ -63,7 +63,7 @@ export async function runClaude({
     return res.structured_output;
   } finally {
     busy = false;
-    if (cwd) await fs.rm(cwd, { recursive: true, force: true }); // 방금 만든 빈 임시 폴더
+    if (cwd) await fs.rm(cwd, { recursive: true, force: true }).catch(() => {}); // 방금 만든 빈 임시 폴더 (실패해도 장부는 남긴다)
     // 형식 검사(schema.safeParse)는 호출하는 쪽에 있어, 여기서 ok는 "결과 JSON을 받았나"까지다 (spec §3)
     await appendUsage({ ...tag, at: new Date().toISOString(), ok, ms: Date.now() - started, promptChars: prompt.length, ...statsOf(stdout) });
   }

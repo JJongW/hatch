@@ -137,6 +137,14 @@ describe('runClaude 사용량 기록', () => {
     expect(e).toMatchObject({ ok: false, turns: null, input: null, cacheWrite: null, cacheRead: null, output: null, costUSD: null, model: null });
   });
 
+  it('임시 폴더 정리가 실패해도 원래 결과를 유지하고 장부 한 줄은 남긴다', async () => {
+    process.env.FAKE_CLAUDE = 'usage';
+    const spy = vi.spyOn(fs, 'rm').mockRejectedValueOnce(new Error('EBUSY'));
+    await expect(runClaude({ prompt: 'x', jsonSchema: schema, tag })).resolves.toBeDefined();
+    expect((await listUsage()).entries).toHaveLength(1);
+    spy.mockRestore();
+  });
+
   it('동시 실행으로 거부된 호출은 기록하지 않는다 (claude를 부르지 않았으니)', async () => {
     process.env.FAKE_CLAUDE = 'slow';
     const first = runClaude({ prompt: 'x', jsonSchema: schema, tag, timeoutMs: 300 });
