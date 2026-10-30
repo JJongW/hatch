@@ -31,11 +31,17 @@ export async function generateDoc(id: string, key: DocKey) {
   if (extras.some((e) => !e.body)) throw new ChainError('앞 문서를 먼저 만들어 주세요.');
   const inputs = [{ label: labelOf(meta.from), body: source }, ...extras.map((e) => ({ label: e.label, body: e.body! }))];
 
+  const again = bodyOf(key) !== null; // 이미 있던 문서를 다시 만듦 (낭비 신호). 문서를 쓰기 전에 읽는다
+
   // 실행 중이면 남의 생성 중 표시를 건드리기 전에 거부
   if (isClaudeBusy()) throw new ChainError(BUSY_MESSAGE);
   await markRunning(id, key);
   try {
-    const raw = await runClaude({ prompt: buildPrompt(step.prompt, inputs), jsonSchema: toClaudeSchema(step.schema) });
+    const raw = await runClaude({
+      prompt: buildPrompt(step.prompt, inputs),
+      jsonSchema: toClaudeSchema(step.schema),
+      tag: { feature: 'doc', key, ideaId: id, again },
+    });
     const parsed = step.schema.safeParse(raw);
     if (!parsed.success) throw new ChainError('결과 형식이 맞지 않아요. 다시 만들어 주세요.');
     await saveDoc(id, key, step.render(parsed.data), { sourceHash: hashOf(source) });

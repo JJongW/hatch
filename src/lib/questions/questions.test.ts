@@ -4,7 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { createIdea, getQuestions, saveDoc } from '@/lib/storage';
+import { createIdea, getQuestions, listUsage, saveDoc } from '@/lib/storage';
 
 import { collectUnknowns } from './collect';
 import { makeQuestions, questionsPrompt } from './make';
@@ -129,6 +129,17 @@ describe('makeQuestions', () => {
     await makeQuestions(idea.id);
     const hist = await fs.readdir(path.join(dir, 'ideas', idea.id, '.history'));
     expect(hist.some((f) => f.startsWith('questions-'))).toBe(true);
+  });
+  it('장부에 questions 꼬리표, 두 번째는 again: true', async () => {
+    process.env.FAKE_CLAUDE = 'questions';
+    const { id } = await withPlan();
+    await makeQuestions(id);
+    await makeQuestions(id);
+    const { entries } = await listUsage();
+    expect(entries.map((e) => [e.feature, e.key, e.ideaId, e.again])).toEqual([
+      ['questions', 'questions', id, false],
+      ['questions', 'questions', id, true],
+    ]);
   });
   it('결과가 라벨을 빠뜨리면 실패하고 저장하지 않는다', async () => {
     process.env.FAKE_CLAUDE = 'metrics'; // 다른 도구 모양 → items 없음
