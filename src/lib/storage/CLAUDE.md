@@ -4,7 +4,7 @@
 
 ## 파일 지도
 - `index.ts` — 밖에서 import하는 유일한 입구
-- `ideas.ts` — 아이디어 읽기 · 쓰기 (`server-only`) · `docs.ts` — 문서 저장 · stale · 생성 중 표시 · `paths.ts` — 경로 · `ids.ts` — id 생성 · 검사 · `progress.ts` — 진행 배지 · `tools.ts` — PO 도구 결과 저장 · 목록 · `decisions.ts` — 결정 · 보류 기록 · `questions.ts` — 확인 질문 · `history.ts` — 덮어쓰기 전 이전 판 보관 · `folders.ts` — 폴더 묶음 계산 (순수) · `index-file.ts` — `목록.md` 자동 쓰기 · `types.ts`
+- `ideas.ts` — 아이디어 읽기 · 쓰기 (`server-only`) · `docs.ts` — 문서 저장 · stale · 생성 중 표시 · `paths.ts` — 경로 · `ids.ts` — id 생성 · 검사 · `progress.ts` — 진행 배지 · `tools.ts` — PO 도구 결과 저장 · 목록 · `decisions.ts` — 결정 · 보류 기록 · `questions.ts` — 확인 질문 · `history.ts` — 덮어쓰기 전 이전 판 보관 · `folders.ts` — 폴더 묶음 계산 (순수) · `index-file.ts` — `목록.md` 자동 쓰기 · `usage.ts` — 사용량 장부 덧붙이기 · 읽기 · `types.ts`
 - `*.test.ts` — vitest, 임시 폴더를 `HATCH_DATA_DIR`로
 
 ## 저장 형식
@@ -13,6 +13,7 @@
 결정 `<id>/decisions.md` (머리말 `items` = 결정 목록, `from` = plan · manual · question, 고치기 전 판은 `.history/decisions-<시각>.md`)
 확인 질문 `<id>/questions.md` (머리말 `labels` · `items`, 다시 만들기 전 판은 `.history/questions-<시각>.md`)
 도구 결과 `<id>/tools/<도구>-<시각>-<rand>.md` (붙여넣기는 `$HATCH_DATA_DIR/tools/`) · 머리말 `data` = 계산 결과 JSON
+사용량 `$HATCH_DATA_DIR/usage.jsonl` (호출 한 번 = JSON 한 줄, `v: 1`, `turns` = 모델 호출 수 · `usage.iterations` 길이 (`num_turns` 아님), 프롬프트 내용은 남기지 않음, 쓰기 실패는 생성을 막지 않음)
 
 ## 규칙
 - 함수 모양(인터페이스)은 유지. 나중에 DB로 옮겨도 호출부는 그대로

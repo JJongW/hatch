@@ -21,6 +21,7 @@ export {
   updateDocBody,
 } from './docs';
 export { listDecisions, removeDecision, saveDecision } from './decisions';
+export { appendUsage, listUsage } from './usage';
 export { FOLDER_MAX, UNFILED, folderNames, groupFolders, pickFolder, type FolderCount } from './folders';
 export { getQuestions, saveQuestions } from './questions';
 export { isValidId } from './ids';
@@ -43,4 +44,8 @@ export {
   type QuestionItem,
   type QuestionRole,
   type QuestionSet,
+  type UsageEntry,
+  type UsageFeature,
+  type UsageTag,
+  USAGE_FILE_VERSION,
 } from './types';

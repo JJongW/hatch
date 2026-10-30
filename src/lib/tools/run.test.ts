@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import { createIdea, getToolResult, hashOf, listToolResults, saveDecision, saveDoc, updateIdeaContext } from '@/lib/storage';
+import { createIdea, getToolResult, hashOf, listToolResults, listUsage, saveDecision, saveDoc, updateIdeaContext } from '@/lib/storage';
 
 import { runTool } from './run';
 import type { ToolDef } from './types';
@@ -39,10 +39,25 @@ const echoTool: ToolDef<{ note: string }, { echo: string }, { echo: string; prev
   render: (r) => `## 결과\n${r.echo.length}자`,
 };
 
+const ideaWithPrd = async () => {
+  const idea = await createIdea({ title: 'x', memo: '' });
+  await saveDoc(idea.id, 'prd', '## 배경\nPRD 본문', { sourceHash: hashOf('x') });
+  return idea;
+};
+
 describe('runTool', () => {
+  it('장부에 도구 꼬리표. 아이디어 문서면 ideaId, 붙여넣기면 null, again은 늘 false', async () => {
+    const idea = await ideaWithPrd();
+    await runTool(echoTool, { source: { ideaId: idea.id, docKey: 'prd' }, input: { note: 'hi' } });
+    await runTool(echoTool, { source: { pasted: '회사 PRD' }, input: {} });
+    const { entries } = await listUsage();
+    expect(entries.map((e) => [e.feature, e.key, e.ideaId, e.again])).toEqual([
+      ['tool', echoTool.key, idea.id, false],
+      ['tool', echoTool.key, null, false],
+    ]);
+  });
   it('아이디어 문서를 입력으로 실행해 결과를 저장한다', async () => {
-    const idea = await createIdea({ title: 'x', memo: '' });
-    await saveDoc(idea.id, 'prd', '## 배경\nPRD 본문', { sourceHash: hashOf('x') });
+    const idea = await ideaWithPrd();
     const { resultId, ideaId } = await runTool(echoTool, { source: { ideaId: idea.id, docKey: 'prd' }, input: { note: 'hi' } });
     expect(ideaId).toBe(idea.id);
     const r = await getToolResult(idea.id, resultId);

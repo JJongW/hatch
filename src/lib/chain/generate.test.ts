@@ -4,7 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { createIdea, DOC_STEPS, getDocs, getRunning, hashOf, markRunning, saveDoc, type DocKey } from '@/lib/storage';
+import { createIdea, DOC_STEPS, getDocs, getRunning, hashOf, listUsage, markRunning, saveDoc, type DocKey } from '@/lib/storage';
 
 import { runClaude } from '@/lib/claude/run';
 
@@ -69,6 +69,17 @@ describe('generateDoc', () => {
     expect((await getDocs(idea.id))[0].content).toBeNull();
     expect(await getRunning(idea.id)).toBeNull();
   });
+  it('장부에 문서 꼬리표를 남기고, 이미 있던 문서면 again: true', async () => {
+    process.env.FAKE_CLAUDE = 'plan';
+    const idea = await createIdea({ title: '동네 클래스', memo: '' });
+    await generateDoc(idea.id, 'plan');
+    await generateDoc(idea.id, 'plan');
+    const { entries } = await listUsage();
+    expect(entries.map((e) => [e.feature, e.key, e.ideaId, e.again, e.ok])).toEqual([
+      ['doc', 'plan', idea.id, false, true],
+      ['doc', 'plan', idea.id, true, true],
+    ]);
+  });
   it('claude에 넘기는 스키마에는 $schema가 없다', () => {
     const schema = toClaudeSchema(planStep.schema) as Record<string, unknown>;
     expect(schema).not.toHaveProperty('$schema');
@@ -78,7 +89,7 @@ describe('generateDoc', () => {
     const a = await createIdea({ title: 'a', memo: '' });
     const b = await createIdea({ title: 'b', memo: '' });
     process.env.FAKE_CLAUDE = 'slow';
-    const slow = runClaude({ prompt: 'x', jsonSchema: {}, timeoutMs: 400, killGraceMs: 100 }).catch(() => {});
+    const slow = runClaude({ prompt: 'x', jsonSchema: {}, timeoutMs: 400, killGraceMs: 100, tag: { feature: 'doc', key: 'plan', ideaId: null, again: false } }).catch(() => {});
     await new Promise((r) => setTimeout(r, 50));
     await markRunning(a.id, 'plan');
     await expect(generateDoc(b.id, 'plan')).rejects.toThrow('다른 문서를 만드는 중');

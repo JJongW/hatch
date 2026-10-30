@@ -4,7 +4,7 @@ import { toClaudeSchema } from '@/lib/claude/schema';
 import { ChainError, runClaude } from '@/lib/claude/run';
 import { INPUT_HEADING } from '@/lib/prompts/context';
 import { QUESTIONS_HEADINGS, QUESTIONS_PROMPT, QUESTIONS_RULES } from '@/lib/prompts/questions';
-import { getDocs, getIdea, listDecisions, projectBlock, saveQuestions, type QuestionSet } from '@/lib/storage';
+import { getDocs, getIdea, getQuestions, listDecisions, projectBlock, saveQuestions, type QuestionSet } from '@/lib/storage';
 
 import { collectUnknowns, QUESTION_LABEL_MAX, type UnknownGroup } from './collect';
 import { questionsSchema, validateQuestions } from './validate';
@@ -28,12 +28,13 @@ export function questionsPrompt(idea: { title: string; memo: string }, project: 
 export async function makeQuestions(id: string): Promise<QuestionSet> {
   const idea = await getIdea(id);
   if (!idea) throw new ChainError('아이디어를 찾을 수 없어요.');
-  const [docs, decisions] = await Promise.all([getDocs(id), listDecisions(id)]);
+  const [docs, decisions, before] = await Promise.all([getDocs(id), listDecisions(id), getQuestions(id)]);
   const groups = collectUnknowns(docs).groups.slice(0, QUESTION_LABEL_MAX);
   if (groups.length === 0) throw new ChainError('질문으로 만들 [확인 필요]가 없어요.');
   const raw = await runClaude({
     prompt: questionsPrompt(idea, projectBlock(idea.context, decisions), groups),
     jsonSchema: toClaudeSchema(questionsSchema),
+    tag: { feature: 'questions', key: 'questions', ideaId: id, again: before !== null },
   });
   const labels = groups.map((g) => g.label);
   const items = validateQuestions(labels, raw);

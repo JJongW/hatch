@@ -55,7 +55,11 @@ export async function runTool(
   ]
     .filter(Boolean)
     .join('\n\n');
-  const raw = await runClaude({ prompt, jsonSchema: toClaudeSchema(tool.outputSchema) });
+  const raw = await runClaude({
+    prompt,
+    jsonSchema: toClaudeSchema(tool.outputSchema),
+    tag: { feature: 'tool', key: tool.key, ideaId, again: false }, // 도구는 다시 실행이 정상 사용
+  });
   const out = tool.outputSchema.safeParse(raw);
   if (!out.success) throw new ChainError('결과 형식이 맞지 않아요. 다시 만들어 주세요.');
 

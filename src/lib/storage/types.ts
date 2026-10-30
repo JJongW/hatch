@@ -92,3 +92,27 @@ export type QuestionSet = {
 };
 export const QUESTION_MAX = 200;
 export const QUESTION_FILE_VERSION = 1;
+
+/** 사용량 장부 (`$HATCH_DATA_DIR/usage.jsonl`) — 호출 한 번에 한 줄 */
+export type UsageFeature = 'doc' | 'questions' | 'tool';
+/** 호출하는 쪽이 넘기는 꼬리표. key = DocKey · 'questions' · ToolKey */
+export type UsageTag = { feature: UsageFeature; key: string; ideaId: string | null; again: boolean };
+export type UsageEntry = UsageTag & {
+  v: 1;
+  /** ISO 8601, 호출이 끝난 시각 */
+  at: string;
+  ok: boolean;
+  ms: number;
+  /** 모델 호출 횟수 = usage.iterations 길이. 1보다 크면 여러 번 돎 (num_turns는 --json-schema면 늘 2라 쓰지 않는다) */
+  turns: number | null;
+  input: number | null;
+  cacheWrite: number | null;
+  cacheRead: number | null;
+  output: number | null;
+  /** total_cost_usd — 정가 기준 추정, 구독은 실제 청구 아님 */
+  costUSD: number | null;
+  model: string | null;
+  /** 프롬프트 길이만. 내용은 남기지 않는다 */
+  promptChars: number;
+};
+export const USAGE_FILE_VERSION = 1;
