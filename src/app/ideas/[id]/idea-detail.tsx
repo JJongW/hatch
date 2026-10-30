@@ -1,7 +1,8 @@
 'use client';
 
+import Link from 'next/link';
 import { useState } from 'react';
-import { Box, Button, ContentBadge, FlexBox } from '@montage-ui/core';
+import { Box, Button, ContentBadge, FlexBox, TextButton } from '@montage-ui/core';
 
 import { useDemo } from '../../_components/demo';
 import IdeaForm from '../../_components/idea-form';
@@ -18,6 +19,7 @@ import QuestionsPanel from './questions-panel';
 
 import type { Doc, DocKey, IdeaContext } from '@/lib/storage';
 import type { QuestionView, Summary } from '@/lib/summary';
+import { formatCost, formatTokens } from '@/lib/usage/summary';
 import type { ContextState, DecisionState, DocActionState, FormState, QuestionsState } from '../../actions';
 
 type Props = {
@@ -40,6 +42,8 @@ type Props = {
   updateDocAction: (key: DocKey, prev: DocActionState, formData: FormData) => Promise<DocActionState>;
   updateAction: (prev: FormState, formData: FormData) => Promise<FormState>;
   trashAction: () => Promise<void>;
+  /** 이 아이디어에 쓴 사용량 합계. 기록이 없으면 null (줄을 숨김) */
+  usage: { calls: number; tokens: number; cost: number } | null;
 };
 
 export default function IdeaDetail({
@@ -61,6 +65,7 @@ export default function IdeaDetail({
   updateDocAction,
   updateAction,
   trashAction,
+  usage,
 }: Props) {
   // 이 화면에서 시작한 생성 (서버 running이 갱신되기 전에도 다른 카드를 막는다)
   const [busy, setBusy] = useState<DocKey | null>(null);
@@ -131,6 +136,11 @@ export default function IdeaDetail({
         removeDecision={removeDecisionAction}
         disabled={generating}
       />
+      {usage && (
+        <TextButton as={Link} href={`/usage?idea=${ideaId}`} size="small" color="assistive" sx={{ alignSelf: 'flex-start' }}>
+          {`이 아이디어에 쓴 토큰 약 ${formatTokens(usage.tokens)}, 정가 기준 약 ${formatCost(usage.cost)} (호출 ${usage.calls}번)`}
+        </TextButton>
+      )}
       <QuestionsPanel
         view={questions}
         action={makeQuestionsAction}

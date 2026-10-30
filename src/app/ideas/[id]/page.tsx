@@ -3,8 +3,9 @@ import { connection } from 'next/server';
 
 import { GENERATABLE } from '@/lib/chain';
 import { collectUnknowns } from '@/lib/questions';
-import { CONTEXT_FIELDS, folderNames, getDocs, getIdea, getQuestions, getRunning, groupFolders, isValidId, listDecisions, listIdeas, listToolResults } from '@/lib/storage';
+import { CONTEXT_FIELDS, folderNames, getDocs, getIdea, getQuestions, getRunning, groupFolders, isValidId, listDecisions, listIdeas, listToolResults, listUsage } from '@/lib/storage';
 import { questionView, summarize, vocEvidence } from '@/lib/summary';
+import { summarizeUsage } from '@/lib/usage/summary';
 
 import { generateDocAction, makeQuestionsAction, removeDecisionAction, saveContextAction, saveDecisionAction, trashIdeaAction, updateDocAction, updateIdeaAction } from '../../actions';
 import IdeaDetail from './idea-detail';
@@ -20,7 +21,7 @@ export default async function IdeaPage({ params }: { params: Promise<{ id: strin
   const idea = await getIdea(id);
   if (!idea) notFound();
   // 결과 파일을 못 읽으면 근거 · 리뷰 여부만 없는 것으로 보고 나머지는 그린다 (spec §5)
-  const [docs, running, vocs, reviews, decisions, questionSet, all] = await Promise.all([
+  const [docs, running, vocs, reviews, decisions, questionSet, all, usageLog] = await Promise.all([
     getDocs(id),
     getRunning(id),
     listToolResults('voc', id).catch(() => []),
@@ -28,6 +29,7 @@ export default async function IdeaPage({ params }: { params: Promise<{ id: strin
     listDecisions(id).catch(() => []),
     getQuestions(id).catch(() => null),
     listIdeas().catch(() => ({ ideas: [], unreadable: 0 })),
+    listUsage().catch(() => ({ entries: [], unreadable: 0 })),
   ]);
   const folders = folderNames(groupFolders(all.ideas));
   const runningKey = running?.key ?? null;
@@ -40,6 +42,8 @@ export default async function IdeaPage({ params }: { params: Promise<{ id: strin
     decisions,
   });
   const questions = questionView(questionSet, collectUnknowns(docs), decisions);
+  const used = summarizeUsage(usageLog.entries, id);
+  const usage = used.calls > 0 ? { calls: used.calls, tokens: used.tokens, cost: used.cost } : null;
 
   return (
     <IdeaDetail
@@ -61,6 +65,7 @@ export default async function IdeaPage({ params }: { params: Promise<{ id: strin
       updateDocAction={updateDocAction.bind(null, id)}
       updateAction={updateIdeaAction.bind(null, id)}
       trashAction={trashIdeaAction.bind(null, id)}
+      usage={usage}
     />
   );
 }

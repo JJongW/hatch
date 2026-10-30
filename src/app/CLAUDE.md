@@ -4,7 +4,7 @@
 
 ## 파일 지도
 - `layout.tsx` (서버) → `providers.tsx` (Montage Theme → Cache) → `_components/app-shell.tsx` (네비바 + 본문)
-- `/` `page.tsx` 쓰기 · `/ideas` 모음(`?folder=` 폴더 칩) · `/ideas/[id]` 상세(`idea-detail.tsx`) · `tools/` PO 도구 (C)
+- `/` `page.tsx` 쓰기 · `/ideas` 모음(`?folder=` 폴더 칩) · `/ideas/[id]` 상세(`idea-detail.tsx`) · `tools/` PO 도구 (C) · `/usage` 사용량(`?idea=`)
 - `actions.ts` — Server Action (쓰기 · 수정 · 휴지통 · 문서 생성/편집). storage · chain 호출 + `revalidatePath`
 - `_components/` — 이 라우트들만 쓰는 화면 조각 (2곳 넘게 쓰이면 `src/components/`로). `doc-markdown` · `use-refresh-while`은 문서 상세와 도구 틀이 공용 · `skeletons`는 경로별 `loading.tsx`, `running-note`는 생성 중 표시가 공용
 - `error.tsx` · `not-found.tsx` — 오류 · 없는 주소 화면 (네비바는 그대로, 다음 행동 버튼)
