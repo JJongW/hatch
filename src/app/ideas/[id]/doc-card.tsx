@@ -1,14 +1,18 @@
 'use client';
 
-import { useActionState, useState } from 'react';
-import { Box, Button, ContentBadge, FlexBox, SectionMessage, TextArea, Typography } from '@montage-ui/core';
+import { useActionState, useId, useState } from 'react';
+import { Box, Button, ContentBadge, FlexBox, SectionMessage, TextArea, TextButton, Typography } from '@montage-ui/core';
 
 import { UseLocallyButton, useDemo } from '../../_components/demo';
 import DocMarkdown from '../../_components/doc-markdown';
 import RunningNote from '../../_components/running-note';
+import { DOC_RUNNING_STEPS, formatElapsed } from '../../_components/running-steps';
 
 import type { Doc, DocKey } from '@/lib/storage';
 import type { DocActionState } from '../../actions';
+
+/** 생성 결과 + 걸린 시간(초). 성공했을 때만 tookSec이 있다 */
+type GenState = DocActionState & { tookSec?: number };
 
 type Props = {
   doc: Doc;
@@ -30,14 +34,20 @@ export default function DocCard({ doc, ready, hasSource, running, onBusy, locked
   const demo = useDemo();
   const [editing, setEditing] = useState(false);
 
-  const [genState, genAction, genPending] = useActionState(async (prev: DocActionState) => {
+  // 생성이 끝나면 걸린 시간을 결과에 같이 남겨, 대기 화면이 "N분 걸려 만들었어요" 한 줄로 접히게 한다
+  const [genState, genAction, genPending] = useActionState(async (prev: GenState): Promise<GenState> => {
     onBusy(doc.key);
+    const started = Date.now();
     try {
-      return await generate(doc.key, prev);
+      const next = await generate(doc.key, prev);
+      return next.error ? next : { ...next, tookSec: Math.round((Date.now() - started) / 1000) };
     } finally {
       onBusy(null);
     }
   }, {});
+  const [showSteps, setShowSteps] = useState(false);
+  const stepsId = useId();
+  const steps = DOC_RUNNING_STEPS[doc.key];
 
   const [saveState, saveAction, savePending] = useActionState(async (prev: DocActionState, fd: FormData) => {
     const next = await update(doc.key, prev, fd);
@@ -80,8 +90,38 @@ export default function DocCard({ doc, ready, hasSource, running, onBusy, locked
         )}
       </FlexBox>
 
+      {/* 이 화면에서 만든 문서: 대기 화면이 한 줄로 접힌다. 누르면 예상 순서를 펼친다 */}
+      {!busy && genState.tookSec !== undefined && doc.content !== null && (
+        <Box sx={{ marginBottom: '12px', '--hatch-rise': '4px', animation: 'hatch-rise 300ms ease-out both' }}>
+          <TextButton
+            size="small"
+            color="assistive"
+            aria-expanded={showSteps}
+            aria-controls={stepsId}
+            onClick={() => setShowSteps((v) => !v)}
+          >
+            <span aria-hidden>{showSteps ? '▾ ' : '▸ '}</span>
+            {`${formatElapsed(genState.tookSec)} 걸려 만들었어요`}
+          </TextButton>
+          {showSteps && (
+            <Box id={stepsId} sx={{ marginTop: '6px' }}>
+              <Box as="ol" sx={{ margin: 0, paddingLeft: '20px' }}>
+                {steps.map((s) => (
+                  <Typography key={s} as="li" variant="caption1" color="semantic.foreground.neutral.secondary">
+                    {s}
+                  </Typography>
+                ))}
+              </Box>
+              <Typography variant="caption1" color="semantic.foreground.neutral.secondary">
+                예상 순서예요. 실제 진행과 다를 수 있어요.
+              </Typography>
+            </Box>
+          )}
+        </Box>
+      )}
+
       {busy ? (
-        <RunningNote label="만드는 중이에요. 1~2분 걸려요." />
+        <RunningNote label="만드는 중이에요. 1~2분 걸려요." steps={steps} />
       ) : doc.content === null ? (
         demo ? (
           <UseLocallyButton size="small" />

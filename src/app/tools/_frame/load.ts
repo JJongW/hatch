@@ -21,6 +21,7 @@ export type ToolFrameData = {
     description: string;
     continueLabel: string | null;
     runningLabel: string;
+    runningSteps: readonly string[];
     inputLabel: string;
     sourceOptional: boolean;
     /** accepts의 라벨, 문서가 없을 때 안내에 쓴다 */
@@ -81,6 +82,7 @@ export async function loadToolPage(
       description: tool.description,
       continueLabel: tool.continueLabel ?? null,
       runningLabel: tool.runningLabel ?? '실행 중이에요 (1~2분)',
+      runningSteps: tool.runningSteps ?? [],
       inputLabel: tool.inputLabel ?? '도구 입력',
       sourceOptional: tool.sourceOptional === true,
       acceptsLabels: tool.accepts.map(labelOf),
