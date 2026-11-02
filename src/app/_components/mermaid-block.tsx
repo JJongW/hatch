@@ -8,6 +8,8 @@ import { IconCheck, IconCopy } from '@montage-ui/icon';
 
 import type { Theme } from '@montage-ui/core';
 
+import Panel from '@/components/panel';
+
 import CodeBlock from './code-block';
 
 // render마다 새 id. 개발 모드에선 effect가 두 번 돌아 같은 id로 겹쳐 그리면 mermaid 임시 DOM이 엉킬 수 있다
@@ -63,14 +65,7 @@ export default function MermaidBlock({ code }: { code: string }) {
     });
 
   return (
-    <Box
-      sx={(theme: Theme) => ({
-        border: `1px solid ${theme.semantic.line.neutral.primary}`,
-        borderRadius: '12px',
-        overflow: 'hidden',
-        margin: '0 0 12px',
-      })}
-    >
+    <Panel flush sx={{ margin: '0 0 12px' }}>
       <FlexBox alignItems="center" justifyContent="space-between" sx={{ padding: '6px 8px 6px 16px' }}>
         <Typography variant="caption1" weight="bold" color="semantic.foreground.neutral.secondary">
           구성도
@@ -99,6 +94,6 @@ export default function MermaidBlock({ code }: { code: string }) {
           구성도를 그리는 중이에요
         </Typography>
       )}
-    </Box>
+    </Panel>
   );
 }

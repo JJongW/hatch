@@ -2,13 +2,12 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Box, Button, FlexBox, respondMore, Typography } from '@montage-ui/core';
-
-import type { Theme } from '@montage-ui/core';
+import { Box, Button, FlexBox, respondMore, SectionHeader, Typography } from '@montage-ui/core';
 
 import type { Decision, Doc, DocKey } from '@/lib/storage';
 import type { NextAction, Summary } from '@/lib/summary';
 import type { DecisionState } from '../../actions';
+import Panel from '@/components/panel';
 import { useDemo } from '../../_components/demo';
 import DecisionForm from './decision-form';
 
@@ -24,22 +23,16 @@ type Props = {
 
 type Opening = { kind: 'plan'; question: string } | { kind: 'edit'; id: string } | { kind: 'new' } | null;
 
-const cellStyle = (theme: Theme) => ({
-  border: `1px solid ${theme.semantic.line.neutral.primary}`,
-  borderRadius: '12px',
-  padding: '16px',
-});
-
 // 넓으면 2열, 좁으면 1열
 const gridStyle = { display: 'grid', gap: '12px', gridTemplateColumns: '1fr', [respondMore('768px')]: { gridTemplateColumns: '1fr 1fr' } };
 
 const Cell = ({ title, children }: { title: string; children: React.ReactNode }) => (
-  <Box sx={cellStyle}>
-    <Typography as="h2" variant="label1" weight="bold" color="semantic.foreground.neutral.secondary" sx={{ marginBottom: '8px' }}>
+  <Panel>
+    <SectionHeader size="xsmall" sx={{ marginBottom: '8px' }}>
       {title}
-    </Typography>
+    </SectionHeader>
     {children}
-  </Box>
+  </Panel>
 );
 
 const text = (t: React.ReactNode) => (

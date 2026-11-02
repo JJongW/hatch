@@ -16,9 +16,9 @@ import {
   Typography,
 } from '@montage-ui/core';
 
-import type { Theme } from '@montage-ui/core';
-
 import PageHeader from '../_components/page-header';
+import SectionTitle from '../_components/section-title';
+import Panel from '@/components/panel';
 
 import { formatCost, formatTokens, type Signal, type UsageSummary } from '@/lib/usage/summary';
 
@@ -38,10 +38,10 @@ type Props = {
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <Box sx={(t: Theme) => ({ flex: 1, minWidth: '140px', padding: '16px', borderRadius: '12px', border: `1px solid ${t.semantic.line.neutral.primary}` })}>
+    <Panel sx={{ flex: 1, minWidth: '140px' }}>
       <Typography variant="caption1" color="semantic.foreground.neutral.secondary">{label}</Typography>
       <Typography as="p" variant="title3" weight="bold" sx={{ margin: '4px 0 0' }}>{value}</Typography>
-    </Box>
+    </Panel>
   );
 }
 
@@ -69,41 +69,44 @@ export default function UsageView({ summary, labels, titles, ideaFilter, unreada
             <Stat label="예상 비용" value={formatCost(s.cost)} />
           </FlexBox>
 
-          <Typography as="h2" variant="headline2" weight="bold">기능별</Typography>
-          <Box sx={{ overflowX: 'auto' }}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                {['기능', '호출', '평균 시간', '평균 토큰', '평균 비용', '비중', '신호'].map((h) => <TableHeadCell key={h} sx={NOWRAP}>{h}</TableHeadCell>)}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {s.features.map((f) => (
-                <TableRow key={`${f.feature}:${f.key}`}>
-                  <TableCell sx={NAME}>{labels[`${f.feature}:${f.key}`] ?? f.key}</TableCell>
-                  <TableCell sx={NOWRAP}>{f.calls}번</TableCell>
-                  <TableCell sx={NOWRAP}>{sec(f.avgMs)}</TableCell>
-                  <TableCell sx={NOWRAP}>{f.avgTokens === null ? '없음' : formatTokens(f.avgTokens)}</TableCell>
-                  <TableCell sx={NOWRAP}>{f.avgCost === null ? '없음' : formatCost(f.avgCost)}</TableCell>
-                  <TableCell sx={NOWRAP}>{pct(f.costShare)}</TableCell>
-                  <TableCell>
-                    <FlexBox gap="4px" sx={{ flexWrap: 'wrap' }}>
-                      {f.signals.map((sg) => (
-                        <ContentBadge key={sg} sx={NOWRAP} size="xsmall" variant="outlined" color="accent" accentColor="semantic.foreground.cautionary.primary">
-                          {sg === 'loops' ? `${SIGNAL_LABEL[sg]} ${f.loops}번` : SIGNAL_LABEL[sg]}
-                        </ContentBadge>
-                      ))}
-                    </FlexBox>
-                  </TableCell>
+          {/* 제목과 표를 한 묶음으로: 바깥 gap(20px)은 묶음 사이에만 */}
+          <section>
+            <SectionTitle flush>기능별</SectionTitle>
+            <Box sx={{ overflowX: 'auto' }}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  {['기능', '호출', '평균 시간', '평균 토큰', '평균 비용', '비중', '신호'].map((h) => <TableHeadCell key={h} sx={NOWRAP}>{h}</TableHeadCell>)}
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          </Box>
+              </TableHead>
+              <TableBody>
+                {s.features.map((f) => (
+                  <TableRow key={`${f.feature}:${f.key}`}>
+                    <TableCell sx={NAME}>{labels[`${f.feature}:${f.key}`] ?? f.key}</TableCell>
+                    <TableCell sx={NOWRAP}>{f.calls}번</TableCell>
+                    <TableCell sx={NOWRAP}>{sec(f.avgMs)}</TableCell>
+                    <TableCell sx={NOWRAP}>{f.avgTokens === null ? '없음' : formatTokens(f.avgTokens)}</TableCell>
+                    <TableCell sx={NOWRAP}>{f.avgCost === null ? '없음' : formatCost(f.avgCost)}</TableCell>
+                    <TableCell sx={NOWRAP}>{pct(f.costShare)}</TableCell>
+                    <TableCell>
+                      <FlexBox gap="4px" sx={{ flexWrap: 'wrap' }}>
+                        {f.signals.map((sg) => (
+                          <ContentBadge key={sg} sx={NOWRAP} size="xsmall" variant="outlined" color="accent" accentColor="semantic.foreground.cautionary.primary">
+                            {sg === 'loops' ? `${SIGNAL_LABEL[sg]} ${f.loops}번` : SIGNAL_LABEL[sg]}
+                          </ContentBadge>
+                        ))}
+                      </FlexBox>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            </Box>
+          </section>
 
           {!ideaFilter && s.ideas.length > 0 && (
-            <>
-              <Typography as="h2" variant="headline2" weight="bold">아이디어별</Typography>
+            <section>
+              <SectionTitle flush>아이디어별</SectionTitle>
               <Box sx={{ overflowX: 'auto' }}>
               <Table>
                 <TableHead>
@@ -129,7 +132,7 @@ export default function UsageView({ summary, labels, titles, ideaFilter, unreada
                 </TableBody>
               </Table>
               </Box>
-            </>
+            </section>
           )}
         </>
       )}

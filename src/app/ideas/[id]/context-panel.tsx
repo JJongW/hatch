@@ -1,7 +1,7 @@
 'use client';
 
 import { useActionState, useState } from 'react';
-import { Box, Button, FlexBox, SectionMessage, TextArea, Typography } from '@montage-ui/core';
+import { Box, Button, FlexBox, SectionMessage, TextArea, TextButton, Typography } from '@montage-ui/core';
 
 import { useDemo } from '../../_components/demo';
 import SectionTitle from '../../_components/section-title';
@@ -74,14 +74,18 @@ export default function ContextPanel({ context, fields, action, disabled }: Prop
 
   return (
     <Box>
-      <FlexBox justifyContent="space-between" alignItems="center" gap="12px">
-        <SectionTitle>프로젝트 맥락</SectionTitle>
-        {!demo && filled.length > 0 && (
-          <Button size="small" variant="outlined" color="assistive" onClick={() => setEditing(true)} disabled={disabled}>
-            수정
-          </Button>
-        )}
-      </FlexBox>
+      <SectionTitle
+        trailing={
+          !demo &&
+          filled.length > 0 && (
+            <TextButton size="small" color="assistive" onClick={() => setEditing(true)} disabled={disabled}>
+              수정
+            </TextButton>
+          )
+        }
+      >
+        프로젝트 맥락
+      </SectionTitle>
       {filled.length > 0 ? (
         <Typography as="ul" variant="body2" sx={{ display: 'block', paddingLeft: '20px', listStyle: 'disc' }}>
           {filled.map((f) => (
