@@ -8,7 +8,7 @@ import { z } from 'zod';
 import { getToolResult } from '@/lib/storage';
 
 import { runTool } from '../run';
-import { computeVoc, renderVoc } from './compute';
+import { computeVoc, renderVoc, vocSummary } from './compute';
 import { vocTool } from './index';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -171,5 +171,44 @@ describe('runTool + FAKE_CLAUDE=voc', () => {
     const voc = Array.from({ length: 201 }, (_, i) => `v${i}`).join('\n');
     await expect(runTool(vocTool, { source: { none: true }, input: { voc } })).rejects.toThrow('입력이 너무 길어요 (최대 200줄).');
     await expect(runTool(vocTool, { source: { none: true }, input: { voc: '' } })).rejects.toThrow('VOC를 한 줄 이상 붙여넣어 주세요.');
+  });
+});
+
+describe('vocSummary', () => {
+  const lines = ['a', 'b', 'c', 'd', 'e', 'f', 'g'];
+  const topics = [
+    { name: '결제', description: '' },
+    { name: '탐색', description: '' },
+    { name: '빈 주제', description: '' },
+  ];
+  // 경계 값: 결제 2건 평균 정확히 3 → 심각 / 탐색 정확히 5건 평균 1 → 자주 나옴 / 빈 주제: 0건 평균 없음
+  const items = [
+    { line: 1, topic: '결제', severity: 4 },
+    { line: 2, topic: '결제', severity: 2 },
+    ...[3, 4, 5, 6, 7].map((line) => ({ line, topic: '탐색', severity: 1 })),
+  ];
+  const result = computeVoc({ topics, items }, { lines });
+
+  it('칩마다 해당 주제 수, 기준 값은 글자에', () => {
+    expect(vocSummary(result)!.filters).toEqual([
+      { key: 'all', label: '전체', count: 3 },
+      { key: 'severe', label: '심각 (평균 심각도 3 이상)', count: 1 },
+      { key: 'frequent', label: '자주 나옴 (5건 이상)', count: 1 },
+    ]);
+  });
+
+  it('행은 원래 순위를 지키고 걸러질 칩을 단다. 평균 없음은 심각에서 빠진다', () => {
+    const rows = vocSummary(result)!.rows;
+    expect(rows.map((r) => [r.rank, r.name, r.filters])).toEqual([
+      [1, '결제', ['all', 'severe']],
+      [2, '탐색', ['all', 'frequent']],
+      [3, '빈 주제', ['all']],
+    ]);
+  });
+
+  it('주제가 없거나 모양이 다르면 null', () => {
+    expect(vocSummary(null)).toBeNull();
+    expect(vocSummary({ topics: 3 })).toBeNull();
+    expect(vocSummary(computeVoc({ topics: [], items: [] }, { lines: ['a'] }))).toBeNull();
   });
 });
