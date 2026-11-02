@@ -6,7 +6,8 @@ import { FlexBox, Skeleton } from '@montage-ui/core';
 
 function Busy({ children }: { children: React.ReactNode }) {
   return (
-    <FlexBox flexDirection="column" gap="12px" aria-busy="true" aria-label="불러오는 중">
+    // Montage Skeleton의 반짝임이 칸 밖으로 새어 화면에 가로 스크롤이 생긴다 (#72) → 여기서 자른다
+    <FlexBox flexDirection="column" gap="12px" aria-busy="true" aria-label="불러오는 중" sx={{ overflow: 'hidden' }}>
       {children}
     </FlexBox>
   );
