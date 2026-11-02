@@ -8,10 +8,12 @@
 ## 공통 틀 (완성됨 — 도구는 이 틀만 씀)
 - `_frame/load.ts` `loadToolPage(key, searchParams)` — 서버 전용. 아이디어 · 결과 목록 · 현재 결과를 읽어 `ToolFrameData`로
 - `_frame/tool-frame.tsx` `ToolFrame` — 입력 문서 고르기 → 도구 입력 → 실행 → 결과 · 지난 결과 (`sourceOptional` 도구는 도구 입력이 먼저). 도구별 입력 칸은 `inputFields`(제목 `inputLabel`), 결과를 본 뒤에야 의미 있는 입력(협상 내 답)은 결과 상자 안 `continueFields`로 넘긴다
+- 결과 상자 맨 위 요약 화면(막대, 칩)은 `ToolFrame`의 `resultSummary`. 페이지가 `data.current?.data`로 만들어 넘긴다 (모양이 다르면 안 그림)
 - `actions.ts` `runToolAction(key, …)` — 프레임 칸(`mode` · `ideaId` · `docKey` · `pasted` · `prevId`) 밖의 폼 필드는 전부 도구 입력
 - 도구 정의(`ToolDef`) · 계산 · 렌더는 `src/lib/tools/<도구>/`. 실행 순서는 `src/lib/tools/run.ts`
 - 페이지는 `prd-review/page.tsx` 모양 그대로 (`instant = false` · `connection()` → `loadToolPage` → `<ToolFrame run={runToolAction.bind(null, key)} />`)
 - 점수 · 합계 · 순위 · 전후 차이는 `compute`가 계산 (AI는 판단만)
+- 실행 중 대기 화면은 `runningLabel` + `runningSteps`(예상 순서, 프롬프트의 AI 단계만). 문서 체인 단계는 `_components/running-steps.ts`
 
 ## 규칙
 - 도구 하나 = `src/app/tools/<도구>/` + `src/lib/tools/<도구>/`. 다른 도구 폴더 수정 금지 (병렬 충돌 방지)

@@ -45,6 +45,7 @@ export const negotiationTool: ToolDef<NegotiationInput, NegotiationOutput, Negot
   accepts: ['prd', 'plan'],
   continueLabel: '내 답 보내기',
   runningLabel: '상대가 답을 읽는 중이에요 (1~2분)',
+  runningSteps: ['상대 입장 읽기', '쟁점 나누기', '상대 답 쓰기', '합의 가능한 선 정리'],
   inputSchema: negotiationInputSchema,
   validate: (input, prev) => {
     if (!prev && input.answer) return "1라운드는 내 답 없이 시작해요. 상대 요청을 받은 뒤 '내 답 보내기'를 눌러 주세요.";

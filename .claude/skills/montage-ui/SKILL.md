@@ -23,6 +23,17 @@ ls node_modules/@montage-ui/icon/dist                           # 아이콘
 2. 없으면 Montage 컴포넌트 위에 조립
 3. props(size · color · variant) 먼저, `sx`는 props로 안 될 때만
 
+**손으로 그리기 전에 확인** (원시 요소는 배치에만):
+| 그리려는 것 | 먼저 쓸 것 |
+| --- | --- |
+| 섹션 제목, 페이지 머리 | `SectionHeader` (`_components/section-title`, `page-header`) |
+| 테두리 묶음 상자 | 공용 `Panel` (`src/components/panel`). `Card`는 썸네일 콘텐츠 카드라 묶음 상자로 쓰지 않음 |
+| 표 | `Table` (직접 `table` 금지) |
+| 글머리표 목록에 버튼, 출처가 붙음 | `List` + `ListCell` |
+| 확인 창, 복사 알림 | `Alert`, `Toast` (`window.confirm` 금지) |
+| 진행 단계 | `ProgressTracker` |
+"없다"고 쓰기 전에 `ls node_modules/@montage-ui/core/dist/components/`로 확인한다.
+
 ## 3. 레이아웃
 | 용도 | 쓸 것 |
 | --- | --- |

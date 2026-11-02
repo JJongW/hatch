@@ -1,18 +1,20 @@
 'use client';
 
-import { FlexBox, Typography } from '@montage-ui/core';
+import { FlexBox, SectionHeader, Typography } from '@montage-ui/core';
 
-export default function PageHeader({ title, description }: { title: string; description?: string }) {
+/** 페이지 맨 위 제목(h1) + 설명 + 한 줄 부가 정보(meta). 제목은 Montage SectionHeader large (title2) */
+export default function PageHeader({ title, description, meta }: { title: string; description?: string; meta?: React.ReactNode }) {
   return (
     <FlexBox flexDirection="column" gap="4px" sx={{ marginBottom: '24px' }}>
-      <Typography as="h1" variant="title2" weight="bold">
+      <SectionHeader size="large" headingTag="h1">
         {title}
-      </Typography>
+      </SectionHeader>
       {description && (
         <Typography variant="body2" color="semantic.foreground.neutral.secondary">
           {description}
         </Typography>
       )}
+      {meta}
     </FlexBox>
   );
 }

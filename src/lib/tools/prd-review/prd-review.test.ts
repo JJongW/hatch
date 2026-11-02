@@ -8,7 +8,7 @@ import { z } from 'zod';
 import { getToolResult } from '@/lib/storage';
 
 import { runTool } from '../run';
-import { computePrdReview, renderPrdReview } from './compute';
+import { compareRows, computePrdReview, renderPrdReview } from './compute';
 import { prdReviewTool } from './index';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -103,5 +103,33 @@ describe('runTool + FAKE_CLAUDE=prd-review', () => {
     await expect(
       runTool(prdReviewTool, { source: { pasted: 'a' }, input: {}, prevId: 'voc-20261028T000000-abcd' }),
     ).rejects.toThrow('이전 결과를 찾을 수 없어요.');
+  });
+});
+
+describe('compareRows', () => {
+  const first = computePrdReview(out as never, null);
+  const again = computePrdReview(
+    { ...out, reviews: out.reviews.map((r) => (r.reviewer === '개발' ? { ...r, scores: scores(5) } : r)) } as never,
+    first,
+  );
+
+  it('이전 결과가 없거나 모양이 다르면 null', () => {
+    expect(compareRows(first)).toBeNull();
+    expect(compareRows(null)).toBeNull();
+    expect(compareRows({ prev: 3 })).toBeNull();
+  });
+
+  it('기준 5개 + 전체, 이전 → 지금과 차이', () => {
+    const rows = compareRows(again)!;
+    expect(rows.map((r) => r.label)).toEqual(['명확성', '실현 가능성', '측정 가능성', '사용자 가치', '위험 대응', '전체']);
+    expect(rows[0]).toEqual({ label: '명확성', before: 3.3, now: 3.8, delta: 0.5 });
+    expect(rows[5].delta).toBe(0.5);
+  });
+
+  it('그대로면 0, 한쪽이 응답 없음이면 차이 없음', () => {
+    const same = computePrdReview(out as never, first);
+    expect(compareRows(same)![0].delta).toBe(0);
+    const missing = { ...again, criteria: { ...again.criteria, 명확성: null } };
+    expect(compareRows(missing)![0]).toEqual({ label: '명확성', before: 3.3, now: null, delta: null });
   });
 });

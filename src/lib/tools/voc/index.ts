@@ -35,6 +35,7 @@ export const vocTool: ToolDef<VocInput, VocOutput, VocResult> = {
   accepts: ['plan', 'prd'],
   sourceOptional: true,
   runningLabel: 'VOC를 묶는 중이에요 (1~2분)',
+  runningSteps: ['의견 한 줄씩 읽기', '비슷한 의견을 주제로 묶기', '의견마다 심각도 매기기', '빠진 의견 없는지 확인'],
   inputSchema: vocInputSchema,
   outputSchema: vocOutputSchema,
   prompt: VOC_PROMPT,

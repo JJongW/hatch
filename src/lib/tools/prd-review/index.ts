@@ -24,6 +24,7 @@ export const prdReviewTool: ToolDef<Record<string, never>, PrdReviewOutput, PrdR
   accepts: ['prd', 'spec', 'plan'],
   continueLabel: '고친 판 다시 리뷰',
   runningLabel: '위원회가 읽는 중이에요 (1~2분)',
+  runningSteps: ['PRD 읽기', '위원마다 반론부터 내기', '기준별로 채점하기', '고칠 점 정리하기'],
   inputSchema: z.object({}).strip() as z.ZodType<Record<string, never>>,
   outputSchema: prdReviewOutputSchema,
   prompt: PRD_REVIEW_PROMPT,

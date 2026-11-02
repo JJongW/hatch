@@ -20,12 +20,12 @@ import {
 import { UseLocallyButton, useDemo } from '../../_components/demo';
 import DocMarkdown from '../../_components/doc-markdown';
 import PageHeader from '../../_components/page-header';
+import SectionTitle from '../../_components/section-title';
 import RunningNote from '../../_components/running-note';
 import { useRefreshWhile } from '../../_components/use-refresh-while';
 
+import Panel from '@/components/panel';
 import { DEMO_SAMPLE_IDEA } from '@/lib/demo';
-
-import type { Theme } from '@montage-ui/core';
 
 import type { ToolActionState } from '../../actions';
 import type { ToolFrameData } from './load';
@@ -36,23 +36,16 @@ type Props = ToolFrameData & {
   inputFields?: React.ReactNode;
   /** 결과 상자 안 이어 실행 입력 (협상 내 답). 이어 실행 버튼과 같은 조건에서 보인다 */
   continueFields?: React.ReactNode;
+  /** 결과 상자 맨 위, 마크다운 위에 놓는 화면 전용 요약 (재리뷰 비교, VOC 거르기). 페이지가 current.data로 만든다.
+   *  그릴 게 없으면 null을 넘긴다. 상태가 있는 요약은 'use client' 컴포넌트에 data(JSON)만 props로 */
+  resultSummary?: React.ReactNode;
 };
 
 type Mode = 'idea' | 'pasted' | 'none';
 
-const sectionTitle = (text: string) => (
-  <Typography as="h2" variant="headline2" weight="bold" sx={{ display: 'block', marginBottom: '12px' }}>
-    {text}
-  </Typography>
-);
+const sectionTitle = (text: string) => <SectionTitle flush>{text}</SectionTitle>;
 
-const resultBoxStyle = (theme: Theme) => ({
-  border: `1px solid ${theme.semantic.line.neutral.primary}`,
-  borderRadius: '12px',
-  padding: '16px',
-});
-
-export default function ToolFrame({ tool, ideas, ideaId, none, results, current, busy, run, inputFields, continueFields }: Props) {
+export default function ToolFrame({ tool, ideas, ideaId, none, results, current, busy, run, inputFields, continueFields, resultSummary }: Props) {
   const router = useRouter();
   const demo = useDemo();
   const base = `/tools/${tool.key}`;
@@ -102,7 +95,7 @@ export default function ToolFrame({ tool, ideas, ideaId, none, results, current,
   const inContinue = continued && continueVisible;
   const statusNode = (
     <>
-      {pending && <RunningNote label={tool.runningLabel} />}
+      {pending && <RunningNote label={tool.runningLabel} steps={tool.runningSteps} />}
     </>
   );
   const errorNode = state.error && !pending ? <SectionMessage variant="negative">{state.error}</SectionMessage> : null;
@@ -268,7 +261,8 @@ export default function ToolFrame({ tool, ideas, ideaId, none, results, current,
           {showResults && current && (
             <section>
               {sectionTitle('결과')}
-              <Box sx={resultBoxStyle}>
+              <Panel>
+                {resultSummary && <Box sx={{ marginBottom: '16px' }}>{resultSummary}</Box>}
                 <Typography as="div" variant="body2">
                   <DocMarkdown>{current.body}</DocMarkdown>
                 </Typography>
@@ -288,7 +282,7 @@ export default function ToolFrame({ tool, ideas, ideaId, none, results, current,
                     </FlexBox>
                   </FlexBox>
                 )}
-              </Box>
+              </Panel>
             </section>
           )}
 
