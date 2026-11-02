@@ -39,7 +39,10 @@ function Choices({ label, options, value, onPick }: { label: string; options: re
   );
 }
 
-function Field({ q, value, set }: { q: Question; value: unknown; set: (v: unknown) => void }) {
+// set은 값 또는 이전 값을 받는 함수. 여러 칸을 빠르게 연달아 눌러도 앞의 답이 덮이지 않게 함수로 고친다
+type SetAnswer = (v: unknown | ((prev: unknown) => unknown)) => void;
+
+function Field({ q, value, set }: { q: Question; value: unknown; set: SetAnswer }) {
   switch (q.type) {
     case 'single':
       return <Choices label={q.label} options={q.options} value={value} onPick={set} />;
@@ -48,7 +51,7 @@ function Field({ q, value, set }: { q: Question; value: unknown; set: (v: unknow
       return (
         <FlexBox gap="8px" role="group" aria-label={q.label} sx={{ flexWrap: 'wrap' }}>
           {q.options.map((o) => (
-            <Choice key={o} label={o} multi selected={picked.includes(o)} onClick={() => set(picked.includes(o) ? picked.filter((p) => p !== o) : [...picked, o])} />
+            <Choice key={o} label={o} multi selected={picked.includes(o)} onClick={() => set((prev: unknown) => { const cur = (prev as string[] | undefined) ?? []; return cur.includes(o) ? cur.filter((p) => p !== o) : [...cur, o]; })} />
           ))}
         </FlexBox>
       );
@@ -77,7 +80,7 @@ function Field({ q, value, set }: { q: Question; value: unknown; set: (v: unknow
               <Typography variant="body2" weight="medium">
                 {i + 1}. {row}
               </Typography>
-              <Choices label={`${q.label}: ${row}`} options={q.options} value={rows[String(i)]} onPick={(o) => set({ ...rows, [String(i)]: o })} />
+              <Choices label={`${q.label}: ${row}`} options={q.options} value={rows[String(i)]} onPick={(o) => set((prev: unknown) => ({ ...(prev as Record<string, string> | undefined), [String(i)]: o }))} />
             </FlexBox>
           ))}
         </FlexBox>
@@ -104,8 +107,8 @@ export default function SurveyForm({ ready, action }: Props) {
     if (first) document.getElementById(`q-${first.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }, [state]);
 
-  const set = (id: string) => (v: unknown) => {
-    setAnswers((a) => ({ ...a, [id]: v }));
+  const set = (id: string): SetAnswer => (v) => {
+    setAnswers((a) => ({ ...a, [id]: typeof v === 'function' ? v(a[id]) : v }));
     setFixed((f) => ({ of: state, ids: new Set(f.of === state ? f.ids : []).add(id) }));
   };
   const done = REQUIRED_IDS.filter((id) => isAnswered(QUESTIONS.find((q) => q.id === id)!, answers[id])).length;
