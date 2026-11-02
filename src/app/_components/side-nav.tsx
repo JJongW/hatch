@@ -96,17 +96,20 @@ function BrandLogo() {
   );
 }
 
-// 지금 있는 메뉴: 라벤더 바탕 (#111). ListCell의 selected(오른쪽 작은 체크)만으로는 어디 있는지 잘 안 보였다.
-// 줄 양옆에 안쪽 여백을 주고 모서리를 둥글게 해 바탕이 글자에 붙지 않게 한다
+// 지금 있는 메뉴: 라벤더 바탕 + 굵은 글자 (#111). 색만으로 알리지 않게 ListCell selected의 굵은 글자는 두고 오른쪽 체크만 뺀다(trailingContent null).
+// full 변형 + 가로 여백 12px: 호버 층과 라벤더 바탕이 같은 폭으로 줄 안에 그려진다 (inset은 호버 층이 양옆으로 넘친다)
 function NavItem({ href, active, children }: { href: string; active: boolean; children: ReactNode }) {
   return (
     <ListCell
       as={Link}
       href={href}
+      variant="full"
+      selected={active}
+      trailingContent={null}
       aria-current={active ? 'page' : undefined}
       verticalPadding="small"
       sx={{
-        paddingInline: '12px',
+        '--list-cell-horizontal-padding': '12px',
         borderRadius: '8px',
         ...(active && { backgroundColor: hatchColor.highlight.bg, color: hatchColor.highlight.text }),
       }}
@@ -136,7 +139,7 @@ export function SideNavView({ pathname }: { pathname: string | null }) {
       <Divider />
 
       <FlexBox flexDirection="column" gap="4px">
-        <Typography variant="caption1" color="semantic.foreground.neutral.tertiary" sx={{ paddingInline: '12px' }}>
+        <Typography variant="caption1" color="semantic.foreground.neutral.tertiary" sx={{ paddingInline: '20px' }}>
           PO 도구
         </Typography>
         {TOOL_LINKS.map((t) =>

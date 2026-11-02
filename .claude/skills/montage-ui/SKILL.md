@@ -50,7 +50,7 @@ ls node_modules/@montage-ui/icon/dist                           # 아이콘
 - 색: `sx={theme => ({ color: theme.semantic.foreground.neutral.primary })}` 또는 `color="semantic.foreground.neutral.secondary"`
 - **`#RRGGBB` 와 `var(--semantic-...)` 직접 사용 금지**
 - 주 행동은 `Button variant="solid" color="primary"`(주색이 검정). 화면당 하나, 나머지는 `outlined` + `assistive`나 `TextButton`. 버튼 색을 sx로 덮지 않는다
-- Montage에 자리가 없는 Hatch 색은 강조 라일락 하나: `highlightSx`, `hatchColor.highlight`(`@/lib/theme/tokens`). 배지, [확인 필요] 배경에만
+- Montage에 자리가 없는 Hatch 색은 강조 라일락 하나: `highlightSx`, `hatchColor.highlight`(`@/lib/theme/tokens`). 배지, [확인 필요], 네비 지금 메뉴 배경. 안내 상자와 토스트는 `theme.css`가 라벤더로 칠하니 sx로 덮지 않는다
 - 색 값은 `src/app/theme.css` 한 곳. Montage 기본값 위에 spec `2026-11-03-mono-montage` 2절 표에 있는 것만 바꾼다. 화면 틀에 회색 면을 깔지 않는다. 글자에 투명도 금지
 - 타이포: `Typography`의 `variant`(예: `title1`, `body1`) · `weight`
 - 그림자 `theme.semantic.elevation.shadow.normal.*` · 투명도 `addOpacity(색, theme.opacity[N])`

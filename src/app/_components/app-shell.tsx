@@ -14,7 +14,7 @@ type Props = PropsWithChildren<{ demo?: boolean }>;
 const GUTTER = 48;
 
 // 넓으면 좌측 네비바 + 본문, 좁으면 네비바가 위로.
-// 네비바는 늘 화면 왼쪽 끝에 붙고, 본문과는 네비 오른쪽 1px 선 하나로만 나눈다. 본문은 남은 폭 가운데 (#111).
+// 네비바는 늘 화면 왼쪽에 띄운 둥근 패널(side-nav.tsx)이고, 본문은 남은 폭 가운데 (#111).
 // 예전엔 네비+본문을 화면마다 다른 폭의 틀로 묶어 가운데에 둬서, 이동할 때 네비 위치와 양옆 세로선이 바뀌었다
 export default function AppShell({ children, demo }: Props) {
   return (

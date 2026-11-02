@@ -23,15 +23,17 @@
 | --- | --- | --- | --- |
 | 주색 `brand` 계열 (foreground, surface, line) | 검정 `#171719` (Montage 본문색) | 흰색 `#F7F7F8` (Montage inverse) | 파랑 대신 검정. 채움 버튼은 검정 바탕 + 흰 글자 17.90 |
 | 3번째 글자 `foreground-neutral-tertiary` | 불투명 `#67696F` (흰 바탕 5.49, 칩과 세그먼트 바탕 4.99) | Montage 다크 값을 불투명으로 (4.5 이상) | Montage 기본은 61% 투명(흰 바탕 3.68)이라 AA 미달 |
-| 입력칸, 칩 등 조작 요소의 테두리 | 1px, 3:1 이상 회색 | 같은 규칙 | WCAG 1.4.11. 장식 선(카드, 구획)은 Montage 기본(1.32)을 그대로 |
+| 입력칸, 칩 등 조작 요소의 테두리 | Montage 기본(옅은 반투명 1px, 3:1 미만) | 같은 규칙 | #111 사용자 선택: 진한 회색 테두리가 무거워 보임. 3:1(WCAG 1.4.11)은 포기하고 자리표시 글자와 포커스 검정 선으로 보완 |
 | 2, 4번째 글자 `foreground-neutral-secondary`, `-quaternary` | 불투명 `#47484C`(9.13), `#67696F` | 같은 규칙 | 텍스트 투명도 금지. 2번째는 Montage 88% 값을 흰 바탕에 섞은 색 |
 | 상태색 `positive`, `cautionary`, `negative` | 글자, 선 검정. 바탕은 Montage 중립 틴트 `#70737C` 5~8% | 같은 규칙 | "빨강은 쓰지 말자"(#103). 상태는 아이콘 모양과 글자 라벨로 |
 | 강조색 `accent-*` (lime, cyan 등) | 글자 검정, 선은 조작 요소 테두리, 바탕은 중립 틴트 | 같은 규칙 | ContentBadge 기본색이 accent라 화면에 유채색이 생긴다 |
-| 포커스 둘레 `line-brand-focus`, `line-negative-focus` | 검정 12% | 같은 규칙 | 파랑, 빨강 번짐 대신 |
-| 강조 `hatchColor.highlight` | 라일락 `#E7E5FF` 배경 + `#171719` 글자 (14.53) | 같음 | 아이콘의 라일락. 주의 배지, [확인 필요]에만 |
+| 포커스 둘레 `line-brand-focus`, `line-negative-focus` | 투명 (포커스는 검정 1px 선만) | 같은 규칙 | #111 사용자 선택: 회색 링이 두꺼워 보임. 1px라 WCAG 2.4.13(AAA)엔 못 미침 |
+| 강조 `hatchColor.highlight` | 라일락 `#E7E5FF` 배경 + `#171719` 글자 (14.53) | 같음 | 아이콘의 라일락. 주의 배지, [확인 필요], 네비의 지금 메뉴, 안내 상자, 토스트 (#111 "알림은 메인 컬러 라벤더") |
 
 - 바탕, 네비, 카드, 입력칸 안은 흰색(Montage `background/surface-neutral-primary`). **회색 면을 새로 깔지 않는다.** 위계는 여백, 글자 크기와 굵기, 1px 선, Montage 그림자(`elevation.shadow.normal.*`)로
 - Montage 컴포넌트가 스스로 쓰는 옅은 채움(칩 바탕, 세그먼트 트랙, 호버 층)은 Montage 모양이라 그대로 둔다
+- 예외 (#111, 사용자 선택): 안내 상자(SectionMessage, 모든 종류)와 토스트는 라벤더 바탕 + 검정 글자와 아이콘. 표 머리줄과 비활성 입력칸은 흰 바탕. 회색 토큰(`surface-neutral-tertiary`)은 스켈레톤, 칩도 써서 바꾸지 않고 `theme.css`에서 Montage 표식(`role`, `data-role`, `data-component`)으로 고른다. Montage를 올리면 표식을 다시 확인
+- 레이아웃 (#111): 넓은 화면에서 네비는 왼쪽에 12px 띄운 둥근 패널(16px 모서리, 1px 선, Montage 그림자)로 고정. 본문은 남은 폭 가운데
 - 노랑(아이콘의 알)은 로고에만. 화면 요소에는 쓰지 않는다
 - 오렌지, 코발트, 옐로, 웜화이트, 회색 단계 토큰은 지운다. `tokens.ts`에는 `highlight`만 남는다
 

@@ -4,7 +4,7 @@
    - 상태색(빨강, 초록, 주황)과 강조색(accent): 검정. 상태는 아이콘 모양과 글자 라벨로 전한다
    - 글자: Montage는 반투명 회색 글자라 불투명으로 (텍스트 투명도 금지). 3번째 글자는 AA(4.5)를 넘게
    - 선: 모두 Montage 기본(옅은 반투명 회색 1px). 입력칸 포커스는 검정 1px만, 회색 링 없음 (#111, 사용자 선택: 3:1보다 옅은 선)
-   - 라일락(라벤더)은 강조 배지, [확인 필요], 안내 상자(SectionMessage) 바탕에 (tokens.ts highlight, 아래 컴포넌트 규칙)
+   - 라일락(라벤더)은 강조 배지, [확인 필요], 네비의 지금 메뉴, 안내 상자(SectionMessage)와 토스트 바탕에 (tokens.ts highlight, 아래 컴포넌트 규칙)
    값을 바꾸면 src/lib/theme/contrast.test.ts가 깨진다.
    -rgb 짝: Montage addOpacity()가 var(--x)를 rgba(var(--x-rgb), a)로 바꿔 쓴다. 값 변수마다 짝을 같은 줄에 둔다
    다크는 #97에서 html[data-theme='dark'] 블록으로 더한다 (Montage 다크 값이 :root보다 선택자가 세다) */
@@ -24,7 +24,7 @@
   --semantic-foreground-neutral-tertiary: var(--text-tertiary); --semantic-foreground-neutral-tertiary-rgb: var(--text-tertiary-rgb);
   --semantic-foreground-neutral-quaternary: var(--text-tertiary); --semantic-foreground-neutral-quaternary-rgb: var(--text-tertiary-rgb);
 
-  /* 주색: 검정. 눌림, 진함은 더 검게. subtle(고른 칩 바탕)은 검정 5%. focus(입력칸 포커스 링)는 투명 */
+  /* 주색: 검정. 눌림, 진함은 더 검게. subtle(고른 칩 바탕)은 검정 5%. focus(입력칸 포커스 링, 오류 칸 포함)는 투명 → 포커스는 검정 1px 선 */
   --semantic-foreground-brand-primary: var(--ink); --semantic-foreground-brand-primary-rgb: var(--ink-rgb);
   --semantic-foreground-brand-inverse: #F7F7F8; --semantic-foreground-brand-inverse-rgb: 247, 247, 248;
   --semantic-surface-brand-primary: var(--ink); --semantic-surface-brand-primary-rgb: var(--ink-rgb);
@@ -48,7 +48,7 @@
   --semantic-line-cautionary-primary: var(--semantic-line-neutral-secondary); --semantic-line-cautionary-primary-rgb: var(--semantic-line-neutral-secondary-rgb);
   --semantic-line-negative-primary: var(--ink); --semantic-line-negative-primary-rgb: var(--ink-rgb);
   --semantic-line-negative-strong: var(--ink); --semantic-line-negative-strong-rgb: var(--ink-rgb);
-  --semantic-line-negative-focus: #1717191F; --semantic-line-negative-focus-rgb: var(--ink-rgb);
+  --semantic-line-negative-focus: #17171900; --semantic-line-negative-focus-rgb: var(--ink-rgb);
 
   /* 강조색(accent): ContentBadge 등이 글자색 틴트를 바탕으로 깐다 → 검정 틴트 */
   --semantic-foreground-accent-lime: var(--ink); --semantic-foreground-accent-lime-rgb: var(--ink-rgb);
@@ -95,14 +95,19 @@ body {
   background-color: var(--semantic-background-neutral-primary);
 }
 
-/* 토스트: 반투명 검정 대신 라벤더 바탕 + 검정 글자. 떠 있는 층이라 옅은 그림자 하나 */
+/* 토스트: 반투명 검정 대신 라벤더 바탕 + 검정 글자. 떠 있는 층이라 Montage 그림자(normal small) */
 [data-role='toast'] {
   background-color: var(--highlight-bg);
-  box-shadow: 0 4px 16px #0000001A;
+  box-shadow: var(--semantic-elevation-shadow-normal-small);
 }
 [data-role='toast'] > [role='presentation'] {
   display: none;
 }
+/* 글자는 불투명 검정(Montage는 흰 글자 88%), 상태 아이콘도 검정(Montage가 초록, 주황을 직접 칠함. 상태는 모양과 문구로) */
 [data-role='toast'] :is(p, span) {
+  color: var(--highlight-text);
+  opacity: 1;
+}
+[data-role='toast'] svg {
   color: var(--highlight-text);
 }
