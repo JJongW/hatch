@@ -8,6 +8,8 @@ import AppShell from './_components/app-shell';
 import Providers from './providers';
 
 import '@montage-ui/core/global.css';
+// Hatch 컬러 토큰이 Montage 색 변수를 덮어쓴다. global.css 바로 뒤여야 이긴다
+import './theme.css';
 import './globals.css';
 
 // 로고만 따로: "Hatch"는 Avigea, "해치"는 HS산토끼체 2.0. 나머지는 Pretendard (globals.css)
