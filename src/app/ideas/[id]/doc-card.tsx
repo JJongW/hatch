@@ -35,8 +35,8 @@ export default function DocCard({ doc, ready, hasSource, running, onBusy, locked
   const [editing, setEditing] = useState(false);
 
   // 생성이 끝나면 걸린 시간을 결과에 같이 남겨, 대기 화면이 "N분 걸려 만들었어요" 한 줄로 접히게 한다
+  // onBusy(key)는 제출 순간(generateForm onSubmit)에 부른다. 액션 안에서 부르면 액션이 끝날 때까지 반영되지 않아 탭과 다른 카드가 생성 중임을 모른다
   const [genState, genAction, genPending] = useActionState(async (prev: GenState): Promise<GenState> => {
-    onBusy(doc.key);
     const started = Date.now();
     try {
       const next = await generate(doc.key, prev);
@@ -64,7 +64,14 @@ export default function DocCard({ doc, ready, hasSource, running, onBusy, locked
   };
 
   const generateForm = (label: string, variant: 'solid' | 'outlined', onSubmit?: (e: React.FormEvent) => void) => (
-    <form action={genAction} onSubmit={onSubmit}>
+    <form
+      action={genAction}
+      onSubmit={(e) => {
+        onSubmit?.(e);
+        // 액션 밖에서 바로 알린다 (확인 창에서 취소했으면 알리지 않음). 끝날 때는 액션의 finally가 onBusy(null)
+        if (!e.defaultPrevented) onBusy(doc.key);
+      }}
+    >
       <Button type="submit" size="small" variant={variant} color={variant === 'solid' ? 'primary' : 'assistive'} disabled={blocked}>
         {label}
       </Button>

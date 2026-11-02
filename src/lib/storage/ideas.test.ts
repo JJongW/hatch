@@ -161,7 +161,14 @@ describe('listIdeasWithProgress', () => {
     await fs.writeFile(path.join(dir, 'ideas', idea.id, 'plan.md'), '# 기획안');
 
     const { items } = await listIdeasWithProgress();
-    expect(items).toEqual([{ idea, progress: '기획안' }]);
+    expect(items).toEqual([{ idea, progress: '기획안', done: 1, total: 7 }]);
+  });
+
+  it('문서가 없으면 0개', async () => {
+    const idea = await createIdea({ title: '빈', memo: '' });
+
+    const { items } = await listIdeasWithProgress();
+    expect(items).toEqual([{ idea, progress: '아이디어', done: 0, total: 7 }]);
   });
 });
 

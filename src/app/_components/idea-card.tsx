@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Card, CardBody, CardCaption, CardRow, CardTitle, ContentBadge, FlexBox, type Theme } from '@montage-ui/core';
+import { Card, CardBody, CardCaption, CardRow, CardTitle, ContentBadge, FlexBox, Typography, type Theme } from '@montage-ui/core';
 
 export type IdeaCardData = {
   id: string;
@@ -11,6 +11,8 @@ export type IdeaCardData = {
   /** 서버에서 포맷한 날짜 */
   date: string;
   progress: string;
+  /** 만든 문서 수. null = 문서 없음 (표시 안 함) */
+  docs: { done: number; total: number } | null;
   /** '' = 미분류 (배지 없음) */
   folder: string;
 };
@@ -27,15 +29,27 @@ const hoverable = (t: Theme) => ({
   '&:active': { transform: 'scale(0.99)' },
 });
 
-export default function IdeaCard({ id, title, summary, date, progress, folder }: IdeaCardData) {
+export default function IdeaCard({ id, title, summary, date, progress, docs, folder }: IdeaCardData) {
   return (
     <Card as={Link} href={`/ideas/${id}`} sx={hoverable}>
       <CardBody>
         <CardRow variant="badge" position="top">
-          <FlexBox gap="4px">
+          <FlexBox gap="4px" alignItems="center">
             <ContentBadge size="xsmall" color={progress === '아이디어' ? 'neutral' : 'accent'}>
               {progress}
             </ContentBadge>
+            {docs && (
+              <Typography
+                as="span"
+                role="img"
+                aria-label={`문서 ${docs.total}개 중 ${docs.done}개 완료`}
+                variant="caption2"
+                color="semantic.foreground.neutral.secondary"
+                sx={{ fontVariantNumeric: 'tabular-nums' }}
+              >
+                {`${docs.done}/${docs.total}`}
+              </Typography>
+            )}
             {folder && (
               <ContentBadge size="xsmall" variant="outlined" color="neutral">
                 {folder}
