@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Card, CardBody, CardCaption, CardRow, CardTitle, ContentBadge, FlexBox, Typography, type Theme } from '@montage-ui/core';
+import { addOpacity, Card, CardBody, CardCaption, CardRow, CardTitle, ContentBadge, FlexBox, Typography, type Theme } from '@montage-ui/core';
 
 export type IdeaCardData = {
   id: string;
@@ -17,15 +17,16 @@ export type IdeaCardData = {
   folder: string;
 };
 
-// 마우스를 올리면 배경이 0.2초에 걸쳐 바뀌고, 누르는 순간 살짝 줄어든다 (spec motion §3)
+// 마우스를 올리면 배경이 0.2초에 걸쳐 바뀌고, 누르는 순간 살짝 줄어든다 (spec motion §3).
+// 배경은 색 대신 본문색 5% 틴트 (색은 포인트에만, #103). 한 장씩 옅은 테두리로 묶어 목록 위계를 만든다
 const hoverable = (t: Theme) => ({
   textDecoration: 'none',
   display: 'block',
-  margin: '-8px -12px',
-  padding: '8px 12px',
+  padding: '12px 16px',
+  border: `1px solid ${t.semantic.line.neutral.primary}`,
   borderRadius: '12px',
   transition: 'background-color 200ms ease-out, transform 120ms ease-out',
-  '&:hover': { backgroundColor: t.semantic.background.neutral.secondary },
+  '&:hover': { backgroundColor: addOpacity(t.semantic.foreground.neutral.primary, t.opacity[5]) },
   '&:active': { transform: 'scale(0.99)' },
 });
 
