@@ -52,6 +52,15 @@ describe('runClaude', () => {
     await expect(runClaude({ prompt: 'x', jsonSchema: schema, tag })).rejects.toThrow(ChainError);
   });
 
+  it('.mjs 경로는 실행 권한이 없어도 node로 실행한다 (Windows · npm 설치 claude)', async () => {
+    const copy = path.join(dir, 'claude-cli.mjs');
+    await fs.copyFile(path.join(here, 'fake-claude.mjs'), copy);
+    await fs.chmod(copy, 0o644);
+    process.env.HATCH_CLAUDE_BIN = copy;
+    const out = (await runClaude({ prompt: '안녕', jsonSchema: schema, tag })) as { echo: string };
+    expect(out.echo).toBe('안녕');
+  });
+
   it('실행 파일이 없으면 설치 안내', async () => {
     process.env.HATCH_CLAUDE_BIN = '/nope/claude';
     await expect(runClaude({ prompt: 'x', jsonSchema: schema, tag })).rejects.toThrow('claude를 찾을 수 없어요');

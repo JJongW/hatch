@@ -4,7 +4,7 @@
 
 - 인자: `-p --output-format json --json-schema <스키마> --tools "" --no-session-persistence --setting-sources project` (+ `--model`). 프롬프트는 stdin.
 - 전역 ~/.claude/CLAUDE.md가 섞이지 않게 `--setting-sources project` (2026-10-28 확인: 없으면 전역 지시가 읽힘)
-- env: `HATCH_CLAUDE_BIN`(기본 `claude`) · `HATCH_CLAUDE_MODEL`(선택).
+- env: `HATCH_CLAUDE_BIN`(기본 `claude`, `.js` · `.mjs` · `.cjs`는 node로 실행 — Windows는 셔뱅을 안 읽고 `claude.cmd`는 셸 없이 못 띄움) · `HATCH_CLAUDE_MODEL`(선택).
 - 동시 실행 1개, 5분 초과 시 종료, 작업 폴더는 빈 임시 폴더.
 - 보안: 도구 없음(`--tools ""`). 프롬프트 본문은 로그에 남기지 않는다(stderr 앞 500자만).
 - 오류는 `ChainError`(한국어 한 줄)로 던진다. 화면에 그대로 보여 준다.
