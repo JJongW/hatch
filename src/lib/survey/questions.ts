@@ -22,7 +22,8 @@ export type Section = { title: string; description?: string; questions: readonly
 export const MAX_SHORT = 200;
 export const MAX_LONG = 2000;
 
-const TASKS = [
+/** 사용자 테스트 과제. 흐름 체험(/try)의 과제 표도 같은 문구를 쓴다 */
+export const TASKS = [
   '아이디어 남기기',
   '맥락(대상 고객, 목표) 적기',
   '기획안 만들고 지금 내릴 결정 찾기',

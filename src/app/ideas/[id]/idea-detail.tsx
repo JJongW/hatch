@@ -17,7 +17,7 @@ import DocCard from './doc-card';
 import DocTabs from './doc-tabs';
 import EvidencePanel from './evidence-panel';
 import { firstTab } from './first-tab';
-import NextBand from './next-band';
+import NextBand, { type ToolLink } from './next-band';
 import QuestionsPanel from './questions-panel';
 import StatusCards, { type DetailTab } from './status-cards';
 
@@ -51,6 +51,10 @@ type Props = {
   trashAction: () => Promise<void>;
   /** 이 아이디어에 쓴 사용량 합계. 기록이 없으면 null (줄을 숨김) */
   usage: { calls: number; tokens: number; cost: number } | null;
+  /** false면 수정 버튼을 숨긴다 (흐름 체험) */
+  editable?: boolean;
+  /** 있으면 도구 버튼이 주소 이동 대신 이 함수를 부른다 (흐름 체험) */
+  goTool?: (tool: ToolLink) => void;
 };
 
 export default function IdeaDetail({
@@ -73,6 +77,8 @@ export default function IdeaDetail({
   updateAction,
   trashAction,
   usage,
+  editable = true,
+  goTool,
 }: Props) {
   // 이 화면에서 시작한 생성 (서버 running이 갱신되기 전에도 다른 카드를 막는다)
   const [busy, setBusy] = useState<DocKey | null>(null);
@@ -141,7 +147,7 @@ export default function IdeaDetail({
               }
             />
           </Box>
-          {!demo && (
+          {!demo && editable && (
             <Button size="small" variant="outlined" color="assistive" onClick={() => setEditing(true)} disabled={generating}>
               수정
             </Button>
@@ -170,7 +176,7 @@ export default function IdeaDetail({
         <ContextPanel context={context} fields={contextFields} action={saveContextAction} disabled={generating} />
       </Box>
 
-      <NextBand next={summary.next} docs={docs} ideaId={ideaId} onOpenDoc={openDoc} />
+      <NextBand next={summary.next} docs={docs} ideaId={ideaId} onOpenDoc={openDoc} goTool={goTool} />
       <StatusCards stats={stats} onOpen={openSection} />
 
       <Box ref={tabsRef} sx={{ marginTop: '12px' }}>
