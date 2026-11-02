@@ -40,6 +40,7 @@ type NextAction =
   | { kind: 'wait'; doc: DocKey }
   | { kind: 'check-stale'; doc: DocKey }
   | { kind: 'make-doc'; doc: DocKey }
+  | { kind: 'make-questions' }
   | { kind: 'collect-voc' }
   | { kind: 'review-prd' }
   | { kind: 'done' };
@@ -56,6 +57,7 @@ type NextAction =
 1. `running` 있음 → `wait` ("○○ 만드는 중이에요")
 2. 내용 있고 `stale`인 문서 중 가장 앞 → `check-stale` ("앞 문서가 바뀐 ○○ 확인") → 그 탭을 연다
 3. 기획안 없음 → `make-doc: plan`
+3-1. 질문 목록 여부를 넘겼고(`questionsMade === false`) 모르는 것 ≥ 1 → `make-questions` → 확인 질문 탭을 연다. 지금은 흐름 체험(/try)만 넘긴다 — 과제 순서가 질문 → 고객 의견이라서 (#113)
 4. VOC 없음 + 모르는 것 ≥ 1 → `collect-voc` → `/tools/voc?idea=<id>`
 5. PRD 있음 + PRD 리뷰 없음 → `review-prd` → `/tools/prd-review?idea=<id>`
 6. 내용 없는 첫 문서 → `make-doc` → 그 탭을 연다
@@ -85,7 +87,7 @@ src/app/ideas/[id]/    page.tsx — VOC · PRD 리뷰 결과를 더 읽고 summa
 - 결과 파일 읽기 실패: 근거 · 리뷰 여부만 없는 것으로 보고 나머지는 그린다
 
 ## 6. 테스트
-- `summarize`: 다음 행동 규칙 7개 각각 · 문제 대체 순서 · 모르는 것 묶기/정렬/○○ 제외 · 결정 꼬리표 떼기 · VOC 깨진 data
+- `summarize`: 다음 행동 규칙 8개 각각 · 문제 대체 순서 · 모르는 것 묶기/정렬/○○ 제외 · 결정 꼬리표 떼기 · VOC 깨진 data
 - 화면: 데모 · 일반 모드로 샘플 3개(문서 6개 · 기획안만 · 아이디어만) 열어 보고 콘솔 확인
 
 ## 7. 이번에 안 하는 것

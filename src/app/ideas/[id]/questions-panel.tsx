@@ -134,7 +134,7 @@ export default function QuestionsPanel({ view, action, saveDecision, onBusy, dis
       <FlexBox flexDirection="column" gap="12px" alignItems="flex-start">
         {!view.made ? (
           <>
-            {text(`[확인 필요] ${view.unknownTotal}곳, 라벨 ${view.labelTotal}개를 고객에게 물을 것과 담당자에게 확인할 것으로 나눠요. 1분쯤 걸려요.`)}
+            {text(`[확인 필요] ${view.unknownTotal}곳(이름 ${view.labelTotal}가지)을 고객에게 물을 것과 담당자에게 확인할 것으로 나눠요. 1분쯤 걸려요.`)}
             {make('질문 목록 만들기')}
           </>
         ) : (

@@ -31,7 +31,7 @@ function stepOf(next: NextAction, label: (key: DocKey) => string): Step {
     case 'make-doc':
       return { text: `다음으로 만들 문서는 ${label(next.doc)}예요.`, open: { doc: next.doc, label: `${label(next.doc)} 열기` } };
     case 'make-questions':
-      return { text: '문서에 [확인 필요]가 남았어요. 누구에게 물을지 질문으로 정리해요.', questions: '확인 질문 정리하기' };
+      return { text: '문서에 [확인 필요]가 남았어요. 누구에게 물을지 질문으로 정리해요.', questions: '확인 질문 열기' };
     case 'collect-voc':
       return { text: '모르는 것이 남았는데 고객 근거가 없어요. 고객 의견부터 모아 봐요.', go: { tool: 'voc', label: '고객 의견 정리하기' } };
     case 'review-prd':
