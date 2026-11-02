@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
@@ -37,8 +38,8 @@ const navStyle = (theme: Theme) => ({
   flexDirection: 'column' as const,
   gap: '16px',
   padding: '16px',
-  // 본문(흰 바탕)과 층을 나눈다. 색 없이 옅은 회색 (spec 11절 위계)
-  background: theme.semantic.background.neutral.secondary,
+  // 흰 바탕. 본문과는 1px 선으로만 나눈다 (spec mono-montage 2절: 회색 면 없음)
+  background: theme.semantic.background.neutral.primary,
   borderBottom: `1px solid ${theme.semantic.line.neutral.primary}`,
   [respondMore('768px')]: {
     width: '240px',
@@ -60,7 +61,7 @@ export default function SideNav() {
   return <SideNavView pathname={usePathname()} />;
 }
 
-// 로고: 'Hatch'(Avigea) ↔ '해치'(HS산토끼체). 마우스를 올리거나 키보드로 포커스하면 뒤집힌다
+// 로고: hatch_ic 아이콘(public/brand, 원본 1254px을 96px로 줄임) + 'Hatch'(Avigea) ↔ '해치'(HS산토끼체). 마우스를 올리거나 키보드로 포커스하면 뒤집힌다
 function BrandLogo() {
   const [swapped, setSwapped] = useState(false);
   return (
@@ -70,13 +71,14 @@ function BrandLogo() {
       variant="headline1"
       weight="bold"
       aria-label="Hatch 해치 — 아이디어 쓰기로"
-      sx={{ textDecoration: 'none' }}
+      sx={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '8px' }}
       onMouseEnter={() => setSwapped(true)}
       onMouseLeave={() => setSwapped(false)}
       onFocus={(e: FocusEvent<HTMLElement>) => setSwapped(e.currentTarget.matches(':focus-visible'))}
       onBlur={() => setSwapped(false)}
     >
-      🐣{' '}
+      {/* 이름은 링크 aria-label이 읽는다 → 그림은 장식 */}
+      <Image src="/brand/hatch-ic.png" alt="" width={24} height={24} />
       <FlippingWordSwap
         word1="Hatch"
         word2="해치"

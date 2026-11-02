@@ -18,10 +18,10 @@ const frameWidth = (content: number) => `${NAV + content + GUTTER * 2 + 2}px`;
 const line = (t: Theme) => ({ borderInline: `1px solid ${t.semantic.line.neutral.primary}` });
 
 // 넓으면 좌측 네비바 + 본문, 좁으면 네비바가 위로.
-// 넓은 화면에서는 네비바와 본문을 한 틀로 묶어 가운데에 두고, 바깥은 옅은 배경으로 채운다 (#76)
+// 넓은 화면에서는 네비바와 본문을 한 틀로 묶어 가운데에 두고, 바깥과는 1px 선으로 나눈다 (#76. 회색 면 없음, spec mono-montage)
 export default function AppShell({ children, demo }: Props) {
   return (
-    <Box sx={(t: Theme) => ({ [respondMore('768px')]: { background: t.semantic.background.neutral.secondary } })}>
+    <Box>
       {/* 설문 화면(FocusPage)에서는 네비바(첫 칸)를 숨긴다 (#71) */}
       <Box
         sx={(t: Theme) => ({
