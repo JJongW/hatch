@@ -146,9 +146,14 @@ export async function trashIdea(id: string): Promise<void> {
   await refreshIndex();
 }
 
-/** 목록 화면용: 아이디어 + 진행 배지 문구 */
+/** 목록 화면용: 아이디어 + 진행 배지 문구 + 만든 문서 수 */
 export async function listIdeasWithProgress() {
   const { ideas, unreadable } = await listIdeas();
-  const items = await Promise.all(ideas.map(async (idea) => ({ idea, progress: progressOf(await getDocs(idea.id)) })));
+  const items = await Promise.all(
+    ideas.map(async (idea) => {
+      const docs = await getDocs(idea.id);
+      return { idea, progress: progressOf(docs), done: docs.filter((d) => d.content !== null).length, total: docs.length };
+    }),
+  );
   return { items, unreadable };
 }

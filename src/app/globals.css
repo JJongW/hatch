@@ -19,6 +19,11 @@ button {
   from { background-position: 100% 0; }
   to { background-position: -150% 0; }
 }
+/* 생성 중 탭 점: 천천히 옅어졌다 돌아온다 (#78) */
+@keyframes hatch-pulse {
+  from { opacity: 1; }
+  to { opacity: 0.35; }
+}
 /* 줄인 모션 설정: 움직임을 끄고 최종 모습만 보인다 (반짝임은 RunningNote가 따로 끈다).
    SVG는 뺀다 — 회전 아이콘(Loading)까지 멈추면 "도는 중" 신호가 사라진다 */
 @media (prefers-reduced-motion: reduce) {
