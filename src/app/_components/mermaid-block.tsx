@@ -3,8 +3,8 @@
 // 데이터 구성 문서의 ```mermaid 펜스를 그림으로 그린다. mermaid는 무거워서 이 블록이 화면에 있을 때만 불러온다.
 // 그리기에 실패하면 코드 블록으로 대신 보여 준다 (복사는 그대로 된다)
 import { useEffect, useId, useRef, useState } from 'react';
-import { Box, FlexBox, TextButton, Typography } from '@montage-ui/core';
-import { IconCheck, IconCopy } from '@montage-ui/icon';
+import { Box, FlexBox, TextButton, Typography, useToast } from '@montage-ui/core';
+import { IconCopy } from '@montage-ui/icon';
 
 import type { Theme } from '@montage-ui/core';
 
@@ -20,7 +20,7 @@ type View = { kind: 'loading' } | { kind: 'svg'; svg: string } | { kind: 'error'
 export default function MermaidBlock({ code }: { code: string }) {
   const base = `mermaid-${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
   const [view, setView] = useState<View>({ kind: 'loading' });
-  const [copied, setCopied] = useState(false);
+  const toast = useToast();
   const boxRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -58,11 +58,14 @@ export default function MermaidBlock({ code }: { code: string }) {
       </>
     );
 
-  const copy = () =>
-    navigator.clipboard?.writeText(code).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1600);
-    });
+  const fail = () => toast({ variant: 'cautionary', content: '복사하지 못했어요. 브라우저가 클립보드를 막았어요.' });
+  const copy = () => {
+    if (!navigator.clipboard) return fail();
+    navigator.clipboard.writeText(code).then(
+      () => toast({ variant: 'positive', content: '복사했어요' }),
+      fail,
+    );
+  };
 
   return (
     <Panel flush sx={{ margin: '0 0 12px' }}>
@@ -70,8 +73,9 @@ export default function MermaidBlock({ code }: { code: string }) {
         <Typography variant="caption1" weight="bold" color="semantic.foreground.neutral.secondary">
           구성도
         </Typography>
-        <TextButton size="small" color="assistive" onClick={copy} leadingContent={copied ? <IconCheck /> : <IconCopy />} aria-live="polite">
-          {copied ? '복사했어요' : '구성도 코드 복사'}
+        {/* 결과는 버튼 글자를 바꾸지 않고 Toast로 알린다 */}
+        <TextButton size="small" color="assistive" onClick={copy} leadingContent={<IconCopy />}>
+          구성도 코드 복사
         </TextButton>
       </FlexBox>
       <Box
