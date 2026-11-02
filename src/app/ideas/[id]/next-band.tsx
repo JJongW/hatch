@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { Box, Button, FlexBox, Typography } from '@montage-ui/core';
 
 import Panel from '@/components/panel';
-import { primaryActionSx } from '@/lib/theme/tokens';
 
 import type { Doc, DocKey } from '@/lib/storage';
 import type { NextAction } from '@/lib/summary';
@@ -55,17 +54,17 @@ export default function NextBand({ next, docs, ideaId, onOpenDoc, goTool }: Prop
             </Typography>
           </FlexBox>
           {step.open && (
-            <Button size="medium" onClick={() => onOpenDoc(step.open!.doc)} sx={primaryActionSx}>
+            <Button size="medium" onClick={() => onOpenDoc(step.open!.doc)}>
               {step.open.label}
             </Button>
           )}
           {step.go &&
             (goTool ? (
-              <Button size="medium" onClick={() => goTool(step.go!.tool)} sx={primaryActionSx}>
+              <Button size="medium" onClick={() => goTool(step.go!.tool)}>
                 {step.go.label}
               </Button>
             ) : (
-              <Button as={Link} href={`/tools/${step.go.tool}?idea=${ideaId}`} size="medium" sx={primaryActionSx}>
+              <Button as={Link} href={`/tools/${step.go.tool}?idea=${ideaId}`} size="medium">
                 {step.go.label}
               </Button>
             ))}
