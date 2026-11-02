@@ -111,7 +111,11 @@ export default function TryFlow({ fixture }: { fixture: TryFixture }) {
 
   const makeQuestions = async (): Promise<QuestionsState> => {
     await wait();
-    setState((s) => ({ ...s, questions: { ...fixture.questions, createdAt: new Date().toISOString() } }));
+    // 예시 질문은 예시 기획안보다 먼저 만들어져 라벨 하나가 빠져 있다. 지금 문서의 라벨을 더해 '새로 생긴 확인 필요'가 바로 뜨지 않게 한다
+    setState((s) => {
+      const labels = [...new Set([...fixture.questions.labels, ...collectUnknowns(docsOf(s)).groups.map((g) => g.label)])];
+      return { ...s, questions: { ...fixture.questions, labels, createdAt: new Date().toISOString() } };
+    });
     return { savedAt: Date.now() };
   };
 
@@ -140,6 +144,7 @@ export default function TryFlow({ fixture }: { fixture: TryFixture }) {
         voc: state.vocRan ? vocEvidence(fixture.voc.data) : null,
         reviewedPrd: state.reviews > 0,
         decisions: state.decisions,
+        questionsMade: state.questions !== null,
       })
     : null;
   const { prdReview, voc } = fixture.tools;

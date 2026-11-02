@@ -15,11 +15,12 @@ type Props = {
   docs: Doc[];
   ideaId: string;
   onOpenDoc: (key: DocKey) => void;
+  onOpenQuestions: () => void;
   /** 있으면 도구 버튼이 주소 이동 대신 이 함수를 부른다 (흐름 체험) */
   goTool?: (tool: ToolLink) => void;
 };
 
-type Step = { text: string; open?: { doc: DocKey; label: string }; go?: { tool: ToolLink; label: string } };
+type Step = { text: string; open?: { doc: DocKey; label: string }; go?: { tool: ToolLink; label: string }; questions?: string };
 
 function stepOf(next: NextAction, label: (key: DocKey) => string): Step {
   switch (next.kind) {
@@ -29,6 +30,8 @@ function stepOf(next: NextAction, label: (key: DocKey) => string): Step {
       return { text: `앞 문서가 바뀌어서 ${label(next.doc)} 내용이 예전 기준이에요.`, open: { doc: next.doc, label: `${label(next.doc)} 확인하기` } };
     case 'make-doc':
       return { text: `다음으로 만들 문서는 ${label(next.doc)}예요.`, open: { doc: next.doc, label: `${label(next.doc)} 열기` } };
+    case 'make-questions':
+      return { text: '문서에 [확인 필요]가 남았어요. 누구에게 물을지 질문으로 정리해요.', questions: '확인 질문 정리하기' };
     case 'collect-voc':
       return { text: '모르는 것이 남았는데 고객 근거가 없어요. 고객 의견부터 모아 봐요.', go: { tool: 'voc', label: '고객 의견 정리하기' } };
     case 'review-prd':
@@ -39,7 +42,7 @@ function stepOf(next: NextAction, label: (key: DocKey) => string): Step {
 }
 
 /** 머리 바로 아래 "다음 할 일" 한 줄 + 주 버튼 하나 (spec detail-dashboard §2-2) */
-export default function NextBand({ next, docs, ideaId, onOpenDoc, goTool }: Props) {
+export default function NextBand({ next, docs, ideaId, onOpenDoc, onOpenQuestions, goTool }: Props) {
   const step = stepOf(next, (key) => docs.find((d) => d.key === key)?.label ?? key);
   return (
     <Box as="section" aria-label="다음 할 일">
@@ -56,6 +59,11 @@ export default function NextBand({ next, docs, ideaId, onOpenDoc, goTool }: Prop
           {step.open && (
             <Button size="medium" onClick={() => onOpenDoc(step.open!.doc)}>
               {step.open.label}
+            </Button>
+          )}
+          {step.questions && (
+            <Button size="medium" onClick={onOpenQuestions}>
+              {step.questions}
             </Button>
           )}
           {step.go &&

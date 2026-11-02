@@ -39,6 +39,10 @@ describe('다음 행동', () => {
   it('4. VOC 없고 모르는 것 있음 → 고객 의견 모으기', () => {
     expect(summarize(input({ voc: null })).next).toEqual({ kind: 'collect-voc' });
   });
+  it('4-0. 질문 목록 여부를 넘기고 아직 안 만들었으면 → 질문 정리가 고객 의견보다 먼저 (흐름 체험)', () => {
+    expect(summarize(input({ voc: null, questionsMade: false })).next).toEqual({ kind: 'make-questions' });
+    expect(summarize(input({ voc: null, questionsMade: true })).next).toEqual({ kind: 'collect-voc' });
+  });
   it('4. VOC 없어도 모르는 것이 없으면 건너뛴다', () => {
     expect(summarize(input({ voc: null, docs: docsWith({ ...ALL, plan: '## 문제\n가' }) })).next).toEqual({ kind: 'done' });
   });
