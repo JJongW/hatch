@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Box, Button, ContentBadge, FlexBox, Tab, TabList, TabListItem, TabPanel, TextButton } from '@montage-ui/core';
 
 import { useDemo } from '../../_components/demo';
@@ -89,6 +89,20 @@ export default function IdeaDetail({
   const [tab, setTab] = useState<DocKey>(() => firstTab(docs, summary.next));
   // 본문 탭. 처음은 문서 (spec detail-dashboard §2-4)
   const [section, setSection] = useState<DetailTab>('docs');
+  // 현황 칸, 근거 링크로 탭을 바꾸면 그 탭으로 초점을 옮긴다 (키보드, 화면 읽기 사용자가 바뀐 곳을 알게)
+  const tabsRef = useRef<HTMLDivElement>(null);
+  const openSection = (next: DetailTab) => {
+    setSection(next);
+    requestAnimationFrame(() => {
+      const el = tabsRef.current?.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]');
+      el?.focus();
+      el?.scrollIntoView({ block: 'nearest' });
+    });
+  };
+  // 결정 폼은 화면 전체에서 하나만 연다. 확인 질문 탭과 결정 탭이 같은 질문을 동시에 열지 않게
+  const [formIn, setFormIn] = useState<'questions' | 'decisions' | null>(null);
+  const onQuestionsForm = useCallback((open: boolean) => setFormIn((f) => (open ? 'questions' : f === 'questions' ? null : f)), []);
+  const onDecisionsForm = useCallback((open: boolean) => setFormIn((f) => (open ? 'decisions' : f === 'decisions' ? null : f)), []);
   const openDoc = (key: DocKey) => {
     setSection('docs');
     setTab(key);
@@ -157,9 +171,9 @@ export default function IdeaDetail({
       </Box>
 
       <NextBand next={summary.next} docs={docs} ideaId={ideaId} onOpenDoc={openDoc} />
-      <StatusCards stats={stats} onOpen={setSection} />
+      <StatusCards stats={stats} onOpen={openSection} />
 
-      <Box sx={{ marginTop: '12px' }}>
+      <Box ref={tabsRef} sx={{ marginTop: '12px' }}>
         <Tab value={section} onValueChange={(v) => setSection(v as DetailTab)}>
           <TabList size="medium" resize="hug">
             <TabListItem value="docs">문서</TabListItem>
@@ -189,13 +203,13 @@ export default function IdeaDetail({
             />
           </TabPanel>
           <TabPanel value="questions" mountMode="force-mount" sx={PANEL}>
-            <QuestionsPanel view={questions} action={makeQuestionsAction} saveDecision={saveDecisionAction} onBusy={setAsking} disabled={generating} />
+            <QuestionsPanel view={questions} action={makeQuestionsAction} saveDecision={saveDecisionAction} onBusy={setAsking} disabled={generating} locked={formIn === 'decisions'} onForm={onQuestionsForm} />
           </TabPanel>
           <TabPanel value="decisions" mountMode="force-mount" sx={PANEL}>
-            <DecisionsPanel decisions={summary.decisions} saveDecision={saveDecisionAction} removeDecision={removeDecisionAction} disabled={generating} />
+            <DecisionsPanel decisions={summary.decisions} saveDecision={saveDecisionAction} removeDecision={removeDecisionAction} disabled={generating} locked={formIn === 'questions'} onForm={onDecisionsForm} />
           </TabPanel>
           <TabPanel value="evidence" mountMode="force-mount" sx={PANEL}>
-            <EvidencePanel summary={summary} unknownPlaces={questions.unknownTotal} onOpenQuestions={() => setSection('questions')} />
+            <EvidencePanel summary={summary} unknownPlaces={questions.unknownTotal} onOpenQuestions={() => openSection('questions')} />
           </TabPanel>
         </Tab>
       </Box>

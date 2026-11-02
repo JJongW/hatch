@@ -1,6 +1,6 @@
 'use client';
 
-import { Box, Tab, TabList, TabListItem, TabPanel, Typography } from '@montage-ui/core';
+import { Box, ContentBadge, FlexBox, ListCell, ListCellContent, Tab, TabList, TabListItem, TabPanel, Typography, useMediaQuery } from '@montage-ui/core';
 import { IconCheck } from '@montage-ui/icon';
 
 import type { Theme } from '@montage-ui/core';
@@ -19,6 +19,22 @@ const LABELS: Record<DocStatus, string> = {
 };
 
 const MARK = '12px';
+
+// 세로 목록의 상태 배지. 완료도 흐리지 않게 (spec detail-dashboard §1)
+const ACCENT: Partial<Record<DocStatus, 'semantic.foreground.brand.primary' | 'semantic.foreground.cautionary.primary'>> = {
+  running: 'semantic.foreground.brand.primary',
+  next: 'semantic.foreground.brand.primary',
+  stale: 'semantic.foreground.cautionary.primary',
+};
+
+function StatusBadge({ status }: { status: DocStatus }) {
+  const accent = ACCENT[status];
+  return (
+    <ContentBadge size="xsmall" variant="outlined" color={accent ? 'accent' : 'neutral'} accentColor={accent}>
+      {LABELS[status]}
+    </ContentBadge>
+  );
+}
 
 // 상태 표시: 완료는 체크, 바뀜은 주황 점, 만드는 중은 깜빡이는 파란 점, 다음 차례는 파란 원, 대기는 회색 원 (spec chain-progress §2)
 function StatusMark({ status }: { status: DocStatus }) {
@@ -51,6 +67,10 @@ type Props = {
 
 export default function DocTabs({ docs, running, value, onChange, render }: Props) {
   const progress = chainProgress(docs, running);
+  const { breakpoint, respondMore } = useMediaQuery();
+  // 넓은 화면은 왼쪽 세로 목록 + 오른쪽 본문, 좁으면 가로 탭 (spec detail-dashboard §2 탭 안).
+  // 왼쪽 네비가 폭을 차지해 spec의 1024px 대신 Montage lg(1200px)에서 나눈다
+  const wide = respondMore(breakpoint.lg);
   return (
     <>
       <Typography
@@ -61,33 +81,55 @@ export default function DocTabs({ docs, running, value, onChange, render }: Prop
       >
         {summaryLine(progress, docs, running)}
       </Typography>
-      <Tab value={value} onValueChange={(v) => onChange(v as DocKey)}>
-        <TabList size="medium" resize="hug">
-          {docs.map((doc) => {
-            const status = progress.status[doc.key];
-            return (
-              <TabListItem key={doc.key} value={doc.key}>
-                <Box as="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                  <StatusMark status={status} />
-                  {doc.label}
-                  <Typography
-                    as="span"
-                    variant="caption2"
-                    color={status === 'next' ? 'semantic.foreground.brand.primary' : 'semantic.foreground.neutral.secondary'}
-                  >
-                    {LABELS[status]}
-                  </Typography>
-                </Box>
-              </TabListItem>
-            );
-          })}
-        </TabList>
-        {docs.map((doc) => (
-          <TabPanel key={doc.key} value={doc.key} sx={{ paddingTop: '16px', animation: 'hatch-fade 200ms ease-out both' }}>
-            {render(doc)}
-          </TabPanel>
-        ))}
-      </Tab>
+      <Box sx={{ [wide]: { display: 'grid', gridTemplateColumns: '220px minmax(0, 1fr)', gap: '24px', alignItems: 'start' } }}>
+        <FlexBox as="nav" aria-label="문서" flexDirection="column" sx={{ display: 'none', [wide]: { display: 'flex' } }}>
+          {docs.map((doc) => (
+            <ListCell
+              key={doc.key}
+              as="button"
+              type="button"
+              aria-current={value === doc.key ? 'true' : undefined}
+              selected={value === doc.key}
+              verticalPadding="small"
+              onClick={() => onChange(doc.key)}
+              trailingContent={
+                <ListCellContent variant="content-badge">
+                  <StatusBadge status={progress.status[doc.key]} />
+                </ListCellContent>
+              }
+            >
+              {doc.label}
+            </ListCell>
+          ))}
+        </FlexBox>
+        <Tab value={value} onValueChange={(v) => onChange(v as DocKey)}>
+          <TabList size="medium" resize="hug" sx={{ [wide]: { display: 'none' } }}>
+            {docs.map((doc) => {
+              const status = progress.status[doc.key];
+              return (
+                <TabListItem key={doc.key} value={doc.key}>
+                  <Box as="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <StatusMark status={status} />
+                    {doc.label}
+                    <Typography
+                      as="span"
+                      variant="caption2"
+                      color={status === 'next' ? 'semantic.foreground.brand.primary' : 'semantic.foreground.neutral.secondary'}
+                    >
+                      {LABELS[status]}
+                    </Typography>
+                  </Box>
+                </TabListItem>
+              );
+            })}
+          </TabList>
+          {docs.map((doc) => (
+            <TabPanel key={doc.key} value={doc.key} sx={{ paddingTop: '16px', animation: 'hatch-fade 200ms ease-out both', [wide]: { paddingTop: 0 } }}>
+              {render(doc)}
+            </TabPanel>
+          ))}
+        </Tab>
+      </Box>
     </>
   );
 }

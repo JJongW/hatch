@@ -1,7 +1,19 @@
 'use client';
 
 import { useActionState, useEffect, useState } from 'react';
-import { Box, Button, FlexBox, SectionMessage, Typography } from '@montage-ui/core';
+import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  Box,
+  Button,
+  FlexBox,
+  List,
+  ListCell,
+  ListCellContent,
+  SectionMessage,
+  Typography,
+} from '@montage-ui/core';
 
 import { useDemo } from '../../_components/demo';
 import DecisionForm from './decision-form';
@@ -18,6 +30,10 @@ type Props = {
   onBusy: (busy: boolean) => void;
   /** 문서 생성 · 질문 만들기 중이면 막는다 */
   disabled: boolean;
+  /** 결정 탭에 폼이 열려 있으면 답 적기를 숨긴다 (폼은 화면 전체에서 하나) */
+  locked: boolean;
+  /** 답 적기 폼을 열고 닫을 때 위에 알린다 */
+  onForm: (open: boolean) => void;
 };
 
 const text = (t: string) => (
@@ -32,42 +48,46 @@ const caption = (t: string) => (
   </Typography>
 );
 
-const sub = (t: string) => (
-  <Typography as="h3" variant="label1" weight="bold" sx={{ display: 'block', marginBottom: '4px' }}>
-    {t}
-  </Typography>
-);
-
+// 질문 한 줄: 질문, 아래에 출처 라벨, 오른쪽에 답 적기. 답 적기 폼은 그 줄 아래에 (ListCell 안에 넣으면 눌림 효과 층이 폼을 덮는다)
 function Lines({ list, aside, below }: { list: QuestionLine[]; aside: (q: QuestionLine) => React.ReactNode; below: (q: QuestionLine) => React.ReactNode }) {
   return (
-    <Typography as="ul" variant="body2" sx={{ display: 'block', paddingLeft: '20px', listStyle: 'disc' }}>
-      {list.map((q) => (
-        <li key={q.label}>
-          <FlexBox justifyContent="space-between" alignItems="flex-start" gap="8px">
-            <span>
+    <List flexDirection="column" sx={{ width: '100%' }}>
+      {list.map((q) => {
+        const button = aside(q);
+        const form = below(q);
+        return (
+          <Box as="li" key={q.label}>
+            <ListCell
+              as="div"
+              disableInteraction
+              verticalPadding="small"
+              textProps={{ description: `${q.label} (${q.count}곳)` }}
+              trailingContent={button && <ListCellContent variant="button">{button}</ListCellContent>}
+            >
               {q.question}
-              {caption(`${q.label} (${q.count}곳)`)}
-            </span>
-            {aside(q)}
-          </FlexBox>
-          {below(q)}
-        </li>
-      ))}
-    </Typography>
+            </ListCell>
+            {form}
+          </Box>
+        );
+      })}
+    </List>
   );
 }
 
-export default function QuestionsPanel({ view, action, saveDecision, onBusy, disabled }: Props) {
+export default function QuestionsPanel({ view, action, saveDecision, onBusy, disabled, locked, onForm }: Props) {
   const demo = useDemo();
   // 한 번에 폼 하나 (결정 칸과 같은 규칙). 값은 열어 둔 질문의 라벨
   const [opening, setOpening] = useState<string | null>(null);
   const [state, formAction, pending] = useActionState(async (): Promise<QuestionsState> => action(), {});
   // 액션 안에서 바꾼 상태는 transition이 끝나야 반영되므로, pending을 보고 위에 알린다
   useEffect(() => onBusy(pending), [pending, onBusy]);
+  // 두 패널은 force-mount라 사라지지 않는다. 조건부 렌더로 바꾸면 언마운트 때 onForm(false) 정리를 넣는다
+  useEffect(() => onForm(opening !== null), [opening, onForm]);
   if (!view.made && (demo || view.labelTotal === 0)) return text('확인할 질문이 아직 없어요.');
 
   const answer = (q: QuestionLine) =>
     !demo &&
+    !locked &&
     opening === null && (
       <Button size="small" variant="outlined" color="assistive" onClick={() => setOpening(q.label)} disabled={disabled}>
         답 적기
@@ -78,6 +98,24 @@ export default function QuestionsPanel({ view, action, saveDecision, onBusy, dis
       <DecisionForm question={q.question} from="question" action={saveDecision.bind(null, null)} onClose={() => setOpening(null)} disabled={disabled} />
     );
 
+  // 묶음 하나. 접어도 폼 상태는 남게 마운트해 두고, 열린 폼이 있는 묶음을 접으면 폼을 닫는다
+  // (안 닫으면 폼은 안 보이는데 두 탭의 버튼이 모두 숨은 채로 남는다)
+  const group = (key: string, title: string, expanded: boolean, list: QuestionLine[]) => (
+    <Accordion
+      key={key}
+      defaultExpanded={expanded}
+      divider
+      onChange={(open) => {
+        if (!open && list.some((q) => q.label === opening)) setOpening(null);
+      }}
+    >
+      <AccordionSummary>{title}</AccordionSummary>
+      <AccordionDetails forceMount>
+        <Lines list={list} aside={answer} below={form} />
+      </AccordionDetails>
+    </Accordion>
+  );
+
   const make = (label: string) => (
     <form action={formAction}>
       <Button type="submit" size="small" loading={pending} disabled={disabled}>
@@ -85,7 +123,6 @@ export default function QuestionsPanel({ view, action, saveDecision, onBusy, dis
       </Button>
     </form>
   );
-  const ownerCount = view.owner.reduce((n, g) => n + g.items.length, 0);
   const skipped = [
     view.unnamed > 0 ? `라벨 없는 표시 ${view.unnamed}곳` : '',
     view.cut > 0 ? `${view.limit + 1}번째부터 ${view.cut}개` : '',
@@ -101,21 +138,12 @@ export default function QuestionsPanel({ view, action, saveDecision, onBusy, dis
           </>
         ) : (
           <>
-            {view.customer.length > 0 && (
-              <Box>
-                {sub(`고객에게 물을 것 (${view.customer.length})`)}
-                <Lines list={view.customer} aside={answer} below={form} />
-              </Box>
-            )}
-            {view.owner.length > 0 && (
-              <Box>
-                {sub(`담당자에게 확인할 것 (${ownerCount})`)}
-                {view.owner.map((g) => (
-                  <Box key={g.role} sx={{ marginTop: '4px' }}>
-                    {caption(g.role)}
-                    <Lines list={g.items} aside={answer} below={form} />
-                  </Box>
-                ))}
+            {/* 묶음마다 접기. 고객 묶음만 처음 펼침 (spec detail-dashboard §2 탭 안) */}
+            {(view.customer.length > 0 || view.owner.length > 0) && (
+              <Box sx={{ width: '100%' }}>
+                {view.customer.length > 0 &&
+                  group('customer', `고객에게 물을 것 ${view.customer.length}개`, true, view.customer)}
+                {view.owner.map((g) => group(g.role, `${g.role} 담당자에게 확인할 것 ${g.items.length}개`, false, g.items))}
               </Box>
             )}
             {view.customer.length === 0 && view.owner.length === 0 && text('남은 질문이 없어요.')}
