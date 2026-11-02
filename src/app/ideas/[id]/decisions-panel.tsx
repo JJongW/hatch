@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Box, Button, ContentBadge, FlexBox, List, ListCell, ListCellContent, ListCellLabelTrailing, Typography } from '@montage-ui/core';
 
 import { useDemo } from '../../_components/demo';
+import { useConfirmSubmit } from '../../_components/use-confirm-submit';
 import DecisionForm from './decision-form';
 
 import type { Decision } from '@/lib/storage';
@@ -55,7 +56,14 @@ function Row({ label, description, badge, actions, below }: RowProps) {
             </ListCellLabelTrailing>
           )
         }
-        trailingContent={actions && <ListCellContent variant="custom">{actions}</ListCellContent>}
+        // ListCell은 줄 안 클릭을 첫 버튼(수정)으로 넘긴다. 버튼끼리는 넘기지 않게 여기서 멈춘다 (지우기를 누르면 수정 폼도 열렸음)
+        trailingContent={
+          actions && (
+            <ListCellContent variant="custom" onClick={(e) => e.stopPropagation()}>
+              {actions}
+            </ListCellContent>
+          )
+        }
       >
         {label}
       </ListCell>
@@ -73,6 +81,7 @@ export default function DecisionsPanel({ decisions, saveDecision, removeDecision
   const demo = useDemo();
   const [opening, setOpening] = useState<Opening>(null);
   const close = () => setOpening(null);
+  const ask = useConfirmSubmit();
   // 두 패널은 force-mount라 사라지지 않는다. 조건부 렌더로 바꾸면 언마운트 때 onForm(false) 정리를 넣는다
   useEffect(() => onForm(opening !== null), [opening, onForm]);
   const canOpen = !demo && !locked && opening === null;
@@ -116,9 +125,7 @@ export default function DecisionsPanel({ decisions, saveDecision, removeDecision
                       {outlined('수정', () => setOpening({ kind: 'edit', id: d.id }))}
                       <form
                         action={() => removeDecision(d.id)}
-                        onSubmit={(e) => {
-                          if (!window.confirm('이 결정을 지울까요? 이전 판은 .history에 남아요.')) e.preventDefault();
-                        }}
+                        onSubmit={ask({ title: '이 결정을 지울까요?', content: '이전 판은 .history에 남아요.', confirm: '지우기', negative: true })}
                       >
                         <Button type="submit" size="small" variant="outlined" color="assistive" disabled={disabled}>
                           지우기
