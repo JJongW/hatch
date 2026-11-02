@@ -37,6 +37,8 @@ const navStyle = (theme: Theme) => ({
   flexDirection: 'column' as const,
   gap: '16px',
   padding: '16px',
+  // 본문(흰 바탕)과 층을 나눈다. 색 없이 옅은 회색 (spec 11절 위계)
+  background: theme.semantic.background.neutral.secondary,
   borderBottom: `1px solid ${theme.semantic.line.neutral.primary}`,
   [respondMore('768px')]: {
     width: '240px',

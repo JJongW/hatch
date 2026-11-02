@@ -1,6 +1,6 @@
 'use client';
 
-import { Box, Typography } from '@montage-ui/core';
+import { addOpacity, Box, Typography } from '@montage-ui/core';
 
 import type { Theme } from '@montage-ui/core';
 
@@ -21,7 +21,7 @@ const cardStyle = (t: Theme) => ({
   color: 'inherit',
   background: 'transparent',
   cursor: 'pointer',
-  '&:hover': { background: t.semantic.background.neutral.secondary },
+  '&:hover': { background: addOpacity(t.semantic.foreground.neutral.primary, t.opacity[5]) }, // 색 대신 본문색 5% 틴트 (#103)
   '&:focus-visible': { outline: `2px solid ${t.semantic.foreground.brand.primary}`, outlineOffset: '2px' },
 });
 

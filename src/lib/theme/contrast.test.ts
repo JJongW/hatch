@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 import { contrastRatio } from './contrast';
 
-// theme.css의 실제 값으로 spec 2026-11-02 color-system 3절 대비표를 다시 계산한다
+// theme.css의 실제 값으로 spec 2026-11-02 color-system 대비표(11절)를 다시 계산한다
 const css = readFileSync(path.resolve(__dirname, '../../app/theme.css'), 'utf8');
 
 // 다크에서는 Montage 다크 값(html[data-theme='dark'], 0,1,1)이 :root(0,1,0)를 이긴다.
@@ -31,39 +31,39 @@ type Pair = [fg: string, bg: string, expected: number, min: number];
 const AA_TEXT = 4.5;
 const UI = 3;
 
-// 사용자 승인 15개
-const approved: { light: Pair[]; dark: Pair[] } = {
+// 승인 조합 (spec 11절 무채색 개정). 라일락은 밝은 바탕 위 1.23이라 배경으로만 쓴다
+const pairs: { light: Pair[]; dark: Pair[] } = {
   light: [
-    ['text-primary', 'bg-default', 17.47, AA_TEXT],
-    ['text-primary', 'surface-secondary', 14.43, AA_TEXT],
-    ['text-secondary', 'bg-default', 6.2, AA_TEXT],
-    ['text-secondary', 'surface-secondary', 5.12, AA_TEXT],
-    ['action-secondary-bg', 'bg-default', 5.74, AA_TEXT],
-    ['action-secondary-bg', 'surface-secondary', 4.74, AA_TEXT],
-    ['action-primary-text', 'action-primary-bg', 5.36, AA_TEXT],
-    ['highlight-text', 'highlight-bg', 12.56, AA_TEXT],
-    ['action-secondary-text', 'action-secondary-bg', 5.74, AA_TEXT],
-    ['border', 'surface-secondary', 3.22, UI],
+    ['text-primary', 'bg-default', 17.58, AA_TEXT],
+    ['text-primary', 'surface-secondary', 15.71, AA_TEXT],
+    ['text-secondary', 'bg-default', 6.48, AA_TEXT],
+    ['text-secondary', 'surface-secondary', 5.79, AA_TEXT],
+    ['action-primary-text', 'action-primary-bg', 14.27, AA_TEXT],
+    ['highlight-text', 'highlight-bg', 14.27, AA_TEXT],
+    ['action-secondary-text', 'action-secondary-bg', 17.58, AA_TEXT],
+    ['text-secondary', 'action-primary-bg', 5.26, AA_TEXT],
+    ['border', 'bg-default', 4, UI],
+    ['border', 'surface-secondary', 3.58, UI],
+    ['border', 'action-primary-bg', 3.25, UI],
+    ['text-primary', 'bg-subtle', 16.41, AA_TEXT],
+    ['text-secondary', 'bg-subtle', 6.05, AA_TEXT],
+    ['border', 'bg-subtle', 3.74, UI],
   ],
   dark: [
-    ['text-primary', 'bg-default', 17.47, AA_TEXT],
-    ['action-primary-bg', 'bg-default', 5.36, AA_TEXT],
-    ['highlight-bg', 'surface-elevated', 9.56, AA_TEXT],
+    ['text-primary', 'bg-default', 17.58, AA_TEXT],
+    ['text-primary', 'surface-primary', 15.52, AA_TEXT],
+    ['text-primary', 'surface-elevated', 13.2, AA_TEXT],
+    ['text-secondary', 'bg-default', 8.86, AA_TEXT],
+    ['text-secondary', 'surface-primary', 7.83, AA_TEXT],
     ['text-secondary', 'surface-elevated', 6.65, AA_TEXT],
-    ['border', 'surface-elevated', 3.36, UI],
-  ],
-};
-
-// 4절 D4로 추가 승인한 7개
-const added: { light: Pair[]; dark: Pair[] } = {
-  light: [['border', 'bg-default', 3.89, UI]],
-  dark: [
-    ['text-primary', 'surface-primary', 15.45, AA_TEXT],
-    ['text-primary', 'surface-elevated', 13.3, AA_TEXT],
-    ['text-secondary', 'bg-default', 8.74, AA_TEXT],
-    ['text-secondary', 'surface-primary', 7.73, AA_TEXT],
-    ['border', 'bg-default', 4.41, UI],
-    ['border', 'surface-primary', 3.91, UI],
+    ['action-primary-text', 'action-primary-bg', 14.27, AA_TEXT],
+    ['highlight-text', 'highlight-bg', 14.27, AA_TEXT],
+    ['action-secondary-text', 'action-secondary-bg', 13.2, AA_TEXT],
+    ['action-primary-bg', 'bg-default', 14.27, UI],
+    ['action-primary-bg', 'surface-elevated', 10.72, UI],
+    ['border', 'bg-default', 4.76, UI],
+    ['border', 'surface-primary', 4.21, UI],
+    ['border', 'surface-elevated', 3.58, UI],
   ],
 };
 
@@ -75,8 +75,8 @@ describe('contrastRatio', () => {
 });
 
 describe.each([
-  ['라이트', light, [...approved.light, ...added.light]],
-  ['다크', dark, [...approved.dark, ...added.dark]],
+  ['라이트', light, pairs.light],
+  ['다크', dark, pairs.dark],
 ] as const)('%s 승인 조합', (_, mode, pairs) => {
   it.each(pairs)('%s / %s = %s', (fg, bg, expected, min) => {
     const ratio = contrastRatio(hex(mode, fg), hex(mode, bg));
