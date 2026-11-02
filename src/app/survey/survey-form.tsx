@@ -5,6 +5,8 @@ import { Box, Button, Chip, FlexBox, SectionMessage, TextArea, TextField, Typogr
 
 import { MAX_LONG, MAX_SHORT, QUESTIONS, SECTIONS, type Question } from '@/lib/survey/questions';
 
+import SectionTitle from '../_components/section-title';
+
 import type { SurveyState } from './actions';
 
 type Answers = Record<string, unknown>;
@@ -120,10 +122,11 @@ export default function SurveyForm({ ready, action }: Props) {
         {!ready && <SectionMessage variant="cautionary">설문 저장소가 연결되지 않았어요. 진행자에게 알려 주세요.</SectionMessage>}
         {SECTIONS.map((s, si) => (
           <FlexBox as="section" key={s.title} flexDirection="column" gap="24px" aria-labelledby={`s-${si}`}>
-            <FlexBox flexDirection="column" gap="4px">
-              <Typography id={`s-${si}`} as="h2" variant="headline2" weight="bold">
+            {/* 제목 아래 여백(12px)이 설명과의 간격 */}
+            <FlexBox flexDirection="column">
+              <SectionTitle id={`s-${si}`} flush>
                 {si + 1}. {s.title}
-              </Typography>
+              </SectionTitle>
               {s.description && (
                 <Typography variant="body2" color="semantic.foreground.neutral.secondary">
                   {s.description}

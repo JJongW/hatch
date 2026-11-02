@@ -20,12 +20,12 @@ import {
 import { UseLocallyButton, useDemo } from '../../_components/demo';
 import DocMarkdown from '../../_components/doc-markdown';
 import PageHeader from '../../_components/page-header';
+import SectionTitle from '../../_components/section-title';
 import RunningNote from '../../_components/running-note';
 import { useRefreshWhile } from '../../_components/use-refresh-while';
 
+import Panel from '@/components/panel';
 import { DEMO_SAMPLE_IDEA } from '@/lib/demo';
-
-import type { Theme } from '@montage-ui/core';
 
 import type { ToolActionState } from '../../actions';
 import type { ToolFrameData } from './load';
@@ -43,17 +43,7 @@ type Props = ToolFrameData & {
 
 type Mode = 'idea' | 'pasted' | 'none';
 
-const sectionTitle = (text: string) => (
-  <Typography as="h2" variant="headline2" weight="bold" sx={{ display: 'block', marginBottom: '12px' }}>
-    {text}
-  </Typography>
-);
-
-const resultBoxStyle = (theme: Theme) => ({
-  border: `1px solid ${theme.semantic.line.neutral.primary}`,
-  borderRadius: '12px',
-  padding: '16px',
-});
+const sectionTitle = (text: string) => <SectionTitle flush>{text}</SectionTitle>;
 
 export default function ToolFrame({ tool, ideas, ideaId, none, results, current, busy, run, inputFields, continueFields, resultSummary }: Props) {
   const router = useRouter();
@@ -271,7 +261,7 @@ export default function ToolFrame({ tool, ideas, ideaId, none, results, current,
           {showResults && current && (
             <section>
               {sectionTitle('결과')}
-              <Box sx={resultBoxStyle}>
+              <Panel>
                 {resultSummary && <Box sx={{ marginBottom: '16px' }}>{resultSummary}</Box>}
                 <Typography as="div" variant="body2">
                   <DocMarkdown>{current.body}</DocMarkdown>
@@ -292,7 +282,7 @@ export default function ToolFrame({ tool, ideas, ideaId, none, results, current,
                     </FlexBox>
                   </FlexBox>
                 )}
-              </Box>
+              </Panel>
             </section>
           )}
 

@@ -10,19 +10,13 @@ import { IconCheck, IconCopy } from '@montage-ui/icon';
 
 import type { Theme } from '@montage-ui/core';
 
+import Panel from '@/components/panel';
 import { splitTbd } from '@/lib/tbd';
 
 // 문서에서 나오는 펜스: 프롬프트(~~~text), 구성도(```mermaid, 그리기 실패 때만 여기로). 다른 언어가 생기면 이름을 더한다
 const LABELS: Record<string, string> = { text: '프롬프트', mermaid: '구성도' };
 
 type CopyState = 'idle' | 'copied' | 'selected';
-
-const frame = (theme: Theme) => ({
-  border: `1px solid ${theme.semantic.line.neutral.primary}`,
-  borderRadius: '12px',
-  overflow: 'hidden',
-  margin: '0 0 12px',
-});
 
 const body = (theme: Theme) => ({
   display: 'grid',
@@ -61,7 +55,7 @@ export default function CodeBlock({ lang, code }: { lang: string; code: string }
   };
 
   return (
-    <Box sx={frame}>
+    <Panel flush sx={{ margin: '0 0 12px' }}>
       <FlexBox alignItems="center" justifyContent="space-between" sx={{ padding: '6px 8px 6px 16px' }}>
         <Typography variant="caption1" weight="bold" color="semantic.foreground.neutral.secondary">
           {LABELS[lang] ?? (lang || '코드')}
@@ -109,6 +103,6 @@ export default function CodeBlock({ lang, code }: { lang: string; code: string }
           ))}
         </Box>
       </Box>
-    </Box>
+    </Panel>
   );
 }
