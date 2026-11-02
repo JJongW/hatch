@@ -36,6 +36,9 @@ type Props = ToolFrameData & {
   inputFields?: React.ReactNode;
   /** 결과 상자 안 이어 실행 입력 (협상 내 답). 이어 실행 버튼과 같은 조건에서 보인다 */
   continueFields?: React.ReactNode;
+  /** 결과 상자 맨 위, 마크다운 위에 놓는 화면 전용 요약 (재리뷰 비교, VOC 거르기). 페이지가 current.data로 만든다.
+   *  그릴 게 없으면 null을 넘긴다. 상태가 있는 요약은 'use client' 컴포넌트에 data(JSON)만 props로 */
+  resultSummary?: React.ReactNode;
 };
 
 type Mode = 'idea' | 'pasted' | 'none';
@@ -52,7 +55,7 @@ const resultBoxStyle = (theme: Theme) => ({
   padding: '16px',
 });
 
-export default function ToolFrame({ tool, ideas, ideaId, none, results, current, busy, run, inputFields, continueFields }: Props) {
+export default function ToolFrame({ tool, ideas, ideaId, none, results, current, busy, run, inputFields, continueFields, resultSummary }: Props) {
   const router = useRouter();
   const demo = useDemo();
   const base = `/tools/${tool.key}`;
@@ -269,6 +272,7 @@ export default function ToolFrame({ tool, ideas, ideaId, none, results, current,
             <section>
               {sectionTitle('결과')}
               <Box sx={resultBoxStyle}>
+                {resultSummary && <Box sx={{ marginBottom: '16px' }}>{resultSummary}</Box>}
                 <Typography as="div" variant="body2">
                   <DocMarkdown>{current.body}</DocMarkdown>
                 </Typography>

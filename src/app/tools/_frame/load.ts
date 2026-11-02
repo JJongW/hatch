@@ -35,8 +35,9 @@ export type ToolFrameData = {
   none: boolean;
   /** 이 아이디어(또는 붙여넣기)의 이 도구 결과, 최신순. createdAt · source는 표시용 문자열 (문서 이름 또는 '붙여넣기') */
   results: { id: string; createdAt: string; source: string }[];
-  /** ?result= 또는 최신 결과 */
-  current: { id: string; body: string } | null;
+  /** ?result= 또는 최신 결과. data = compute 결과 (도구 페이지가 요약 화면을 그릴 때 해석한다)
+   *  갈아탈 신호: 요약을 쓰는 도구가 3개를 넘거나 data가 수십 KB가 되면, current에서 data를 빼고 요약 쓰는 페이지만 따로 읽는다 (지금은 ToolFrame에 통째로 직렬화된다) */
+  current: { id: string; body: string; data: unknown } | null;
   busy: boolean;
 };
 
@@ -91,7 +92,7 @@ export async function loadToolPage(
     ideaId,
     none,
     results,
-    current: cur ? { id: cur.id, body: cur.body } : null,
+    current: cur ? { id: cur.id, body: cur.body, data: cur.data } : null,
     busy: isClaudeBusy(),
   };
 }
