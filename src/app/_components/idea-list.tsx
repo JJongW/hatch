@@ -25,7 +25,8 @@ export default function IdeaList({ cards, unreadable = 0, emptyAction = false }:
         </Typography>
       )}
       {cards.length === 0 ? (
-        <FallbackView padding="compact">
+        // FallbackView는 폭이 고정(335px)이라 세로 FlexBox에서 왼쪽에 붙는다 → 가운데로
+        <FallbackView padding="compact" sx={{ alignSelf: 'center' }}>
           <FallbackViewContent>
             <FallbackViewText description="아직 아이디어가 없어요." />
           </FallbackViewContent>

@@ -16,7 +16,9 @@ import {
 } from '@montage-ui/core';
 
 import type { Theme } from '@montage-ui/core';
-import type { FocusEvent } from 'react';
+import type { FocusEvent, ReactNode } from 'react';
+
+import { hatchColor } from '@/lib/theme/tokens';
 
 import FlippingWordSwap from './flipping-word-swap';
 
@@ -38,21 +40,25 @@ const navStyle = (theme: Theme) => ({
   flexDirection: 'column' as const,
   gap: '16px',
   padding: '16px',
-  // 흰 바탕. 본문과는 1px 선으로만 나눈다 (spec mono-montage 2절: 회색 면 없음)
+  // 흰 바탕 (spec mono-montage 2절: 회색 면 없음). 좁은 화면에선 위에 놓이고 아래 1px 선으로 나눈다
   background: theme.semantic.background.neutral.primary,
   borderBottom: `1px solid ${theme.semantic.line.neutral.primary}`,
+  // 넓은 화면: 화면 가장자리에서 12px 띄운 둥근 패널 (#111, 사용자 요청: 네비 전체를 라운드로 묶어 옆에).
+  // 회색은 선과 그림자에만. 화면 높이에 묶고 넘치면 패널 안에서 스크롤 (#76)
   [respondMore('768px')]: {
     width: '240px',
     flexShrink: 0,
-    // 틀 높이만큼 늘어나면 sticky가 듣지 않는다. 화면 높이로 묶고 넘치면 네비바 안에서 스크롤 (#76)
-    height: '100vh',
+    height: 'calc(100vh - 24px)',
+    margin: '12px 0 12px 12px',
     alignSelf: 'flex-start',
     overflowY: 'auto' as const,
     position: 'sticky' as const,
-    top: 0,
-    padding: '24px 16px',
+    top: '12px',
+    padding: '20px 12px',
     borderBottom: 'none',
-    borderRight: `1px solid ${theme.semantic.line.neutral.primary}`,
+    borderRadius: '16px',
+    border: `1px solid ${theme.semantic.line.neutral.primary}`,
+    boxShadow: theme.semantic.elevation.shadow.normal.small,
   },
 });
 
@@ -90,6 +96,26 @@ function BrandLogo() {
   );
 }
 
+// 지금 있는 메뉴: 라벤더 바탕 (#111). ListCell의 selected(오른쪽 작은 체크)만으로는 어디 있는지 잘 안 보였다.
+// 줄 양옆에 안쪽 여백을 주고 모서리를 둥글게 해 바탕이 글자에 붙지 않게 한다
+function NavItem({ href, active, children }: { href: string; active: boolean; children: ReactNode }) {
+  return (
+    <ListCell
+      as={Link}
+      href={href}
+      aria-current={active ? 'page' : undefined}
+      verticalPadding="small"
+      sx={{
+        paddingInline: '12px',
+        borderRadius: '8px',
+        ...(active && { backgroundColor: hatchColor.highlight.bg, color: hatchColor.highlight.text }),
+      }}
+    >
+      {children}
+    </ListCell>
+  );
+}
+
 /** 경로를 모를 때(Suspense 대기 중)는 강조 없이 그린다 */
 export function SideNavView({ pathname }: { pathname: string | null }) {
   const isActive = (href: string) =>
@@ -101,23 +127,23 @@ export function SideNavView({ pathname }: { pathname: string | null }) {
 
       <FlexBox flexDirection="column">
         {MAIN.map((m) => (
-          <ListCell key={m.href} as={Link} href={m.href} selected={isActive(m.href)} verticalPadding="small">
+          <NavItem key={m.href} href={m.href} active={isActive(m.href)}>
             {m.label}
-          </ListCell>
+          </NavItem>
         ))}
       </FlexBox>
 
       <Divider />
 
       <FlexBox flexDirection="column" gap="4px">
-        <Typography variant="caption1" color="semantic.foreground.neutral.tertiary">
+        <Typography variant="caption1" color="semantic.foreground.neutral.tertiary" sx={{ paddingInline: '12px' }}>
           PO 도구
         </Typography>
         {TOOL_LINKS.map((t) =>
           t.ready ? (
-            <ListCell key={t.href} as={Link} href={t.href} selected={isActive(t.href)} verticalPadding="small">
+            <NavItem key={t.href} href={t.href} active={isActive(t.href)}>
               {t.label}
-            </ListCell>
+            </NavItem>
           ) : (
             <ListCell
               key={t.href}
@@ -140,9 +166,9 @@ export function SideNavView({ pathname }: { pathname: string | null }) {
 
       <Divider />
 
-      <ListCell as={Link} href="/usage" selected={isActive('/usage')} verticalPadding="small">
+      <NavItem href="/usage" active={isActive('/usage')}>
         사용량
-      </ListCell>
+      </NavItem>
     </Box>
   );
 }

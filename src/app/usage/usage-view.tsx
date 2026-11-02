@@ -15,6 +15,7 @@ import {
   TextButton,
   Typography,
 } from '@montage-ui/core';
+import type { Theme } from '@montage-ui/core';
 
 import PageHeader from '../_components/page-header';
 import SectionTitle from '../_components/section-title';
@@ -26,6 +27,8 @@ import { highlightSx } from '@/lib/theme/tokens';
 const SIGNAL_LABEL: Record<Signal, string> = { heavy: '비용 큼', loops: '여러 번 돎', redo: '다시 만들기 잦음', fails: '실패 있음' };
 const sec = (ms: number) => `${Math.round(ms / 1000)}초`;
 const NOWRAP = { whiteSpace: 'nowrap' } as const;
+// 표 머리줄: Montage 회색 면 대신 흰 바탕 + 아래 1px 선 (#111. 회색은 선에만)
+const HEAD = (t: Theme) => ({ backgroundColor: 'transparent', boxShadow: `inset 0 -1px 0 ${t.semantic.line.neutral.primary}` });
 const NAME = { wordBreak: 'keep-all', minWidth: '120px' } as const;
 const pct = (r: number) => `${Math.round(r * 100)}%`;
 
@@ -75,7 +78,7 @@ export default function UsageView({ summary, labels, titles, ideaFilter, unreada
             <SectionTitle flush>기능별</SectionTitle>
             <Box sx={{ overflowX: 'auto' }}>
             <Table>
-              <TableHead>
+              <TableHead sx={HEAD}>
                 <TableRow>
                   {['기능', '호출', '평균 시간', '평균 토큰', '평균 비용', '비중', '신호'].map((h) => <TableHeadCell key={h} sx={NOWRAP}>{h}</TableHeadCell>)}
                 </TableRow>
@@ -110,7 +113,7 @@ export default function UsageView({ summary, labels, titles, ideaFilter, unreada
               <SectionTitle flush>아이디어별</SectionTitle>
               <Box sx={{ overflowX: 'auto' }}>
               <Table>
-                <TableHead>
+                <TableHead sx={HEAD}>
                   <TableRow>
                     {['아이디어', '호출', '토큰', '예상 비용'].map((h) => <TableHeadCell key={h} sx={NOWRAP}>{h}</TableHeadCell>)}
                   </TableRow>

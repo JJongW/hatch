@@ -37,7 +37,6 @@ function mix(name: string): string {
 }
 
 const AA_TEXT = 4.5;
-const UI = 3;
 const WHITE = 'semantic-background-neutral-primary';
 
 // [글자 또는 선, 바탕, 기대 대비, 기준]
@@ -53,8 +52,6 @@ const pairs: [string, string, number, number][] = [
   ['semantic-foreground-brand-primary', WHITE, 17.9, AA_TEXT],
   ['semantic-foreground-negative-primary', WHITE, 17.9, AA_TEXT],
   ['highlight-text', 'highlight-bg', 14.53, AA_TEXT],
-  ['semantic-line-neutral-secondary', WHITE, 3.36, UI],
-  ['semantic-line-neutral-secondary', 'semantic-background-neutral-secondary', 3.14, UI],
 ];
 
 describe('contrastRatio', () => {
@@ -86,9 +83,12 @@ describe('Montage 위에 얹기', () => {
     expect(semantic.filter((k) => /--semantic-(background|surface)-neutral|--semantic-surface-elevated/.test(k))).toEqual([]);
   });
 
-  it('글자와 조작 요소 테두리는 불투명이고 -rgb 짝이 같은 색이다', () => {
-    // 조작 요소 테두리(3:1)도 불투명이어야 대비가 그대로 나온다
-    for (const k of semantic.filter((k) => (k.startsWith('--semantic-foreground-') || k === '--semantic-line-neutral-secondary') && !k.endsWith('-rgb'))) {
+  it('선은 Montage 기본 그대로 둔다 (#111, 옅은 1px 선)', () => {
+    expect(semantic.filter((k) => k.startsWith('--semantic-line-neutral-'))).toEqual([]);
+  });
+
+  it('글자는 불투명이고 -rgb 짝이 같은 색이다', () => {
+    for (const k of semantic.filter((k) => k.startsWith('--semantic-foreground-') && !k.endsWith('-rgb'))) {
       const value = hex(k.slice(2));
       expect(value, k).toMatch(/^#[0-9A-F]{6}$/);
       const rgb = [1, 3, 5].map((j) => parseInt(value.slice(j, j + 2), 16)).join(', ');
