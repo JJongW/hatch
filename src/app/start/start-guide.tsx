@@ -5,7 +5,8 @@ import { FlexBox, Typography } from '@montage-ui/core';
 import CodeBlock from '../_components/code-block';
 import SectionTitle from '../_components/section-title';
 
-const SETUP = (repoUrl: string) => `git clone ${repoUrl}.git && cd hatch
+const SETUP = (repoUrl: string) => `git clone ${repoUrl}.git
+cd hatch
 cp .env.example .env.local
 npm install
 npm run dev`;
@@ -35,13 +36,13 @@ export default function StartGuide({ repoUrl }: { repoUrl: string }) {
           <b>됨</b> — 샘플 아이디어 3개, 이어진 문서 6종, PO 도구 4종의 샘플 결과 둘러보기
         </>,
         <>
-          <b>안 됨</b> — 아이디어 저장, 문서 만들기, 도구 실행. 생성은 각자 맥의 Claude Code(<code>claude -p</code>)가 하므로 인터넷 데모에선 할 수 없어요
+          <b>안 됨</b> — 아이디어 저장, 문서 만들기, 도구 실행. 생성은 각자 컴퓨터의 Claude Code(<code>claude -p</code>)가 하므로 인터넷 데모에선 할 수 없어요
         </>,
       ])}
 
       <SectionTitle>준비물</SectionTitle>
       {list([
-        'macOS, Node.js 20.9 이상',
+        'macOS, Linux, Windows 중 하나와 Node.js 20.9 이상',
         <>
           Claude Code 설치 후 로그인 — 터미널에서 <code>claude -p &quot;안녕&quot;</code>이 답하면 준비 끝
         </>,
@@ -51,7 +52,7 @@ export default function StartGuide({ repoUrl }: { repoUrl: string }) {
       <CodeBlock lang="bash" code={SETUP(repoUrl)} />
       {body(
         <>
-          http://localhost:3000 에서 열어요. 데이터는 내 맥의 <code>~/Hatch</code>에 md 파일로 쌓여요.
+          http://localhost:3000 에서 열어요. 데이터는 홈 폴더의 <code>~/Hatch</code>에 md 파일로 쌓여요. Windows는 PowerShell에서 같은 명령을 붙여 넣어요.
         </>,
       )}
 

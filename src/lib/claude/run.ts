@@ -82,8 +82,12 @@ function spawnClaude(prompt: string, jsonSchema: object, cwd: string, timeoutMs:
     ...(model ? ['--model', model] : []),
   ];
 
+  // .js · .mjs · .cjs는 node로 실행한다. Windows는 셔뱅을 읽지 않고, npm으로 설치한 claude.cmd는 셸 없이 못 띄워서
+  // HATCH_CLAUDE_BIN에 cli.js 경로를 넣으면 된다 (테스트의 fake-claude.mjs도 같은 길)
+  const [cmd, cmdArgs] = /\.[cm]?js$/i.test(bin) ? [process.execPath, [bin, ...args]] : [bin, args];
+
   return new Promise<string>((resolve, reject) => {
-    const child = spawn(/*turbopackIgnore: true*/ bin, args, { cwd, stdio: ['pipe', 'pipe', 'pipe'] });
+    const child = spawn(/*turbopackIgnore: true*/ cmd, cmdArgs, { cwd, stdio: ['pipe', 'pipe', 'pipe'] });
     let out = '';
     let err = '';
     let timedOut = false;
@@ -117,7 +121,7 @@ function spawnClaude(prompt: string, jsonSchema: object, cwd: string, timeoutMs:
       settle(() =>
         reject(
           e.code === 'ENOENT'
-            ? new ChainError('claude를 찾을 수 없어요. Claude Code가 설치돼 있는지 확인해 주세요.')
+            ? new ChainError('claude를 찾을 수 없어요. Claude Code를 설치했는데도 그렇다면 .env.local의 HATCH_CLAUDE_BIN에 실행 파일 경로를 넣어 주세요.')
             : new ChainError(LOGIN_HINT),
         ),
       );

@@ -2,7 +2,7 @@
 
 > 아이디어 한 줄을 적으면, 기획안 · PRD · 기능명세서를 거쳐 개발 · 디자인 프롬프트까지 부화시키는 PO용 아이디어 뱅크.
 
-**데모 (읽기 전용)**: https://hatch-steel-alpha.vercel.app — 샘플 아이디어 · 6문서 · PO 도구 4종 결과를 둘러볼 수 있다. 생성은 맥에서 실행할 때만 된다 ([왜](docs/decisions/2026-10-28_읽기-전용-데모.md))
+**데모 (읽기 전용)**: https://hatch-steel-alpha.vercel.app — 샘플 아이디어 · 6문서 · PO 도구 4종 결과를 둘러볼 수 있다. 생성은 내 컴퓨터에서 실행할 때만 된다 ([왜](docs/decisions/2026-10-28_읽기-전용-데모.md))
 
 ## 왜 만드나
 
@@ -24,7 +24,7 @@ Hatch는 이 일을 돕는다. 결정은 사람이 하고, AI는 정리 · 초�
                                                 └─▶ 개발 프롬프트 / 디자인 프롬프트
 ```
 
-각 단계는 앞 단계 결과를 입력으로 받는다. 버튼을 누르면 한 단계씩 만들고, 만든 문서는 고칠 수 있다. 생성은 맥의 **로컬 Claude Code**(`claude -p`)가 한다.
+각 단계는 앞 단계 결과를 입력으로 받는다. 버튼을 누르면 한 단계씩 만들고, 만든 문서는 고칠 수 있다. 생성은 내 컴퓨터의 **로컬 Claude Code**(`claude -p`)가 한다.
 
 ## 화면 구성
 
@@ -49,24 +49,28 @@ Hatch는 이 일을 돕는다. 결정은 사람이 하고, AI는 정리 · 초�
 
 ## 기술 스택
 
-- **Next.js** (App Router) · 맥에서 실행
+- **Next.js** (App Router) · 내 컴퓨터에서 실행 (macOS · Linux · Windows)
 - **디자인**: [Montage](https://github.com/wanteddev/montage-web) (원티드 웹 디자인 시스템, MIT) 기본 컴포넌트 · 토큰.
   TDS(토스 디자인 시스템)는 화면 패턴 · UX 라이팅만 참고 (두 시스템의 토큰을 섞지 않는다)
-- **저장**: 맥의 md 파일 (`~/Hatch/ideas/<id>/`)
+- **저장**: 내 컴퓨터의 md 파일 (`~/Hatch/ideas/<id>/`)
 - **생성**: 로컬 Claude Code (`claude -p`)
 
 ## 실행
 
-준비물: macOS · Node.js 20.9 이상 · [Claude Code](https://claude.com/claude-code) 설치 후 `claude` 로그인 (터미널에서 `claude -p "안녕"`이 답하면 준비 끝)
+준비물: macOS · Linux · Windows 중 하나 · Node.js 20.9 이상 · [Claude Code](https://claude.com/claude-code) 설치 후 `claude` 로그인 (터미널에서 `claude -p "안녕"`이 답하면 준비 끝)
+
+Windows는 PowerShell에서 아래 명령을 그대로 쓴다. Claude Code는 공식 설치 스크립트로 깔면 `claude`를 바로 찾는다.
+npm으로 깔아서 "claude를 찾을 수 없어요"가 뜨면 `.env.local`의 `HATCH_CLAUDE_BIN`에 실행 파일 경로를 넣는다 (`.js` · `.mjs` · `.cjs` 경로면 node로 실행한다).
 
 ```bash
-git clone https://github.com/JJongW/hatch.git && cd hatch
+git clone https://github.com/JJongW/hatch.git
+cd hatch
 cp .env.example .env.local
 npm install
 npm run dev
 ```
 
-http://localhost:3000 에서 연다. 데이터는 `~/Hatch`에 쌓인다 (`.env.local`의 `HATCH_DATA_DIR`로 바꿀 수 있다).
+http://localhost:3000 에서 연다. 데이터는 홈 폴더의 `Hatch`(`~/Hatch`, Windows는 `C:\Users\<이름>\Hatch`)에 쌓인다 (`.env.local`의 `HATCH_DATA_DIR`로 바꿀 수 있다).
 
 따라 하기 (약 10분):
 1. **아이디어 쓰기**에 한 줄 적고 Enter → **아이디어 모음**에서 연다
@@ -90,7 +94,7 @@ http://localhost:3000 에서 연다. 데이터는 `~/Hatch`에 쌓인다 (`.env.
 ```
 
 1. Tailscale 관리 화면에서 MagicDNS · HTTPS 인증서 · Serve를 켠다 (처음 한 번)
-2. 맥에서 `npm run build && npm start`
+2. Hatch를 띄울 컴퓨터에서 `npm run build && npm start`
 3. `tailscale serve --bg 3000` → 같은 tailnet 기기에서 `https://<내 맥>.<tailnet>.ts.net`
 4. 따로 설정할 것은 없다 — Serve가 `x-forwarded-host`로 주소를 넘겨 Server Action 출처 검사를 통과한다 (2026-10-28 확인).
    `npm run dev`로 열었는데 버튼이 막히면 `.env.local`에 `HATCH_SERVE_HOST=<내 맥>.<tailnet>.ts.net`
