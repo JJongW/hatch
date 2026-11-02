@@ -8,6 +8,7 @@ import { questionView, summarize, vocEvidence } from '@/lib/summary';
 import { summarizeUsage } from '@/lib/usage/summary';
 
 import { generateDocAction, makeQuestionsAction, removeDecisionAction, saveContextAction, saveDecisionAction, trashIdeaAction, updateDocAction, updateIdeaAction } from '../../actions';
+import WidePage from '../../_components/wide-page';
 import IdeaDetail from './idea-detail';
 
 // 로컬 전용 · 항상 요청 시 렌더라 정적 셸 검증을 끈다 (docs: route-segment-config/instant, 'Disabling instant')
@@ -46,26 +47,29 @@ export default async function IdeaPage({ params }: { params: Promise<{ id: strin
   const usage = used.calls > 0 ? { calls: used.calls, tokens: used.tokens, cost: used.cost } : null;
 
   return (
-    <IdeaDetail
-      idea={{ title: idea.title, memo: idea.memo, folder: idea.folder }}
-      folders={folders}
-      ideaId={id}
-      context={idea.context}
-      contextFields={CONTEXT_FIELDS}
-      saveContextAction={saveContextAction.bind(null, id)}
-      saveDecisionAction={saveDecisionAction.bind(null, id)}
-      removeDecisionAction={removeDecisionAction.bind(null, id)}
-      summary={summary}
-      questions={questions}
-      makeQuestionsAction={makeQuestionsAction.bind(null, id)}
-      docs={docs}
-      generatable={GENERATABLE}
-      running={runningKey}
-      generateAction={generateDocAction.bind(null, id)}
-      updateDocAction={updateDocAction.bind(null, id)}
-      updateAction={updateIdeaAction.bind(null, id)}
-      trashAction={trashIdeaAction.bind(null, id)}
-      usage={usage}
-    />
+    <>
+      <WidePage />
+      <IdeaDetail
+        idea={{ title: idea.title, memo: idea.memo, folder: idea.folder }}
+        folders={folders}
+        ideaId={id}
+        context={idea.context}
+        contextFields={CONTEXT_FIELDS}
+        saveContextAction={saveContextAction.bind(null, id)}
+        saveDecisionAction={saveDecisionAction.bind(null, id)}
+        removeDecisionAction={removeDecisionAction.bind(null, id)}
+        summary={summary}
+        questions={questions}
+        makeQuestionsAction={makeQuestionsAction.bind(null, id)}
+        docs={docs}
+        generatable={GENERATABLE}
+        running={runningKey}
+        generateAction={generateDocAction.bind(null, id)}
+        updateDocAction={updateDocAction.bind(null, id)}
+        updateAction={updateIdeaAction.bind(null, id)}
+        trashAction={trashIdeaAction.bind(null, id)}
+        usage={usage}
+      />
+    </>
   );
 }

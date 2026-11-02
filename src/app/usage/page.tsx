@@ -4,6 +4,7 @@ import { DOC_STEPS, isValidId, listIdeas, listUsage } from '@/lib/storage';
 import { TOOLS } from '@/lib/tools';
 import { summarizeUsage } from '@/lib/usage/summary';
 
+import WidePage from '../_components/wide-page';
 import UsageView from './usage-view';
 
 // 로컬 전용 · 항상 요청 시 렌더라 정적 셸 검증을 끈다 (docs: route-segment-config/instant, 'Disabling instant')
@@ -25,12 +26,15 @@ export default async function UsagePage({ searchParams }: { searchParams: Promis
     ...Object.fromEntries(Object.values(TOOLS).map((t) => [`tool:${t!.key}`, t!.label])),
   };
   return (
-    <UsageView
-      summary={summarizeUsage(entries, ideaId)}
-      labels={labels}
-      titles={titles}
-      ideaFilter={ideaId ? { id: ideaId, title: titles[ideaId] ?? '휴지통으로 보낸 아이디어' } : null}
-      unreadable={unreadable}
-    />
+    <>
+      <WidePage />
+      <UsageView
+        summary={summarizeUsage(entries, ideaId)}
+        labels={labels}
+        titles={titles}
+        ideaFilter={ideaId ? { id: ideaId, title: titles[ideaId] ?? '휴지통으로 보낸 아이디어' } : null}
+        unreadable={unreadable}
+      />
+    </>
   );
 }
