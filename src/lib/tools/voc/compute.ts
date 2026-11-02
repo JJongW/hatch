@@ -75,3 +75,28 @@ export function renderVoc(r: VocResult) {
     ...(r.unclassified.count ? [`## ${UNCLASSIFIED}: ${r.unclassified.count}건\n${r.unclassified.top.map(vocLine).join('\n')}`] : []),
   ].join('\n\n');
 }
+
+// 결과 맨 위 거르기 칩 (spec tool-result-view §3). 기준 값은 칩 글자에 그대로 적는다
+export const VOC_SEVERE = 3;
+export const VOC_FREQUENT = 5;
+export type VocFilterKey = 'all' | 'severe' | 'frequent';
+export type VocRow = Pick<VocResult['topics'][number], 'rank' | 'name' | 'count' | 'average' | 'score'> & { filters: VocFilterKey[] };
+export type VocSummary = { rows: VocRow[]; filters: { key: VocFilterKey; label: string; count: number }[] };
+
+/** 저장된 data로 칩과 표를 만든다. 주제가 없거나 모양이 다르면 null (요약을 그리지 않는다) */
+export function vocSummary(data: unknown): VocSummary | null {
+  const r = data as Partial<VocResult> | null;
+  if (!r || typeof r !== 'object' || !Array.isArray(r.topics) || r.topics.length === 0) return null;
+  const rows = r.topics.map(({ rank, name, count, average, score }) => {
+    const filters: VocFilterKey[] = ['all'];
+    if (average !== null && average >= VOC_SEVERE) filters.push('severe');
+    if (count >= VOC_FREQUENT) filters.push('frequent');
+    return { rank, name, count, average, score, filters };
+  });
+  const labels: [VocFilterKey, string][] = [
+    ['all', '전체'],
+    ['severe', `심각 (평균 심각도 ${VOC_SEVERE} 이상)`],
+    ['frequent', `자주 나옴 (${VOC_FREQUENT}건 이상)`],
+  ];
+  return { rows, filters: labels.map(([key, label]) => ({ key, label, count: rows.filter((x) => x.filters.includes(key)).length })) };
+}
