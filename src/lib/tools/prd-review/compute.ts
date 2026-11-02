@@ -56,6 +56,20 @@ export function computePrdReview(out: PrdReviewOutput, prev: PrdReviewResult | n
   };
 }
 
+export type CompareRow = { label: string; before: number | null; now: number | null; delta: number | null };
+
+/** 재리뷰 비교 표 (spec tool-result-view §2): 기준 5개 + 전체. 이전 결과가 없거나 data 모양이 다르면 null (예전 · 깨진 결과) */
+export function compareRows(data: unknown): CompareRow[] | null {
+  const r = data as Partial<PrdReviewResult> | null;
+  if (!r || typeof r !== 'object' || !r.criteria || !r.prev || typeof r.prev !== 'object' || !r.prev.criteria) return null;
+  const row = (label: string, now: number | null | undefined, before: number | null | undefined): CompareRow => {
+    const n = typeof now === 'number' ? now : null;
+    const b = typeof before === 'number' ? before : null;
+    return { label, before: b, now: n, delta: n !== null && b !== null ? round1(n - b) : null };
+  };
+  return [...CRITERIA.map((c) => row(c, r.criteria![c], r.prev!.criteria[c])), row('전체', r.overall, r.prev.overall)];
+}
+
 const fmt = (n: number | null) => (n === null ? '응답 없음' : String(n));
 const diff = (now: number | null, before: number | null | undefined) => {
   if (before === undefined || now === null || before === null) return '';
