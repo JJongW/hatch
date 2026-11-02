@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import {
+  Box,
   FallbackView,
   FallbackViewActionArea,
   FallbackViewActionAreaButton,
@@ -37,7 +38,12 @@ export default function IdeaList({ cards, unreadable = 0, emptyAction = false }:
           )}
         </FallbackView>
       ) : (
-        cards.map((c) => <IdeaCard key={c.id} {...c} />)
+        // 위에서부터 차례로 나타난다. 10번째부터는 더 늦추지 않는다 (긴 목록이 굼떠 보이지 않게, spec motion §2)
+        cards.map((c, i) => (
+          <Box key={c.id} sx={{ animation: `hatch-rise 300ms ease-out ${Math.min(i, 9) * 30}ms both` }}>
+            <IdeaCard {...c} />
+          </Box>
+        ))
       )}
     </FlexBox>
   );

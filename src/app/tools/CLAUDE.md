@@ -12,6 +12,7 @@
 - 도구 정의(`ToolDef`) · 계산 · 렌더는 `src/lib/tools/<도구>/`. 실행 순서는 `src/lib/tools/run.ts`
 - 페이지는 `prd-review/page.tsx` 모양 그대로 (`instant = false` · `connection()` → `loadToolPage` → `<ToolFrame run={runToolAction.bind(null, key)} />`)
 - 점수 · 합계 · 순위 · 전후 차이는 `compute`가 계산 (AI는 판단만)
+- 실행 중 대기 화면은 `runningLabel` + `runningSteps`(예상 순서, 프롬프트의 AI 단계만). 문서 체인 단계는 `_components/running-steps.ts`
 
 ## 규칙
 - 도구 하나 = `src/app/tools/<도구>/` + `src/lib/tools/<도구>/`. 다른 도구 폴더 수정 금지 (병렬 충돌 방지)

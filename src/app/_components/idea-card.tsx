@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Card, CardBody, CardCaption, CardRow, CardTitle, ContentBadge, FlexBox } from '@montage-ui/core';
+import { Card, CardBody, CardCaption, CardRow, CardTitle, ContentBadge, FlexBox, type Theme } from '@montage-ui/core';
 
 export type IdeaCardData = {
   id: string;
@@ -15,9 +15,21 @@ export type IdeaCardData = {
   folder: string;
 };
 
+// 마우스를 올리면 배경이 0.2초에 걸쳐 바뀌고, 누르는 순간 살짝 줄어든다 (spec motion §3)
+const hoverable = (t: Theme) => ({
+  textDecoration: 'none',
+  display: 'block',
+  margin: '-8px -12px',
+  padding: '8px 12px',
+  borderRadius: '12px',
+  transition: 'background-color 200ms ease-out, transform 120ms ease-out',
+  '&:hover': { backgroundColor: t.semantic.background.neutral.secondary },
+  '&:active': { transform: 'scale(0.99)' },
+});
+
 export default function IdeaCard({ id, title, summary, date, progress, folder }: IdeaCardData) {
   return (
-    <Card as={Link} href={`/ideas/${id}`} sx={{ textDecoration: 'none' }}>
+    <Card as={Link} href={`/ideas/${id}`} sx={hoverable}>
       <CardBody>
         <CardRow variant="badge" position="top">
           <FlexBox gap="4px">

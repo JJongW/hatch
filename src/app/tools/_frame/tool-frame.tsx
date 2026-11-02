@@ -102,7 +102,7 @@ export default function ToolFrame({ tool, ideas, ideaId, none, results, current,
   const inContinue = continued && continueVisible;
   const statusNode = (
     <>
-      {pending && <RunningNote label={tool.runningLabel} />}
+      {pending && <RunningNote label={tool.runningLabel} steps={tool.runningSteps} />}
     </>
   );
   const errorNode = state.error && !pending ? <SectionMessage variant="negative">{state.error}</SectionMessage> : null;

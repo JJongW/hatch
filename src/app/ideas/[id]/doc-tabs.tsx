@@ -54,7 +54,7 @@ export default function DocTabs({ docs, running, value, onChange, render }: Prop
         })}
       </TabList>
       {docs.map((doc) => (
-        <TabPanel key={doc.key} value={doc.key} sx={{ paddingTop: '16px' }}>
+        <TabPanel key={doc.key} value={doc.key} sx={{ paddingTop: '16px', animation: 'hatch-fade 200ms ease-out both' }}>
           {render(doc)}
         </TabPanel>
       ))}
