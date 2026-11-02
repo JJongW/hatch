@@ -32,7 +32,11 @@ export default function AppShell({ children, demo }: Props) {
           {demo && (
             <Box data-demo-banner sx={{ marginBottom: '24px' }}>
               <SectionMessage variant="info">
-                읽기 전용 데모예요. 샘플 아이디어, 문서, 도구 결과를 둘러볼 수 있어요. 직접 만들려면{' '}
+                읽기 전용 데모예요. 샘플 아이디어, 문서, 도구 결과를 둘러볼 수 있어요. 만드는 과정은{' '}
+                <Link href="/try" style={{ textDecoration: 'underline', fontWeight: 600 }}>
+                  흐름 체험하기
+                </Link>
+                에서 예시로 해 볼 수 있고, 직접 만들려면{' '}
                 <Link href="/start" style={{ textDecoration: 'underline', fontWeight: 600 }}>
                   내 환경에서 사용하기
                 </Link>

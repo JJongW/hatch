@@ -20,7 +20,11 @@ type Props = {
   saveDecision: (decisionId: string | null, prev: DecisionState, formData: FormData) => Promise<DecisionState>;
   removeDecision: (decisionId: string) => Promise<void>;
   disabled: boolean;
+  /** 주면 도구 버튼이 도구 페이지로 가는 대신 이 함수를 부른다 (흐름 체험) */
+  goTool?: (tool: ToolLink) => void;
 };
+
+export type ToolLink = 'voc' | 'prd-review';
 
 type Opening = { kind: 'plan'; question: string } | { kind: 'edit'; id: string } | { kind: 'new' } | null;
 
@@ -73,18 +77,23 @@ function DecisionLine({ d }: { d: Decision }) {
   );
 }
 
-function NextCell({ next, docs, ideaId, onOpenDoc }: { next: NextAction } & Pick<Props, 'docs' | 'ideaId' | 'onOpenDoc'>) {
+function NextCell({ next, docs, ideaId, onOpenDoc, goTool }: { next: NextAction } & Pick<Props, 'docs' | 'ideaId' | 'onOpenDoc' | 'goTool'>) {
   const label = (key: DocKey) => docs.find((d) => d.key === key)?.label ?? key;
   const open = (key: DocKey, title: string) => (
     <Button size="small" onClick={() => onOpenDoc(key)}>
       {title}
     </Button>
   );
-  const go = (href: string, title: string) => (
-    <Button as={Link} href={href} size="small">
-      {title}
-    </Button>
-  );
+  const go = (tool: ToolLink, title: string) =>
+    goTool ? (
+      <Button size="small" onClick={() => goTool(tool)}>
+        {title}
+      </Button>
+    ) : (
+      <Button as={Link} href={`/tools/${tool}?idea=${ideaId}`} size="small">
+        {title}
+      </Button>
+    );
   switch (next.kind) {
     case 'wait':
       return text(`${label(next.doc)} 만드는 중이에요.`);
@@ -106,14 +115,14 @@ function NextCell({ next, docs, ideaId, onOpenDoc }: { next: NextAction } & Pick
       return (
         <FlexBox flexDirection="column" gap="8px" alignItems="flex-start">
           {text('모르는 것이 남았는데 고객 근거가 없어요. 고객 의견부터 모아 봐요.')}
-          {go(`/tools/voc?idea=${ideaId}`, '고객 의견 정리하기')}
+          {go('voc', '고객 의견 정리하기')}
         </FlexBox>
       );
     case 'review-prd':
       return (
         <FlexBox flexDirection="column" gap="8px" alignItems="flex-start">
           {text('PRD를 아직 리뷰받지 않았어요.')}
-          {go(`/tools/prd-review?idea=${ideaId}`, 'PRD 리뷰 받기')}
+          {go('prd-review', 'PRD 리뷰 받기')}
         </FlexBox>
       );
     case 'done':
@@ -121,7 +130,7 @@ function NextCell({ next, docs, ideaId, onOpenDoc }: { next: NextAction } & Pick
   }
 }
 
-export default function IdeaSummary({ summary, docs, ideaId, onOpenDoc, saveDecision, removeDecision, disabled }: Props) {
+export default function IdeaSummary({ summary, docs, ideaId, onOpenDoc, saveDecision, removeDecision, disabled, goTool }: Props) {
   const { problem, evidence, unknowns, unknownTotal, decisions, next } = summary;
   const rest = unknownTotal - unknowns.length;
   const { open, openMore, recorded } = decisions;
@@ -211,7 +220,7 @@ export default function IdeaSummary({ summary, docs, ideaId, onOpenDoc, saveDeci
         </Cell>
       )}
       <Cell title="추천 다음 행동">
-        <NextCell next={next} docs={docs} ideaId={ideaId} onOpenDoc={onOpenDoc} />
+        <NextCell next={next} docs={docs} ideaId={ideaId} onOpenDoc={onOpenDoc} goTool={goTool} />
       </Cell>
     </Box>
   );

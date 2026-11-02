@@ -14,7 +14,7 @@ import ContextPanel from './context-panel';
 import DocCard from './doc-card';
 import DocTabs from './doc-tabs';
 import { firstTab } from './first-tab';
-import IdeaSummary from './idea-summary';
+import IdeaSummary, { type ToolLink } from './idea-summary';
 import QuestionsPanel from './questions-panel';
 
 import type { Doc, DocKey, IdeaContext } from '@/lib/storage';
@@ -44,6 +44,9 @@ type Props = {
   trashAction: () => Promise<void>;
   /** 이 아이디어에 쓴 사용량 합계. 기록이 없으면 null (줄을 숨김) */
   usage: { calls: number; tokens: number; cost: number } | null;
+  /** false면 수정, 휴지통을 숨긴다 (흐름 체험) */
+  editable?: boolean;
+  goTool?: (tool: ToolLink) => void;
 };
 
 export default function IdeaDetail({
@@ -66,6 +69,8 @@ export default function IdeaDetail({
   updateAction,
   trashAction,
   usage,
+  editable = true,
+  goTool,
 }: Props) {
   // 이 화면에서 시작한 생성 (서버 running이 갱신되기 전에도 다른 카드를 막는다)
   const [busy, setBusy] = useState<DocKey | null>(null);
@@ -102,7 +107,7 @@ export default function IdeaDetail({
             )}
             <PageHeader title={idea.title} description={idea.memo || undefined} />
           </Box>
-          {!demo && (
+          {!demo && editable && (
             <Button size="small" variant="outlined" color="assistive" onClick={() => setEditing(true)} disabled={generating}>
               수정
             </Button>
@@ -135,6 +140,7 @@ export default function IdeaDetail({
         saveDecision={saveDecisionAction}
         removeDecision={removeDecisionAction}
         disabled={generating}
+        goTool={goTool}
       />
       {usage && (
         <TextButton as={Link} href={`/usage?idea=${ideaId}`} size="small" color="assistive" sx={{ alignSelf: 'flex-start' }}>
