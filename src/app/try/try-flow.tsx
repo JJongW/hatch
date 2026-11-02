@@ -17,6 +17,7 @@ import { CONTEXT_FIELDS, DOC_STEPS, type Decision, type DocKey, type IdeaContext
 import { questionView, summarize, vocEvidence } from '@/lib/summary';
 import { TASKS } from '@/lib/survey/questions';
 import { docsOf, editDoc, generate, START, tasksDone, type TryFixture, type TryState } from '@/lib/try/flow';
+import { primaryActionSx } from '@/lib/theme/tokens';
 import type { ContextState, DecisionState, DocActionState, FormState, QuestionsState } from '../actions';
 import TryTool from './try-tool';
 
@@ -255,7 +256,7 @@ export default function TryFlow({ fixture }: { fixture: TryFixture }) {
           <Button variant="outlined" color="assistive" size="small" onClick={restart}>
             처음부터 다시
           </Button>
-          <Button as={Link} href="/survey" variant={finished ? 'solid' : 'outlined'} color={finished ? 'primary' : 'assistive'}>
+          <Button as={Link} href="/survey" variant={finished ? 'solid' : 'outlined'} color={finished ? 'primary' : 'assistive'} sx={finished ? primaryActionSx : undefined}>
             설문하러 가기
           </Button>
         </FlexBox>

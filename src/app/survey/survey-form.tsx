@@ -4,6 +4,7 @@ import { useActionState, useEffect, useState } from 'react';
 import { Box, Button, Chip, FlexBox, SectionMessage, TextArea, TextField, Typography, type Theme } from '@montage-ui/core';
 
 import { MAX_LONG, MAX_SHORT, QUESTIONS, SECTIONS, type Question } from '@/lib/survey/questions';
+import { primaryActionSx } from '@/lib/theme/tokens';
 
 import SectionTitle from '../_components/section-title';
 
@@ -172,7 +173,7 @@ export default function SurveyForm({ ready, action }: Props) {
             <Typography variant="caption1" color="semantic.foreground.neutral.secondary">
               필수 {REQUIRED_IDS.length}개 중 {done}개 답함
             </Typography>
-            <Button type="submit" size="large" fullWidth loading={pending} disabled={!ready}>
+            <Button type="submit" size="large" fullWidth loading={pending} disabled={!ready} sx={primaryActionSx}>
               제출하기
             </Button>
           </FlexBox>

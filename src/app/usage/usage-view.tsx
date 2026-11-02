@@ -21,6 +21,7 @@ import SectionTitle from '../_components/section-title';
 import Panel from '@/components/panel';
 
 import { formatCost, formatTokens, type Signal, type UsageSummary } from '@/lib/usage/summary';
+import { highlightSx } from '@/lib/theme/tokens';
 
 const SIGNAL_LABEL: Record<Signal, string> = { heavy: '비용 큼', loops: '여러 번 돎', redo: '다시 만들기 잦음', fails: '실패 있음' };
 const sec = (ms: number) => `${Math.round(ms / 1000)}초`;
@@ -91,7 +92,7 @@ export default function UsageView({ summary, labels, titles, ideaFilter, unreada
                     <TableCell>
                       <FlexBox gap="4px" sx={{ flexWrap: 'wrap' }}>
                         {f.signals.map((sg) => (
-                          <ContentBadge key={sg} sx={NOWRAP} size="xsmall" variant="outlined" color="accent" accentColor="semantic.foreground.cautionary.primary">
+                          <ContentBadge key={sg} sx={{ ...NOWRAP, ...highlightSx }} size="xsmall" variant="solid">
                             {sg === 'loops' ? `${SIGNAL_LABEL[sg]} ${f.loops}번` : SIGNAL_LABEL[sg]}
                           </ContentBadge>
                         ))}

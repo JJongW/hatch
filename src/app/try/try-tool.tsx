@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { Box, Button, ContentBadge, FlexBox, Typography } from '@montage-ui/core';
 
+import { primaryActionSx } from '@/lib/theme/tokens';
+
 import DocMarkdown from '../_components/doc-markdown';
 import RunningNote from '../_components/running-note';
 
@@ -54,7 +56,7 @@ export default function TryTool({ info, input, blocked, result, runLabel, onRun 
         ) : (
           runLabel && (
             <FlexBox justifyContent="flex-end">
-              <Button variant={result ? 'outlined' : 'solid'} color={result ? 'assistive' : 'primary'} onClick={run}>
+              <Button variant={result ? 'outlined' : 'solid'} color={result ? 'assistive' : 'primary'} sx={result ? undefined : primaryActionSx} onClick={run}>
                 {runLabel}
               </Button>
             </FlexBox>

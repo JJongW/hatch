@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Box, Button, FlexBox, Typography } from '@montage-ui/core';
 
 import Panel from '@/components/panel';
+import { primaryActionSx } from '@/lib/theme/tokens';
 
 import type { Doc, DocKey } from '@/lib/storage';
 import type { NextAction } from '@/lib/summary';
@@ -46,7 +47,7 @@ export default function NextBand({ next, docs, ideaId, onOpenDoc, goTool }: Prop
       <Panel>
         <FlexBox justifyContent="space-between" alignItems="center" gap="12px" sx={{ flexWrap: 'wrap' }}>
           <FlexBox flexDirection="column" gap="2px" sx={{ minWidth: 0, flex: '1 1 240px' }}>
-            <Typography variant="label2" weight="bold" color="semantic.foreground.brand.primary">
+            <Typography variant="label2" weight="bold" color="semantic.foreground.neutral.secondary">
               다음 할 일
             </Typography>
             <Typography variant="body1" weight="medium">
@@ -54,17 +55,17 @@ export default function NextBand({ next, docs, ideaId, onOpenDoc, goTool }: Prop
             </Typography>
           </FlexBox>
           {step.open && (
-            <Button size="medium" onClick={() => onOpenDoc(step.open!.doc)}>
+            <Button size="medium" onClick={() => onOpenDoc(step.open!.doc)} sx={primaryActionSx}>
               {step.open.label}
             </Button>
           )}
           {step.go &&
             (goTool ? (
-              <Button size="medium" onClick={() => goTool(step.go!.tool)}>
+              <Button size="medium" onClick={() => goTool(step.go!.tool)} sx={primaryActionSx}>
                 {step.go.label}
               </Button>
             ) : (
-              <Button as={Link} href={`/tools/${step.go.tool}?idea=${ideaId}`} size="medium">
+              <Button as={Link} href={`/tools/${step.go.tool}?idea=${ideaId}`} size="medium" sx={primaryActionSx}>
                 {step.go.label}
               </Button>
             ))}

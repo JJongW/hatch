@@ -3,6 +3,8 @@
 import { useActionState, useState } from 'react';
 import { Button, Chip, FlexBox, SectionMessage, TextArea, TextField, Typography } from '@montage-ui/core';
 
+import { primaryActionSx } from '@/lib/theme/tokens';
+
 import type { FormState } from '../actions';
 
 import { UseLocallyButton, useDemo } from './demo';
@@ -77,7 +79,7 @@ export default function IdeaForm({ action, submitLabel, initial, resetOnSave = f
           {demo ? (
             <UseLocallyButton />
           ) : (
-            <Button type="submit" loading={pending} disabled={disabled}>
+            <Button type="submit" loading={pending} disabled={disabled} sx={primaryActionSx}>
               {submitLabel}
             </Button>
           )}
