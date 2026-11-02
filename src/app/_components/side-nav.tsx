@@ -41,7 +41,10 @@ const navStyle = (theme: Theme) => ({
   [respondMore('768px')]: {
     width: '240px',
     flexShrink: 0,
-    minHeight: '100vh',
+    // 틀 높이만큼 늘어나면 sticky가 듣지 않는다. 화면 높이로 묶고 넘치면 네비바 안에서 스크롤 (#76)
+    height: '100vh',
+    alignSelf: 'flex-start',
+    overflowY: 'auto' as const,
     position: 'sticky' as const,
     top: 0,
     padding: '24px 16px',
