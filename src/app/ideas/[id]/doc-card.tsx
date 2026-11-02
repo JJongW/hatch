@@ -7,6 +7,7 @@ import { UseLocallyButton, useDemo } from '../../_components/demo';
 import DocMarkdown from '../../_components/doc-markdown';
 import RunningNote from '../../_components/running-note';
 import { DOC_RUNNING_STEPS, formatElapsed } from '../../_components/running-steps';
+import { useConfirmSubmit } from '../../_components/use-confirm-submit';
 
 import type { Doc, DocKey } from '@/lib/storage';
 import type { DocActionState } from '../../actions';
@@ -59,16 +60,15 @@ export default function DocCard({ doc, ready, hasSource, running, onBusy, locked
   const blocked = running !== null || genPending || locked; // 어떤 생성이든 진행 중이면 다른 버튼은 막는다
   const error = genState.error ?? saveState.error;
 
-  const confirmRegenerate = (e: React.FormEvent) => {
-    if (!window.confirm('지금 문서는 .history에 남기고 새로 만들까요?')) e.preventDefault();
-  };
+  const ask = useConfirmSubmit();
+  const confirmRegenerate = ask({ title: '문서를 새로 만들까요?', content: '지금 문서는 .history에 남아요.', confirm: '새로 만들기' });
 
-  const generateForm = (label: string, variant: 'solid' | 'outlined', onSubmit?: (e: React.FormEvent) => void) => (
+  const generateForm = (label: string, variant: 'solid' | 'outlined', onSubmit?: (e: React.FormEvent<HTMLFormElement>) => void) => (
     <form
       action={genAction}
       onSubmit={(e) => {
         onSubmit?.(e);
-        // 액션 밖에서 바로 알린다 (확인 창에서 취소했으면 알리지 않음). 끝날 때는 액션의 finally가 onBusy(null)
+        // 액션 밖에서 바로 알린다 (확인 창을 띄우는 첫 제출과 취소는 막혀 있어 알리지 않음). 끝날 때는 액션의 finally가 onBusy(null)
         if (!e.defaultPrevented) onBusy(doc.key);
       }}
     >

@@ -7,6 +7,7 @@ import { Box, Button, ContentBadge, FlexBox, Tab, TabList, TabListItem, TabPanel
 import { useDemo } from '../../_components/demo';
 import IdeaForm from '../../_components/idea-form';
 import PageHeader from '../../_components/page-header';
+import { useConfirmSubmit } from '../../_components/use-confirm-submit';
 import { useRefreshWhile } from '../../_components/use-refresh-while';
 
 import ContextPanel from './context-panel';
@@ -81,9 +82,8 @@ export default function IdeaDetail({
   useRefreshWhile(running !== null && busy === null);
   // Server Action은 클라이언트에서 하나씩 실행되므로 생성 중엔 다른 저장 버튼을 막는다
   const generating = (busy ?? running) !== null || asking;
-  const confirmTrash = (e: React.FormEvent) => {
-    if (!window.confirm('휴지통(~/Hatch/.trash)으로 옮길까요? 파일은 지워지지 않아요.')) e.preventDefault();
-  };
+  const ask = useConfirmSubmit();
+  const confirmTrash = ask({ title: '휴지통으로 옮길까요?', content: '~/Hatch/.trash로 옮겨요. 파일은 지워지지 않아요.', confirm: '휴지통으로' });
 
   const [editing, setEditing] = useState(false);
   const [tab, setTab] = useState<DocKey>(() => firstTab(docs, summary.next));
