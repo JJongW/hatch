@@ -4,7 +4,6 @@ import { useActionState, useEffect, useState } from 'react';
 import { Box, Button, FlexBox, SectionMessage, Typography } from '@montage-ui/core';
 
 import { useDemo } from '../../_components/demo';
-import SectionTitle from '../../_components/section-title';
 import DecisionForm from './decision-form';
 
 import type { QuestionLine, QuestionView } from '@/lib/summary';
@@ -65,7 +64,7 @@ export default function QuestionsPanel({ view, action, saveDecision, onBusy, dis
   const [state, formAction, pending] = useActionState(async (): Promise<QuestionsState> => action(), {});
   // 액션 안에서 바꾼 상태는 transition이 끝나야 반영되므로, pending을 보고 위에 알린다
   useEffect(() => onBusy(pending), [pending, onBusy]);
-  if (!view.made && (demo || view.labelTotal === 0)) return null;
+  if (!view.made && (demo || view.labelTotal === 0)) return text('확인할 질문이 아직 없어요.');
 
   const answer = (q: QuestionLine) =>
     !demo &&
@@ -94,7 +93,6 @@ export default function QuestionsPanel({ view, action, saveDecision, onBusy, dis
 
   return (
     <Box>
-      <SectionTitle>확인 질문</SectionTitle>
       <FlexBox flexDirection="column" gap="12px" alignItems="flex-start">
         {!view.made ? (
           <>
