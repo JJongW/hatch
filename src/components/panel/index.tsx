@@ -10,7 +10,8 @@ type Props = ComponentProps<typeof Box> & {
   flush?: boolean;
 };
 
-const panelStyle = (flush: boolean) => (t: Theme) => ({
+/** 테두리 상자 모양만 필요할 때 (버튼처럼 다른 요소로 그릴 때) */
+export const panelStyle = (flush: boolean) => (t: Theme) => ({
   border: `1px solid ${t.semantic.line.neutral.primary}`,
   borderRadius: '12px',
   ...(flush ? { overflow: 'hidden' } : { padding: '16px' }),

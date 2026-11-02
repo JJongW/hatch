@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useState } from 'react';
+import { Fragment, useActionState, useState } from 'react';
 import { Box, Button, FlexBox, SectionMessage, TextArea, TextButton, Typography } from '@montage-ui/core';
 
 import { useDemo } from '../../_components/demo';
@@ -63,6 +63,7 @@ function ContextForm({ context, fields, action, disabled, onClose }: Props & { o
   );
 }
 
+/** 머리 아래 맥락 줄 (spec detail-dashboard §2-1). 이름과 값을 한 줄씩, 수정은 끝에 글자 버튼 */
 export default function ContextPanel({ context, fields, action, disabled }: Props) {
   const demo = useDemo();
   const [editing, setEditing] = useState(false);
@@ -72,39 +73,38 @@ export default function ContextPanel({ context, fields, action, disabled }: Prop
     return <ContextForm context={context} fields={fields} action={action} disabled={disabled} onClose={() => setEditing(false)} />;
   }
 
-  return (
-    <Box>
-      <SectionTitle
-        trailing={
-          !demo &&
-          filled.length > 0 && (
-            <TextButton size="small" color="assistive" onClick={() => setEditing(true)} disabled={disabled}>
-              수정
-            </TextButton>
-          )
-        }
-      >
-        프로젝트 맥락
-      </SectionTitle>
-      {filled.length > 0 ? (
-        <Typography as="ul" variant="body2" sx={{ display: 'block', paddingLeft: '20px', listStyle: 'disc' }}>
-          {filled.map((f) => (
-            <li key={f.key}>
-              {f.label}: {context[f.key]}
-            </li>
-          ))}
+  if (filled.length === 0) {
+    if (demo) return null;
+    return (
+      <FlexBox alignItems="center" gap="8px" sx={{ flexWrap: 'wrap' }}>
+        <Typography variant="body2" color="semantic.foreground.neutral.secondary">
+          목표 고객, 목표 지표를 적어 두면 모든 문서와 도구에 같이 들어가요.
         </Typography>
-      ) : (
-        <FlexBox flexDirection="column" gap="8px" alignItems="flex-start">
-          <Typography as="p" variant="body2" color="semantic.foreground.neutral.secondary">
-            {demo ? '아직 적은 맥락이 없어요.' : '적어 두면 모든 문서와 도구에 같이 들어가요.'}
+        <TextButton size="small" onClick={() => setEditing(true)} disabled={disabled}>
+          맥락 적기
+        </TextButton>
+      </FlexBox>
+    );
+  }
+
+  return (
+    <Box as="dl" aria-label="프로젝트 맥락" sx={{ display: 'grid', gridTemplateColumns: 'max-content minmax(0, 1fr)', columnGap: '12px', rowGap: '4px', margin: 0 }}>
+      {filled.map((f) => (
+        <Fragment key={f.key}>
+          <Typography as="dt" variant="label1" color="semantic.foreground.neutral.secondary">
+            {f.label}
           </Typography>
-          {!demo && (
-            <Button size="small" onClick={() => setEditing(true)} disabled={disabled}>
-              맥락 적기
-            </Button>
-          )}
-        </FlexBox>
+          <Typography as="dd" variant="label1" sx={{ margin: 0 }}>
+            {context[f.key]}
+          </Typography>
+        </Fragment>
+      ))}
+      {!demo && (
+        <Box sx={{ gridColumn: '1 / -1' }}>
+          <TextButton size="small" color="assistive" onClick={() => setEditing(true)} disabled={disabled}>
+            맥락 수정
+          </TextButton>
+        </Box>
       )}
     </Box>
   );
