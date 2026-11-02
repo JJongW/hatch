@@ -176,7 +176,7 @@ export default function IdeaDetail({
         <ContextPanel context={context} fields={contextFields} action={saveContextAction} disabled={generating} />
       </Box>
 
-      <NextBand next={summary.next} docs={docs} ideaId={ideaId} onOpenDoc={openDoc} goTool={goTool} />
+      <NextBand next={summary.next} docs={docs} ideaId={ideaId} onOpenDoc={openDoc} onOpenQuestions={() => openSection('questions')} goTool={goTool} />
       <StatusCards stats={stats} onOpen={openSection} />
 
       <Box ref={tabsRef} sx={{ marginTop: '12px' }}>
