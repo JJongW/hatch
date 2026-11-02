@@ -5,7 +5,7 @@ PO, PM 3~5명이 **자기 아이디어 하나**로 Hatch를 써 보게 하고, �
 | 파일 | 쓰는 때 |
 | --- | --- |
 | 이 파일 | 테스트 전: 목적, 가설, 참가자, 준비 |
-| [script.md](script.md) | 테스트 중: 진행 대본과 과제 6개 |
+| [script.md](script.md) | 테스트 중: 진행 대본과 과제 7개 |
 | [record-sheet.md](record-sheet.md) | 테스트 중: 참가자 한 명당 한 장 복사해서 기록 |
 | [form.md](form.md) | 테스트 직후: 참가자가 혼자 채우는 설문 (구글 폼으로 옮김) |
 | [results.md](results.md) | 테스트 뒤: 가설별 판정, 고칠 것, 이슈 |
