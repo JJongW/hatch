@@ -1,166 +1,81 @@
-/* Hatch 컬러 시스템 (spec 2026-11-02 color-system, 11절 무채색 개정). hex는 이 파일에만 둔다.
-   1) 토큰: 바탕, 글자, 경계, 보조 행동은 무채색. 포인트 색은 라일락 하나(주 행동, 강조)만, 배경으로만 쓴다.
-      값을 바꾸면 src/lib/theme/contrast.test.ts가 깨진다
-   2) Montage 매핑: Montage 테마 값은 전부 var(--semantic-…)라서, 같은 선택자로 global.css 뒤에서 덮어쓴다
-   반투명 글자, 선은 모두 불투명 토큰으로 바꾼다 (텍스트 투명도 금지)
-   -rgb 짝: Montage addOpacity()가 var(--x)를 rgba(var(--x-rgb), a)로 바꿔 쓴다. 값 변수마다 짝을 같은 줄에 둔다 */
+/* Hatch 테마 (spec 2026-11-03 mono-montage 2절). hex는 이 파일에만 둔다.
+   원칙: Montage 기본값을 그대로 쓰고, 아래에 적은 것만 바꾼다. 여기 없는 Montage 변수는 덮어쓰지 않는다.
+   - 주색(brand): 파랑 → 검정. 채움 버튼은 검정 바탕 + 흰 글자 (17.90)
+   - 상태색(빨강, 초록, 주황)과 강조색(accent): 검정. 상태는 아이콘 모양과 글자 라벨로 전한다
+   - 글자: Montage는 반투명 회색 글자라 불투명으로 (텍스트 투명도 금지). 3번째 글자는 AA(4.5)를 넘게
+   - 조작 요소 테두리(line.neutral.secondary: 입력칸, 칩, 외곽선 버튼, 셀렉트): 1px, 3:1 이상. 장식 선은 Montage 그대로
+   - 라일락은 강조 배지와 [확인 필요]의 배경에만 (tokens.ts highlight)
+   값을 바꾸면 src/lib/theme/contrast.test.ts가 깨진다.
+   -rgb 짝: Montage addOpacity()가 var(--x)를 rgba(var(--x-rgb), a)로 바꿔 쓴다. 값 변수마다 짝을 같은 줄에 둔다
+   다크는 #97에서 html[data-theme='dark'] 블록으로 더한다 (Montage 다크 값이 :root보다 선택자가 세다) */
 
 :root {
-  --bg-default: #FFFFFF; --bg-default-rgb: 255, 255, 255;
-  --bg-subtle: #F7F7F7; --bg-subtle-rgb: 247, 247, 247;
-  --surface-secondary: #F2F2F2; --surface-secondary-rgb: 242, 242, 242;
-  --text-primary: #191919; --text-primary-rgb: 25, 25, 25;
-  --text-secondary: #5E5E5E; --text-secondary-rgb: 94, 94, 94;
-  --border: #7F7F7F; --border-rgb: 127, 127, 127;
-  /* 구획 선(카드, 네비바, 표 줄). 장식이라 3:1을 요구하지 않는다 (1.32). 조작 요소 테두리는 --border */
-  --divider: #E0E0E0; --divider-rgb: 224, 224, 224;
-  --action-primary-bg: #E7E5FF; --action-primary-bg-rgb: 231, 229, 255;
-  --action-primary-text: #191919; --action-primary-text-rgb: 25, 25, 25;
-  --action-secondary-bg: #191919; --action-secondary-bg-rgb: 25, 25, 25;
-  --action-secondary-text: #FFFFFF; --action-secondary-text-rgb: 255, 255, 255;
+  --ink: #171719; --ink-rgb: 23, 23, 25;
+  --ink-strong: #000000; --ink-strong-rgb: 0, 0, 0;
+  --text-secondary: #47484C; --text-secondary-rgb: 71, 72, 76;
+  --text-tertiary: #67696F; --text-tertiary-rgb: 103, 105, 111;
+  --border: #8A8C92; --border-rgb: 138, 140, 146;
   --highlight-bg: #E7E5FF; --highlight-bg-rgb: 231, 229, 255;
-  --highlight-text: #191919; --highlight-text-rgb: 25, 25, 25;
+  --highlight-text: #171719; --highlight-text-rgb: 23, 23, 25;
 }
 
-html[data-theme='dark'] {
-  --bg-default: #191919; --bg-default-rgb: 25, 25, 25;
-  --surface-primary: #242424; --surface-primary-rgb: 36, 36, 36;
-  --surface-elevated: #303030; --surface-elevated-rgb: 48, 48, 48;
-  --text-primary: #FFFFFF; --text-primary-rgb: 255, 255, 255;
-  --text-secondary: #B8B8B8; --text-secondary-rgb: 184, 184, 184;
-  --border: #858585; --border-rgb: 133, 133, 133;
-  --divider: #3A3A3A; --divider-rgb: 58, 58, 58;
-  --action-primary-bg: #E7E5FF; --action-primary-bg-rgb: 231, 229, 255;
-  --action-primary-text: #191919; --action-primary-text-rgb: 25, 25, 25;
-  --action-secondary-bg: #303030; --action-secondary-bg-rgb: 48, 48, 48;
-  --action-secondary-text: #FFFFFF; --action-secondary-text-rgb: 255, 255, 255;
-  --highlight-bg: #E7E5FF; --highlight-bg-rgb: 231, 229, 255;
-  --highlight-text: #191919; --highlight-text-rgb: 25, 25, 25;
-}
-
-/* Montage 매핑: 라이트. 다크에서 다른 것만 아래에서 다시 쓴다.
-   색은 포인트에만 (#103). 위계는 무채색 단계로: 바깥 띠와 네비바는 옅은 회색, 칩, 표 머리, 코드 상자는 회색 채움,
-   구획 선(카드, 네비바, 표 줄)은 옅게, 입력칸과 칩 테두리(조작 요소)만 3:1 경계선
-   다크 선택자도 같이 둔다: Montage 다크 값은 html[data-theme='dark'](0,1,1)에 있어 :root만으로는 다크에서 진다 */
-:root,
-html[data-theme='dark'] {
-  /* 채움 버튼, 토스트 글자색. 흰색 그대로 (보조 행동 배경 위 17.58, 다크 13.20) */
-  --semantic-static-white: var(--action-secondary-text); --semantic-static-white-rgb: var(--action-secondary-text-rgb);
-
-  --semantic-background-neutral-primary: var(--bg-default); --semantic-background-neutral-primary-rgb: var(--bg-default-rgb);
-  --semantic-background-neutral-secondary: var(--bg-subtle); --semantic-background-neutral-secondary-rgb: var(--bg-subtle-rgb);
-  --semantic-surface-neutral-primary: var(--bg-default); --semantic-surface-neutral-primary-rgb: var(--bg-default-rgb);
-  --semantic-surface-neutral-secondary: var(--surface-secondary); --semantic-surface-neutral-secondary-rgb: var(--surface-secondary-rgb);
-  --semantic-surface-neutral-tertiary: var(--surface-secondary); --semantic-surface-neutral-tertiary-rgb: var(--surface-secondary-rgb);
-  --semantic-surface-neutral-strong: var(--surface-secondary); --semantic-surface-neutral-strong-rgb: var(--surface-secondary-rgb);
-  --semantic-surface-neutral-inverse: var(--text-primary); --semantic-surface-neutral-inverse-rgb: var(--text-primary-rgb);
-  --semantic-surface-elevated-primary: var(--bg-default); --semantic-surface-elevated-primary-rgb: var(--bg-default-rgb);
-  --semantic-surface-elevated-secondary: var(--bg-default); --semantic-surface-elevated-secondary-rgb: var(--bg-default-rgb);
-  --semantic-surface-disable-primary: var(--surface-secondary); --semantic-surface-disable-primary-rgb: var(--surface-secondary-rgb);
-
-  --semantic-foreground-neutral-primary: var(--text-primary); --semantic-foreground-neutral-primary-rgb: var(--text-primary-rgb);
-  --semantic-foreground-neutral-strong: var(--text-primary); --semantic-foreground-neutral-strong-rgb: var(--text-primary-rgb);
+:root {
+  /* 글자: 불투명. 2번째는 Montage 88% 값을 흰 바탕에 섞은 색, 3, 4번째는 4.5를 넘는 회색 */
   --semantic-foreground-neutral-secondary: var(--text-secondary); --semantic-foreground-neutral-secondary-rgb: var(--text-secondary-rgb);
-  --semantic-foreground-neutral-tertiary: var(--text-secondary); --semantic-foreground-neutral-tertiary-rgb: var(--text-secondary-rgb);
-  --semantic-foreground-neutral-quaternary: var(--text-secondary); --semantic-foreground-neutral-quaternary-rgb: var(--text-secondary-rgb);
-  --semantic-foreground-neutral-inverse: var(--bg-default); --semantic-foreground-neutral-inverse-rgb: var(--bg-default-rgb);
-  --semantic-foreground-disable-primary: var(--text-secondary); --semantic-foreground-disable-primary-rgb: var(--text-secondary-rgb);
-  --semantic-foreground-inactive-primary: var(--text-secondary); --semantic-foreground-inactive-primary-rgb: var(--text-secondary-rgb);
+  --semantic-foreground-neutral-tertiary: var(--text-tertiary); --semantic-foreground-neutral-tertiary-rgb: var(--text-tertiary-rgb);
+  --semantic-foreground-neutral-quaternary: var(--text-tertiary); --semantic-foreground-neutral-quaternary-rgb: var(--text-tertiary-rgb);
 
-  /* primary, secondaryOpaque = 구획 선(Divider, 표 테두리, 메뉴 틀, 배지 테두리. 장식). secondary, tertiary = 조작 요소 3:1.
-     Montage Checkbox, Radio는 빈 칸 경계를 line.neutral.primary로 그린다 → 쓰게 되면 sx로 line.neutral.secondary를 줄 것 */
-  --semantic-line-neutral-primary: var(--divider); --semantic-line-neutral-primary-rgb: var(--divider-rgb);
-  --semantic-line-neutral-primaryOpaque: var(--divider); --semantic-line-neutral-primaryOpaque-rgb: var(--divider-rgb);
+  /* 조작 요소 테두리 */
   --semantic-line-neutral-secondary: var(--border); --semantic-line-neutral-secondary-rgb: var(--border-rgb);
-  --semantic-line-neutral-secondaryOpaque: var(--divider); --semantic-line-neutral-secondaryOpaque-rgb: var(--divider-rgb);
-  --semantic-line-neutral-tertiary: var(--border); --semantic-line-neutral-tertiary-rgb: var(--border-rgb);
-  --semantic-line-neutral-tertiaryOpaque: var(--border); --semantic-line-neutral-tertiaryOpaque-rgb: var(--border-rgb);
 
-  /* Montage 브랜드 = 보조 행동(무채색 채움). 주 행동 라일락은 Montage에 자리가 없어 src/lib/theme/tokens.ts로 쓴다.
-     라일락은 밝은 바탕 위 1.23이라 글자, 선, 포커스로는 못 쓴다 → 브랜드 글자와 선은 본문색 */
-  --semantic-surface-brand-primary: var(--action-secondary-bg); --semantic-surface-brand-primary-rgb: var(--action-secondary-bg-rgb);
-  --semantic-surface-brand-strong: var(--action-secondary-bg); --semantic-surface-brand-strong-rgb: var(--action-secondary-bg-rgb);
-  --semantic-surface-brand-heavy: var(--action-secondary-bg); --semantic-surface-brand-heavy-rgb: var(--action-secondary-bg-rgb);
-  --semantic-surface-brand-subtle: var(--surface-secondary); --semantic-surface-brand-subtle-rgb: var(--surface-secondary-rgb);
-  --semantic-foreground-brand-primary: var(--text-primary); --semantic-foreground-brand-primary-rgb: var(--text-primary-rgb);
-  --semantic-foreground-brand-inverse: var(--bg-default); --semantic-foreground-brand-inverse-rgb: var(--bg-default-rgb);
-  --semantic-line-brand-primary: var(--text-primary); --semantic-line-brand-primary-rgb: var(--text-primary-rgb);
-  --semantic-line-brand-strong: var(--text-primary); --semantic-line-brand-strong-rgb: var(--text-primary-rgb);
-  --semantic-line-brand-focus: var(--text-primary); --semantic-line-brand-focus-rgb: var(--text-primary-rgb);
+  /* 주색: 검정. 눌림, 진함은 더 검게. subtle(고른 칩 바탕)은 검정 5% */
+  --semantic-foreground-brand-primary: var(--ink); --semantic-foreground-brand-primary-rgb: var(--ink-rgb);
+  --semantic-foreground-brand-inverse: #F7F7F8; --semantic-foreground-brand-inverse-rgb: 247, 247, 248;
+  --semantic-surface-brand-primary: var(--ink); --semantic-surface-brand-primary-rgb: var(--ink-rgb);
+  --semantic-surface-brand-strong: var(--ink-strong); --semantic-surface-brand-strong-rgb: var(--ink-strong-rgb);
+  --semantic-surface-brand-heavy: var(--ink-strong); --semantic-surface-brand-heavy-rgb: var(--ink-strong-rgb);
+  --semantic-surface-brand-subtle: #1717190D; --semantic-surface-brand-subtle-rgb: var(--ink-rgb);
+  --semantic-line-brand-primary: var(--ink); --semantic-line-brand-primary-rgb: var(--ink-rgb);
+  --semantic-line-brand-strong: var(--ink); --semantic-line-brand-strong-rgb: var(--ink-rgb);
+  --semantic-line-brand-focus: #1717191F; --semantic-line-brand-focus-rgb: var(--ink-rgb);
 
-  /* 상태색(빨강, 초록, 주황)은 쓰지 않는다 (D3). 글자는 본문색, 상태는 라벨과 모양으로 전한다 */
-  --semantic-foreground-positive-primary: var(--text-primary); --semantic-foreground-positive-primary-rgb: var(--text-primary-rgb);
-  --semantic-foreground-cautionary-primary: var(--text-primary); --semantic-foreground-cautionary-primary-rgb: var(--text-primary-rgb);
-  --semantic-foreground-negative-primary: var(--text-primary); --semantic-foreground-negative-primary-rgb: var(--text-primary-rgb);
-  --semantic-foreground-negative-strong: var(--text-primary); --semantic-foreground-negative-strong-rgb: var(--text-primary-rgb);
-  --semantic-surface-positive-primary: var(--bg-default); --semantic-surface-positive-primary-rgb: var(--bg-default-rgb);
-  --semantic-surface-cautionary-primary: var(--bg-default); --semantic-surface-cautionary-primary-rgb: var(--bg-default-rgb);
-  --semantic-surface-negative-primary: var(--bg-default); --semantic-surface-negative-primary-rgb: var(--bg-default-rgb);
-  --semantic-surface-negative-strong: var(--bg-default); --semantic-surface-negative-strong-rgb: var(--bg-default-rgb);
-  --semantic-line-positive-primary: var(--text-primary); --semantic-line-positive-primary-rgb: var(--text-primary-rgb);
-  --semantic-line-cautionary-primary: var(--text-primary); --semantic-line-cautionary-primary-rgb: var(--text-primary-rgb);
-  --semantic-line-negative-primary: var(--text-primary); --semantic-line-negative-primary-rgb: var(--text-primary-rgb);
-  --semantic-line-negative-strong: var(--text-primary); --semantic-line-negative-strong-rgb: var(--text-primary-rgb);
-  --semantic-line-negative-focus: var(--text-primary); --semantic-line-negative-focus-rgb: var(--text-primary-rgb);
+  /* 상태색: 글자와 선은 검정, 바탕은 Montage 중립 틴트 */
+  --semantic-foreground-positive-primary: var(--ink); --semantic-foreground-positive-primary-rgb: var(--ink-rgb);
+  --semantic-foreground-cautionary-primary: var(--ink); --semantic-foreground-cautionary-primary-rgb: var(--ink-rgb);
+  --semantic-foreground-negative-primary: var(--ink); --semantic-foreground-negative-primary-rgb: var(--ink-rgb);
+  --semantic-foreground-negative-strong: var(--ink); --semantic-foreground-negative-strong-rgb: var(--ink-rgb);
+  --semantic-surface-positive-primary: #70737C0D; --semantic-surface-positive-primary-rgb: 112, 115, 124;
+  --semantic-surface-cautionary-primary: #70737C0D; --semantic-surface-cautionary-primary-rgb: 112, 115, 124;
+  --semantic-surface-negative-primary: #70737C0D; --semantic-surface-negative-primary-rgb: 112, 115, 124;
+  --semantic-surface-negative-strong: #70737C14; --semantic-surface-negative-strong-rgb: 112, 115, 124;
+  --semantic-line-positive-primary: var(--border); --semantic-line-positive-primary-rgb: var(--border-rgb);
+  --semantic-line-cautionary-primary: var(--border); --semantic-line-cautionary-primary-rgb: var(--border-rgb);
+  --semantic-line-negative-primary: var(--ink); --semantic-line-negative-primary-rgb: var(--ink-rgb);
+  --semantic-line-negative-strong: var(--ink); --semantic-line-negative-strong-rgb: var(--ink-rgb);
+  --semantic-line-negative-focus: #1717191F; --semantic-line-negative-focus-rgb: var(--ink-rgb);
 
-  /* 강조색(accent): ContentBadge 기본(cyan) 등. 배지는 글자색의 8% 틴트를 배경으로 깐다 → 본문색 (무채색 틴트) */
-  --semantic-foreground-accent-lime: var(--text-primary); --semantic-foreground-accent-lime-rgb: var(--text-primary-rgb);
+  /* 강조색(accent): ContentBadge 등이 글자색 틴트를 바탕으로 깐다 → 검정 틴트 */
+  --semantic-foreground-accent-lime: var(--ink); --semantic-foreground-accent-lime-rgb: var(--ink-rgb);
+  --semantic-foreground-accent-cyan: var(--ink); --semantic-foreground-accent-cyan-rgb: var(--ink-rgb);
+  --semantic-foreground-accent-lightBlue: var(--ink); --semantic-foreground-accent-lightBlue-rgb: var(--ink-rgb);
+  --semantic-foreground-accent-violet: var(--ink); --semantic-foreground-accent-violet-rgb: var(--ink-rgb);
+  --semantic-foreground-accent-purple: var(--ink); --semantic-foreground-accent-purple-rgb: var(--ink-rgb);
+  --semantic-foreground-accent-pink: var(--ink); --semantic-foreground-accent-pink-rgb: var(--ink-rgb);
   --semantic-line-accent-lime: var(--border); --semantic-line-accent-lime-rgb: var(--border-rgb);
-  --semantic-surface-accent-lime: var(--bg-default); --semantic-surface-accent-lime-rgb: var(--bg-default-rgb);
-  --semantic-surface-accent-limeOpaque: var(--bg-default); --semantic-surface-accent-limeOpaque-rgb: var(--bg-default-rgb);
-  --semantic-foreground-accent-cyan: var(--text-primary); --semantic-foreground-accent-cyan-rgb: var(--text-primary-rgb);
   --semantic-line-accent-cyan: var(--border); --semantic-line-accent-cyan-rgb: var(--border-rgb);
-  --semantic-surface-accent-cyan: var(--bg-default); --semantic-surface-accent-cyan-rgb: var(--bg-default-rgb);
-  --semantic-surface-accent-cyanOpaque: var(--bg-default); --semantic-surface-accent-cyanOpaque-rgb: var(--bg-default-rgb);
-  --semantic-foreground-accent-lightBlue: var(--text-primary); --semantic-foreground-accent-lightBlue-rgb: var(--text-primary-rgb);
   --semantic-line-accent-lightBlue: var(--border); --semantic-line-accent-lightBlue-rgb: var(--border-rgb);
-  --semantic-surface-accent-lightBlue: var(--bg-default); --semantic-surface-accent-lightBlue-rgb: var(--bg-default-rgb);
-  --semantic-surface-accent-lightBlueOpaque: var(--bg-default); --semantic-surface-accent-lightBlueOpaque-rgb: var(--bg-default-rgb);
-  --semantic-foreground-accent-violet: var(--text-primary); --semantic-foreground-accent-violet-rgb: var(--text-primary-rgb);
   --semantic-line-accent-violet: var(--border); --semantic-line-accent-violet-rgb: var(--border-rgb);
-  --semantic-surface-accent-violet: var(--bg-default); --semantic-surface-accent-violet-rgb: var(--bg-default-rgb);
-  --semantic-surface-accent-violetOpaque: var(--bg-default); --semantic-surface-accent-violetOpaque-rgb: var(--bg-default-rgb);
-  --semantic-foreground-accent-purple: var(--text-primary); --semantic-foreground-accent-purple-rgb: var(--text-primary-rgb);
   --semantic-line-accent-purple: var(--border); --semantic-line-accent-purple-rgb: var(--border-rgb);
-  --semantic-surface-accent-purple: var(--bg-default); --semantic-surface-accent-purple-rgb: var(--bg-default-rgb);
-  --semantic-surface-accent-purpleOpaque: var(--bg-default); --semantic-surface-accent-purpleOpaque-rgb: var(--bg-default-rgb);
-  --semantic-foreground-accent-pink: var(--text-primary); --semantic-foreground-accent-pink-rgb: var(--text-primary-rgb);
   --semantic-line-accent-pink: var(--border); --semantic-line-accent-pink-rgb: var(--border-rgb);
-  --semantic-surface-accent-pink: var(--bg-default); --semantic-surface-accent-pink-rgb: var(--bg-default-rgb);
-  --semantic-surface-accent-pinkOpaque: var(--bg-default); --semantic-surface-accent-pinkOpaque-rgb: var(--bg-default-rgb);
-}
-
-/* Montage 매핑: 다크. 표면은 한 단계씩 밝은 회색 */
-html[data-theme='dark'] {
-  --semantic-background-neutral-secondary: var(--surface-primary); --semantic-background-neutral-secondary-rgb: var(--surface-primary-rgb);
-  --semantic-surface-neutral-primary: var(--surface-primary); --semantic-surface-neutral-primary-rgb: var(--surface-primary-rgb);
-  --semantic-surface-neutral-secondary: var(--surface-elevated); --semantic-surface-neutral-secondary-rgb: var(--surface-elevated-rgb);
-  --semantic-surface-neutral-tertiary: var(--surface-elevated); --semantic-surface-neutral-tertiary-rgb: var(--surface-elevated-rgb);
-  --semantic-surface-neutral-strong: var(--surface-elevated); --semantic-surface-neutral-strong-rgb: var(--surface-elevated-rgb);
-  --semantic-surface-elevated-primary: var(--surface-elevated); --semantic-surface-elevated-primary-rgb: var(--surface-elevated-rgb);
-  --semantic-surface-elevated-secondary: var(--surface-elevated); --semantic-surface-elevated-secondary-rgb: var(--surface-elevated-rgb);
-  --semantic-surface-disable-primary: var(--surface-elevated); --semantic-surface-disable-primary-rgb: var(--surface-elevated-rgb);
-  --semantic-surface-brand-subtle: var(--surface-elevated); --semantic-surface-brand-subtle-rgb: var(--surface-elevated-rgb);
-  --semantic-surface-positive-primary: var(--surface-elevated); --semantic-surface-positive-primary-rgb: var(--surface-elevated-rgb);
-  --semantic-surface-cautionary-primary: var(--surface-elevated); --semantic-surface-cautionary-primary-rgb: var(--surface-elevated-rgb);
-  --semantic-surface-negative-primary: var(--surface-elevated); --semantic-surface-negative-primary-rgb: var(--surface-elevated-rgb);
-  --semantic-surface-negative-strong: var(--surface-elevated); --semantic-surface-negative-strong-rgb: var(--surface-elevated-rgb);
-
-  --semantic-surface-accent-lime: var(--surface-elevated); --semantic-surface-accent-lime-rgb: var(--surface-elevated-rgb);
-  --semantic-surface-accent-limeOpaque: var(--surface-elevated); --semantic-surface-accent-limeOpaque-rgb: var(--surface-elevated-rgb);
-  --semantic-surface-accent-cyan: var(--surface-elevated); --semantic-surface-accent-cyan-rgb: var(--surface-elevated-rgb);
-  --semantic-surface-accent-cyanOpaque: var(--surface-elevated); --semantic-surface-accent-cyanOpaque-rgb: var(--surface-elevated-rgb);
-  --semantic-surface-accent-lightBlue: var(--surface-elevated); --semantic-surface-accent-lightBlue-rgb: var(--surface-elevated-rgb);
-  --semantic-surface-accent-lightBlueOpaque: var(--surface-elevated); --semantic-surface-accent-lightBlueOpaque-rgb: var(--surface-elevated-rgb);
-  --semantic-surface-accent-violet: var(--surface-elevated); --semantic-surface-accent-violet-rgb: var(--surface-elevated-rgb);
-  --semantic-surface-accent-violetOpaque: var(--surface-elevated); --semantic-surface-accent-violetOpaque-rgb: var(--surface-elevated-rgb);
-  --semantic-surface-accent-purple: var(--surface-elevated); --semantic-surface-accent-purple-rgb: var(--surface-elevated-rgb);
-  --semantic-surface-accent-purpleOpaque: var(--surface-elevated); --semantic-surface-accent-purpleOpaque-rgb: var(--surface-elevated-rgb);
-  --semantic-surface-accent-pink: var(--surface-elevated); --semantic-surface-accent-pink-rgb: var(--surface-elevated-rgb);
-  --semantic-surface-accent-pinkOpaque: var(--surface-elevated); --semantic-surface-accent-pinkOpaque-rgb: var(--surface-elevated-rgb);
+  --semantic-surface-accent-lime: #70737C0D; --semantic-surface-accent-lime-rgb: 112, 115, 124;
+  --semantic-surface-accent-cyan: #70737C0D; --semantic-surface-accent-cyan-rgb: 112, 115, 124;
+  --semantic-surface-accent-lightBlue: #70737C0D; --semantic-surface-accent-lightBlue-rgb: 112, 115, 124;
+  --semantic-surface-accent-violet: #70737C0D; --semantic-surface-accent-violet-rgb: 112, 115, 124;
+  --semantic-surface-accent-purple: #70737C0D; --semantic-surface-accent-purple-rgb: 112, 115, 124;
+  --semantic-surface-accent-pink: #70737C0D; --semantic-surface-accent-pink-rgb: 112, 115, 124;
 }
 
 /* Montage는 body 배경만 칠한다. 색을 안 준 글자(로고 등)가 #000이 되지 않게 본문색을 준다 */
 body {
-  color: var(--text-primary);
+  color: var(--semantic-foreground-neutral-primary);
 }
