@@ -5,3 +5,15 @@ export const hatchColor = {
   actionPrimary: { bg: 'var(--action-primary-bg)', text: 'var(--action-primary-text)' },
   highlight: { bg: 'var(--highlight-bg)', text: 'var(--highlight-text)' },
 } as const;
+
+// 주 행동 버튼: Montage Button(solid, primary)의 sx. 화면에 하나만 둔다.
+// 비활성은 Montage 모양(슬레이트 글자, 라일락 배경 5.12)을 그대로 쓴다
+export const primaryActionSx = {
+  '&:not(:disabled):not([aria-disabled="true"])': {
+    color: hatchColor.actionPrimary.text,
+    backgroundColor: hatchColor.actionPrimary.bg,
+  },
+};
+
+// 주의 배지, 작은 강조: 옐로 배경 + 잉크 글자. 글자 라벨과 같이 쓴다 (색만으로 알리지 않는다)
+export const highlightSx = { color: hatchColor.highlight.text, backgroundColor: hatchColor.highlight.bg, boxShadow: 'none' };

@@ -157,7 +157,7 @@ export default function IdeaDetail({
 
       {editing && (
         <Box sx={{ marginBottom: '24px' }}>
-          <IdeaForm action={saveIdea} submitLabel="수정 저장" initial={idea} folders={folders} disabled={generating} />
+          <IdeaForm action={saveIdea} submitLabel="수정 저장" primary={false} initial={idea} folders={folders} disabled={generating} />
           <FlexBox justifyContent="space-between" sx={{ marginTop: '8px' }}>
             <form action={trashAction} onSubmit={confirmTrash}>
               <Button type="submit" variant="outlined" color="assistive" size="small" disabled={generating}>

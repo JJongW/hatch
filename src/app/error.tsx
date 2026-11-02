@@ -4,6 +4,8 @@ import { useEffect } from 'react';
 import Link from 'next/link';
 import { Button, FlexBox, Typography } from '@montage-ui/core';
 
+import { primaryActionSx } from '@/lib/theme/tokens';
+
 import PageHeader from './_components/page-header';
 
 // Next 16: 예상 못 한 오류가 나면 이 화면이 페이지 자리에 뜬다 (네비바는 그대로). retry는 다시 받아 그린다
@@ -23,7 +25,7 @@ export default function Error({ error, retry }: { error: unknown; retry: () => v
         </Typography>
       )}
       <FlexBox gap="8px">
-        <Button onClick={() => retry()}>다시 시도</Button>
+        <Button onClick={() => retry()} sx={primaryActionSx}>다시 시도</Button>
         <Button as={Link} href="/ideas" variant="outlined" color="assistive">
           아이디어 모음으로
         </Button>

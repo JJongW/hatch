@@ -12,6 +12,7 @@ import type { Theme } from '@montage-ui/core';
 
 import Panel from '@/components/panel';
 import { splitTbd } from '@/lib/tbd';
+import { hatchColor } from '@/lib/theme/tokens';
 
 // 문서에서 나오는 펜스: 프롬프트(~~~text), 구성도(```mermaid, 그리기 실패 때만 여기로). 다른 언어가 생기면 이름을 더한다
 const LABELS: Record<string, string> = { text: '프롬프트', mermaid: '구성도' };
@@ -76,11 +77,7 @@ export default function CodeBlock({ lang, code }: { lang: string; code: string }
                       <Box
                         key={j}
                         as="mark"
-                        sx={(theme: Theme) => ({
-                          background: theme.semantic.surface.cautionary.primary,
-                          color: theme.semantic.foreground.cautionary.primary,
-                          borderRadius: '3px',
-                        })}
+                        sx={{ background: hatchColor.highlight.bg, color: hatchColor.highlight.text, borderRadius: '3px' }}
                       >
                         {s.text}
                       </Box>

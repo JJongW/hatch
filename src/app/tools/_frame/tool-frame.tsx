@@ -26,6 +26,7 @@ import { useRefreshWhile } from '../../_components/use-refresh-while';
 
 import Panel from '@/components/panel';
 import { DEMO_SAMPLE_IDEA } from '@/lib/demo';
+import { primaryActionSx } from '@/lib/theme/tokens';
 
 import type { ToolActionState } from '../../actions';
 import type { ToolFrameData } from './load';
@@ -212,7 +213,7 @@ export default function ToolFrame({ tool, ideas, ideaId, none, results, current,
         <Box sx={{ marginBottom: '32px' }}>
           <SectionMessage variant="info">데모에서는 실행할 수 없어요. 샘플 아이디어로 미리 만든 결과를 볼 수 있어요.</SectionMessage>
           <FlexBox gap="8px" flexWrap="wrap" sx={{ marginTop: '12px' }}>
-            <Button as={Link} href={`${base}?idea=${DEMO_SAMPLE_IDEA}`}>
+            <Button as={Link} href={`${base}?idea=${DEMO_SAMPLE_IDEA}`} sx={primaryActionSx}>
               샘플 결과 보기
             </Button>
             <UseLocallyButton />
@@ -244,7 +245,7 @@ export default function ToolFrame({ tool, ideas, ideaId, none, results, current,
               {demo ? (
                 <UseLocallyButton />
               ) : (
-                <Button type="submit" disabled={blocked || noSource}>
+                <Button type="submit" disabled={blocked || noSource} sx={primaryActionSx}>
                   실행
                 </Button>
               )}

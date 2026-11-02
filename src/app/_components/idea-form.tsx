@@ -3,6 +3,8 @@
 import { useActionState, useState } from 'react';
 import { Button, Chip, FlexBox, SectionMessage, TextArea, TextField, Typography } from '@montage-ui/core';
 
+import { primaryActionSx } from '@/lib/theme/tokens';
+
 import type { FormState } from '../actions';
 
 import { UseLocallyButton, useDemo } from './demo';
@@ -13,6 +15,8 @@ type Props = {
   initial?: { title: string; memo: string; folder: string };
   /** 저장 후 입력을 비울지 (쓰기 화면) */
   resetOnSave?: boolean;
+  /** 화면의 주 행동이면 오렌지. 상세 화면 수정처럼 다른 주 행동(다음 할 일)이 같이 보이면 false */
+  primary?: boolean;
   /** 다른 긴 작업 중 제출을 막는다 */
   disabled?: boolean;
   /** 지금 있는 폴더 이름 (누르면 칸이 채워진다) */
@@ -47,7 +51,7 @@ function FolderField({ initial, folders, disabled }: { initial: string; folders:
   );
 }
 
-export default function IdeaForm({ action, submitLabel, initial, resetOnSave = false, disabled = false, folders }: Props) {
+export default function IdeaForm({ action, submitLabel, initial, resetOnSave = false, disabled = false, folders, primary = true }: Props) {
   const demo = useDemo();
   const [state, formAction, pending] = useActionState(action, {});
   const values = state.values ?? (resetOnSave ? undefined : initial);
@@ -77,7 +81,7 @@ export default function IdeaForm({ action, submitLabel, initial, resetOnSave = f
           {demo ? (
             <UseLocallyButton />
           ) : (
-            <Button type="submit" loading={pending} disabled={disabled}>
+            <Button type="submit" loading={pending} disabled={disabled} sx={primary ? primaryActionSx : undefined}>
               {submitLabel}
             </Button>
           )}

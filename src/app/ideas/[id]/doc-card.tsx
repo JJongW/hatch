@@ -3,6 +3,8 @@
 import { useActionState, useId, useState } from 'react';
 import { Box, Button, ContentBadge, FlexBox, SectionMessage, TextArea, TextButton, Typography } from '@montage-ui/core';
 
+import { highlightSx } from '@/lib/theme/tokens';
+
 import { UseLocallyButton, useDemo } from '../../_components/demo';
 import DocMarkdown from '../../_components/doc-markdown';
 import RunningNote from '../../_components/running-note';
@@ -91,7 +93,7 @@ export default function DocCard({ doc, ready, hasSource, running, onBusy, locked
           {doc.content === null ? '아직 없음' : doc.file}
         </ContentBadge>
         {doc.content !== null && doc.stale && (
-          <ContentBadge size="xsmall" variant="solid" color="accent" accentColor="semantic.foreground.cautionary.primary">
+          <ContentBadge size="xsmall" variant="solid" sx={highlightSx}>
             앞 문서가 바뀌었어요
           </ContentBadge>
         )}
