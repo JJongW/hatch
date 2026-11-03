@@ -64,3 +64,4 @@ export {
   type UsageTag,
   USAGE_FILE_VERSION,
 } from './types';
+export { docInputs, type DocInputs, type DocSource } from './doc-inputs';

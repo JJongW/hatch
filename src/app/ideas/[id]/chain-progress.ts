@@ -27,11 +27,12 @@ export function chainProgress(docs: Doc[], running: DocKey | null): ChainProgres
   };
 }
 
-/** 탭 위 요약 한 줄 (spec chain-progress §3). 다시 만드는 중이면 완료 수는 그대로 두고 "지금 ○○ 만드는 중"을 붙인다 */
+/** 탭 위 요약 한 줄 (spec chain-progress §3). 다시 만드는 중이면 생성된 수는 그대로 두고 "지금 ○○ 만드는 중"을 붙인다 */
 export function summaryLine({ done, total, next }: ChainProgress, docs: Doc[], running: DocKey | null): string {
   const label = (key: DocKey) => docs.find((d) => d.key === key)?.label ?? '';
-  if (running) return `${total}개 중 ${done}개 완료, 지금 ${label(running)} 만드는 중`;
+  if (running) return `${total}개 중 ${done}개 생성됨, 지금 ${label(running)} 만드는 중`;
   // 체인 순서상 처음 빈 문서는 앞 문서가 늘 있으므로, 생성 중이 아니고 빈 문서가 있으면 next도 있다
-  if (done === total || !next) return `${total}개 모두 완료`;
-  return `${total}개 중 ${done}개 완료, 다음 차례는 ${label(next)}`;
+  // "생성됨"은 파일이 있다는 뜻일 뿐 검토 · 확정이 끝났다는 뜻이 아니다 (spec 2026-11-03 §3)
+  if (done === total || !next) return `${total}개 모두 생성됨`;
+  return `${total}개 중 ${done}개 생성됨, 다음 차례는 ${label(next)}`;
 }

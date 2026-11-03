@@ -67,6 +67,9 @@ export default function TryFlow({ fixture }: { fixture: TryFixture }) {
 
   const docs = docsOf(state);
   const madePrd = state.made.prd?.content ?? null;
+  // PRD를 아직 안 만들었어도 리뷰를 막지 않는다: 예시 PRD로 계속 (spec 2026-11-03 §4). 예시인 것은 화면에 밝힌다
+  const [examplePrd, setExamplePrd] = useState(false);
+  const prdInput = madePrd ?? (examplePrd ? fixture.docs.prd : null);
 
   const createIdea = async (_prev: FormState, fd: FormData): Promise<FormState> => {
     const values = { title: String(fd.get('title') ?? '').trim(), memo: String(fd.get('memo') ?? ''), folder: String(fd.get('folder') ?? '') };
@@ -152,6 +155,7 @@ export default function TryFlow({ fixture }: { fixture: TryFixture }) {
 
   const restart = () => {
     setState(START);
+    setExamplePrd(false);
     setView('detail');
     setRound((r) => r + 1);
   };
@@ -227,20 +231,30 @@ export default function TryFlow({ fixture }: { fixture: TryFixture }) {
               <TryTool
                 info={prdReview}
                 input={
-                  madePrd ? (
-                    <Box sx={{ maxHeight: '240px', overflow: 'auto' }}>
-                      <Typography as="div" variant="body2">
-                        <DocMarkdown>{madePrd}</DocMarkdown>
-                      </Typography>
-                    </Box>
+                  prdInput ? (
+                    <FlexBox flexDirection="column" gap="6px">
+                      {!madePrd && (
+                        <Typography variant="caption1" color="semantic.foreground.neutral.secondary">
+                          예시 PRD예요. 이 아이디어에서 만든 PRD가 아니에요.
+                        </Typography>
+                      )}
+                      <Box sx={{ maxHeight: '240px', overflow: 'auto' }}>
+                        <Typography as="div" variant="body2">
+                          <DocMarkdown>{prdInput}</DocMarkdown>
+                        </Typography>
+                      </Box>
+                    </FlexBox>
                   ) : (
                     <Typography variant="body2">이 아이디어의 PRD를 리뷰해요.</Typography>
                   )
                 }
                 blocked={
-                  madePrd ? undefined : (
+                  prdInput ? undefined : (
                     <FlexBox alignItems="center" gap="12px" sx={{ flexWrap: 'wrap' }}>
-                      <Typography variant="body2">아이디어 상세에서 기획안, 개발 로드맵, PRD를 차례로 먼저 만들어요.</Typography>
+                      <Typography variant="body2">이 아이디어의 PRD가 아직 없어요. 상세에서 만들거나 예시 PRD로 계속할 수 있어요.</Typography>
+                      <Button size="small" onClick={() => setExamplePrd(true)}>
+                        예시 PRD로 계속
+                      </Button>
                       <Button size="small" variant="outlined" color="assistive" onClick={() => setView('detail')}>
                         아이디어 상세로
                       </Button>

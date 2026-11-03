@@ -158,7 +158,15 @@ export default function ToolFrame({ tool, ideas, ideaId, none, results, current,
             </Select>
             {idea &&
               (idea.docs.length === 0 ? (
-                <SectionMessage variant="info">이 도구가 받는 문서({tool.acceptsLabels.join(', ')})가 아직 없어요.</SectionMessage>
+                // 막지 않는다: 이유와 함께 붙여넣기로 이어 갈 길을 준다 (spec 2026-11-03 §4)
+                <FlexBox flexDirection="column" gap="8px" alignItems="flex-start">
+                  <SectionMessage variant="info">
+                    이 아이디어에는 이 도구가 받는 문서({tool.acceptsLabels.join(', ')})가 아직 없어요. 아이디어 상세에서 만들거나, 가진 문서를 붙여넣어 계속할 수 있어요.
+                  </SectionMessage>
+                  <Button size="small" variant="outlined" color="assistive" onClick={() => changeMode('pasted')} disabled={blocked}>
+                    붙여넣기로 계속
+                  </Button>
+                </FlexBox>
               ) : (
                 <Select value={selectedDoc} onChange={(k) => k && setDocKey(k)} disabled={blocked} width="100%" aria-label="문서">
                   {idea.docs.map((d) => (

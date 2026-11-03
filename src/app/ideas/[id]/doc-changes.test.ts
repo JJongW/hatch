@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { DOC_STEPS, type Doc, type DocChange, type DocKey } from '@/lib/storage';
 
-import { changeBadge, changeSentence, upstreamHint } from './doc-changes';
+import { changeBadge, changeSentence, madeWithLine, upstreamHint } from './doc-changes';
 import { formatKst } from './format-kst';
 import { summaryLine } from './diff-view';
 
@@ -51,5 +51,15 @@ describe('formatKst · summaryLine', () => {
   it('바뀐 절 요약', () => {
     expect(summaryLine({ added: 1, removed: 0, changed: ['목표'], addedSections: [], removedSections: [] })).toBe('바뀐 절: 목표 · 더한 줄 1, 뺀 줄 0');
     expect(summaryLine({ added: 0, removed: 0, changed: [], addedSections: [], removedSections: [] })).toBe('내용이 같아요.');
+  });
+});
+
+describe('madeWithLine', () => {
+  it('빠진 것 · 대신 쓴 것', () => {
+    expect(madeWithLine({ madeWithout: ['roadmap'], madeFrom: 'plan' })).toBe('개발 로드맵 없이 기획안으로 만들었어요.');
+    expect(madeWithLine({ madeWithout: ['plan'], madeFrom: 'idea' })).toBe('기획안 없이 아이디어로 만들었어요.');
+    expect(madeWithLine({ madeWithout: ['plan'] })).toBe('기획안 없이 만들었어요.');
+    expect(madeWithLine({})).toBeNull();
+    expect(changeSentence({ from: 'prd', madeWithout: ['prd'] }, 'doc:prd')).toBe('빠졌던 PRD가 생겼어요');
   });
 });

@@ -214,15 +214,26 @@ export default function QuestionsPanel({ view, action, saveDecision, saveEvidenc
                 )}
               </Box>
             )}
-            {(view.customer.length > 0 || view.owner.length > 0 || view.decision.length > 0) && (
+            {view.first.length > 0 && (
               <Box sx={{ width: '100%' }}>
-                {view.customer.length > 0 &&
-                  group('customer', `고객에게 물을 것 ${view.customer.length}개`, true, view.customer)}
-                {view.owner.map((g) => group(g.role, `${g.role} 담당자에게 확인할 것 ${g.items.length}개`, false, g.items))}
-                {view.decision.length > 0 && group('decision', `팀이 정할 것 ${view.decision.length}개`, false, view.decision)}
+                <Typography variant="label1" weight="bold" sx={{ display: 'block' }}>
+                  먼저 볼 것 {view.first.length}개
+                </Typography>
+                {caption('팀이 정할 것 먼저, 그다음 [확인 필요]가 걸린 곳이 많은 순이에요.')}
+                <Lines list={view.first} aside={answer} below={form} />
               </Box>
             )}
-            {view.customer.length === 0 && view.owner.length === 0 && view.decision.length === 0 && text('남은 질문이 없어요.')}
+            {(view.customer.length > 0 || view.owner.length > 0 || view.decision.length > 0) && (
+              <Accordion divider={false} onChange={(open) => !open && opening && !view.first.some((q) => q.label === opening.label) && setOpening(null)}>
+                <AccordionSummary>{`나머지 ${view.openTotal - view.first.length}개 보기`}</AccordionSummary>
+                <AccordionDetails forceMount>
+                  {view.customer.length > 0 && group('customer', `고객에게 물을 것 ${view.customer.length}개`, true, view.customer)}
+                  {view.owner.map((g) => group(g.role, `${g.role} 담당자에게 확인할 것 ${g.items.length}개`, false, g.items))}
+                  {view.decision.length > 0 && group('decision', `팀이 정할 것 ${view.decision.length}개`, false, view.decision)}
+                </AccordionDetails>
+              </Accordion>
+            )}
+            {view.openTotal === 0 && text('남은 질문이 없어요.')}
             {view.answered > 0 &&
               caption(
                 `답한 것 ${view.answered}개 — ${[view.byEvidence > 0 && `근거 ${view.byEvidence}개는 문제와 근거 탭`, view.byDecision > 0 && `결정 ${view.byDecision}개는 결정 탭`].filter(Boolean).join(', ')}에 있어요.`,

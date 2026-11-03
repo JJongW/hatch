@@ -230,7 +230,6 @@ export default function IdeaDetail({
                 <DocCard
                   doc={doc}
                   ready={generatable.includes(doc.key)}
-                  hasSource={doc.from === 'idea' || docs.find((d) => d.key === doc.from)?.content != null}
                   running={busy ?? running}
                   onBusy={setBusy}
                   locked={asking}

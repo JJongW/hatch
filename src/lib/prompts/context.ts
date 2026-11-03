@@ -8,6 +8,10 @@ export const CHAIN_RULES = `너는 한국 IT 회사의 시니어 PO다. 아래 �
 
 export const INPUT_HEADING = '## 입력';
 
+/** 권장 입력이 없어 대신 만들 때 입력 앞에 붙인다. 빠진 문서 내용을 짐작해 채우지 않게 (spec 2026-11-03 §4) */
+export const missingNote = (labels: string[]) =>
+  `참고: ${labels.join(', ')} 문서 없이 만든다. 그 문서에 있었을 내용은 지어내지 말고 "[확인 필요: ○○]"로 남긴다.`;
+
 /** 모든 PO 도구 앞에 붙는 공통 규칙 */
 export const TOOL_RULES = `너는 한국 IT 회사의 시니어 PO를 돕는 동료다. 아래 입력 문서만 근거로 판단한다.
 - 입력에 없는 사실은 지어내지 말고 "[확인 필요: ○○]"로 남긴다.

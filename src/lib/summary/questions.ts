@@ -12,6 +12,11 @@ export type QuestionView = {
   owner: { role: QuestionRole; items: QuestionLine[] }[];
   /** 팀이 정할 것 (답 = 결정) */
   decision: QuestionLine[];
+  /** 먼저 볼 것 (최대 5). 점수 없이: 팀이 정할 것 먼저, 그다음 [확인 필요]가 걸린 곳이 많은 순, 같으면 목록 순.
+   * customer · owner · decision에는 이 5개를 뺀 나머지만 담는다 (같은 질문이 두 번 나오지 않게) */
+  first: QuestionLine[];
+  /** 남은 질문 전체 수 (first 포함) */
+  openTotal: number;
   /** 같은 질문 문장의 결정이나 근거가 있는 질문 수 */
   answered: number;
   /** 그중 근거로 답한 수 · 결정으로 답한 수 (둘 다 있으면 둘 다 센다) */
@@ -28,6 +33,8 @@ export type QuestionView = {
   limit: number;
 };
 
+const FIRST_MAX = 5;
+
 export function questionView(set: QuestionSet | null, { groups, unnamed }: Collected, decisions: Decision[], evidence: Evidence[] = []): QuestionView {
   const count = new Map(groups.map((g) => [g.label, g.count]));
   const decided = new Set(decisions.map((d) => norm(d.question)));
@@ -35,13 +42,21 @@ export function questionView(set: QuestionSet | null, { groups, unnamed }: Colle
   const live = (set?.items ?? []).filter((q) => count.has(q.label)).map((q) => ({ ...q, count: count.get(q.label)! }));
   const open = live.filter((q) => !decided.has(norm(q.question)) && !observed.has(norm(q.question)));
   const known = new Set(set?.labels ?? []);
+  const first = open
+    .map((q, i) => ({ q, i }))
+    .sort((a, b) => Number(b.q.kind === 'decision') - Number(a.q.kind === 'decision') || b.q.count - a.q.count || a.i - b.i)
+    .slice(0, FIRST_MAX)
+    .map(({ q }) => q);
+  const rest = open.filter((q) => !first.includes(q));
   return {
     made: set !== null,
-    customer: open.filter((q) => q.kind === 'customer'),
-    owner: QUESTION_ROLES.map((role) => ({ role, items: open.filter((q) => q.kind === 'owner' && q.role === role) })).filter(
+    customer: rest.filter((q) => q.kind === 'customer'),
+    owner: QUESTION_ROLES.map((role) => ({ role, items: rest.filter((q) => q.kind === 'owner' && q.role === role) })).filter(
       (g) => g.items.length > 0,
     ),
-    decision: open.filter((q) => q.kind === 'decision'),
+    decision: rest.filter((q) => q.kind === 'decision'),
+    first,
+    openTotal: open.length,
     answered: live.length - open.length,
     byEvidence: live.filter((q) => observed.has(norm(q.question))).length,
     byDecision: live.filter((q) => decided.has(norm(q.question))).length,

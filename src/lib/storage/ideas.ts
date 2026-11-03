@@ -5,7 +5,10 @@ import path from 'node:path';
 import matter from 'gray-matter';
 
 import { assertValidId, isValidId, newId } from './ids';
+import { listDecisions } from './decisions';
 import { getDocs } from './docs';
+import { listEvidence } from './evidence';
+import { listToolResults } from './tools';
 import { FOLDER_MAX, UNFILED } from './folders';
 import { ideaDir, ideaFile, ideasDir, isMissing, dataDir } from './paths';
 import { progressOf } from './progress';
@@ -146,13 +149,27 @@ export async function trashIdea(id: string): Promise<void> {
   await refreshIndex();
 }
 
-/** 목록 화면용: 아이디어 + 진행 배지 문구 + 만든 문서 수 */
+/** 목록 화면용: 아이디어 + 진행 배지 문구 + 만든 문서 수 + 실제로 있는 근거 · 결정 · PRD 리뷰 (spec 2026-11-03 §3) */
 export async function listIdeasWithProgress() {
   const { ideas, unreadable } = await listIdeas();
   const items = await Promise.all(
     ideas.map(async (idea) => {
-      const docs = await getDocs(idea.id);
-      return { idea, progress: progressOf(docs), done: docs.filter((d) => d.content !== null).length, total: docs.length };
+      // 근거 · 결정 · 리뷰 파일이 깨져도 목록은 보인다 (그 배지만 빠짐)
+      const [docs, evidence, decisions, reviews] = await Promise.all([
+        getDocs(idea.id),
+        listEvidence(idea.id).catch(() => []),
+        listDecisions(idea.id).catch(() => []),
+        listToolResults('prd-review', idea.id, 'prd').catch(() => []),
+      ]);
+      return {
+        idea,
+        progress: progressOf(docs),
+        done: docs.filter((d) => d.content !== null).length,
+        total: docs.length,
+        evidence: evidence.length,
+        decided: decisions.filter((d) => d.status === 'decided').length,
+        prdReviewed: reviews.length > 0,
+      };
     }),
   );
   return { items, unreadable };

@@ -11,7 +11,7 @@
 - `tools/_frame/` — 도구 공통 틀 (`load.ts` 서버 로더 · `tool-frame.tsx`). 자세히는 `tools/CLAUDE.md`
 
 ## 규칙
-- 페이지(서버)가 storage를 읽어 client 컴포넌트에 props로. storage · chain · `@/lib/tools` · `@/lib/share`(서버 전용 `client`)는 페이지 · `actions.ts`에서만 import (예외: 도구 페이지만 부르는 서버 전용 `tools/_frame/load.ts`). 타입과 순수 계산 모듈(`storage/types`, `summary`, `questions/collect`)은 client에서도 쓴다
+- 페이지(서버)가 storage를 읽어 client 컴포넌트에 props로. storage · chain · `@/lib/tools` · `@/lib/share`(서버 전용 `client`)는 페이지 · `actions.ts`에서만 import (예외: 도구 페이지만 부르는 서버 전용 `tools/_frame/load.ts`). 타입과 순수 계산 모듈(`storage/types`, `storage/doc-inputs`, `summary`, `questions/collect`)은 client에서도 쓴다 (경로로 직접 import)
 - Montage 컴포넌트는 Emotion이라 `'use client'`. 날짜 포맷은 서버에서 (hydration 차이)
 - **Next 16**: 파일을 읽는 페이지는 `await connection()` + 그 경로에 `loading.tsx` (Suspense 경계).
   없으면 build 실패 / 이동 시 dev 경고. `usePathname`도 Suspense 안에서 (`app-shell.tsx` 참고)

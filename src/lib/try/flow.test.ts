@@ -69,6 +69,14 @@ describe('docsOf, generate', () => {
     expect(docs.find((d) => d.key === 'prd')!.content).toBeNull();
   });
 
+  it('앞 문서 없이 만들면 빠진 것 · 대신 쓴 것이 남고, 대신 쓴 문서가 바뀌어도 알린다 (실제와 같은 규칙)', () => {
+    let s = generate({ ...START, idea }, 'plan', fixture);
+    s = generate(s, 'spec', fixture);
+    expect(docsOf(s).find((d) => d.key === 'spec')).toMatchObject({ madeWithout: ['prd', 'roadmap'], madeFrom: 'plan', changes: [] });
+    s = editDoc(s, 'plan', '고친 기획안');
+    expect(docsOf(s).find((d) => d.key === 'spec')!.changes).toEqual(['doc:plan']);
+  });
+
   it('PRD는 함께 넣은 기획안이 바뀌어도 알린다 (extra)', () => {
     let s = generate({ ...START, idea }, 'plan', fixture);
     for (const k of ['roadmap', 'prd'] as DocKey[]) s = generate(s, k, fixture);

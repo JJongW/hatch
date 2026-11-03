@@ -3,7 +3,7 @@ import 'server-only';
 import { toClaudeSchema } from '@/lib/claude/schema';
 import { BUSY_MESSAGE, ChainError, isClaudeBusy, runClaude } from '@/lib/claude/run';
 import {
-  clearRunning, DOC_STEPS, getDocs, getIdea, hashOf, ideaSource, inputHashes, listDecisions, listEvidence, markRunning, saveDoc, saveDraft, type DocKey,
+  clearRunning, docInputs, DOC_STEPS, getDocs, getIdea, hashOf, ideaSource, inputHashes, listDecisions, listEvidence, markRunning, saveDoc, saveDraft, type DocKey,
 } from '@/lib/storage';
 
 import { buildPrompt } from './build-prompt';
@@ -23,13 +23,12 @@ export async function generateDoc(id: string, key: DocKey) {
   const [decisions, evidence] = await Promise.all([listDecisions(id), listEvidence(id)]);
   const bodyOf = (k: DocKey) => docs.find((d) => d.key === k)?.content ?? null;
 
-  const source = meta.from === 'idea' ? ideaSource(idea, decisions, evidence) : bodyOf(meta.from);
-  if (!source) throw new ChainError('앞 문서를 먼저 만들어 주세요.');
-
+  // 앞 문서가 없으면 막지 않고 가장 가까운 있는 앞 문서(없으면 아이디어)로 만든다. 화면에서 빠진 것을 확인받은 뒤 온다
+  const plan = docInputs(key, (k) => bodyOf(k) !== null);
+  const source = plan.from === 'idea' ? ideaSource(idea, decisions, evidence) : bodyOf(plan.from)!;
   const labelOf = (k: DocKey | 'idea') => (k === 'idea' ? '아이디어' : DOC_STEPS.find((s) => s.key === k)!.label);
-  const extras = (meta.extra ?? []).map((k) => ({ label: labelOf(k), body: bodyOf(k) }));
-  if (extras.some((e) => !e.body)) throw new ChainError('앞 문서를 먼저 만들어 주세요.');
-  const inputs = [{ label: labelOf(meta.from), body: source }, ...extras.map((e) => ({ label: e.label, body: e.body! }))];
+  const inputs = [{ label: labelOf(plan.from), body: source }, ...plan.extra.map((k) => ({ label: labelOf(k), body: bodyOf(k)! }))];
+  const used = [plan.from, ...plan.extra];
 
   const again = bodyOf(key) !== null; // 이미 있던 문서를 다시 만듦 (낭비 신호). 문서를 쓰기 전에 읽는다
 
@@ -38,14 +37,14 @@ export async function generateDoc(id: string, key: DocKey) {
   await markRunning(id, key);
   try {
     const raw = await runClaude({
-      prompt: buildPrompt(step.prompt, inputs),
+      prompt: buildPrompt(step.prompt, inputs, plan.missing.map(labelOf)),
       jsonSchema: toClaudeSchema(step.schema),
       tag: { feature: 'doc', key, ideaId: id, again },
     });
     const parsed = step.schema.safeParse(raw);
     if (!parsed.success) throw new ChainError('결과 형식이 맞지 않아요. 다시 만들어 주세요.');
     // 입력 조각별 해시를 같이 남겨, 나중에 무엇이 바뀌었는지(앞 문서 · 결정 · 근거) 알린다
-    const docMeta = { sourceHash: hashOf(source), inputs: inputHashes(key, { idea, decisions, evidence, bodyOf }) };
+    const docMeta = { sourceHash: hashOf(source), inputs: inputHashes(key, { idea, decisions, evidence, bodyOf }, used) };
     await (again ? saveDraft : saveDoc)(id, key, step.render(parsed.data), docMeta);
   } finally {
     await clearRunning(id);

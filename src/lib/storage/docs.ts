@@ -9,6 +9,7 @@ import { PROJECT_BLOCK } from '@/lib/prompts/context';
 
 import { listDecisions } from './decisions';
 import { listEvidence } from './evidence';
+import { docInputs, sourceOfInput, type DocSource } from './doc-inputs';
 import { HISTORY_DIR, keepHistory } from './history';
 import { getIdea, StorageError } from './ideas';
 import { assertValidId } from './ids';
@@ -75,17 +76,23 @@ export type InputContext = {
   bodyOf: (key: DocKey) => string | null;
 };
 
-export function inputHashes(key: DocKey, ctx: InputContext): Record<string, string> {
-  const step = stepOf(key);
-  if (step.from === 'idea') {
-    const idea = ctx.idea;
-    return {
-      idea: hashOf(idea ? joined([titleMemo(idea), contextBlock(idea.context)]) : ''),
-      decisions: hashOf(decisionBlock(ctx.decisions)),
-      evidence: hashOf(evidenceBlock(ctx.evidence)),
-    };
+function hashesFor(sources: DocSource[], ctx: InputContext): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const src of new Set(sources)) {
+    if (src === 'idea') {
+      const idea = ctx.idea;
+      out.idea = hashOf(idea ? joined([titleMemo(idea), contextBlock(idea.context)]) : '');
+      out.decisions = hashOf(decisionBlock(ctx.decisions));
+      out.evidence = hashOf(evidenceBlock(ctx.evidence));
+    } else out[`doc:${src}`] = hashOf(ctx.bodyOf(src) ?? '');
   }
-  return Object.fromEntries([step.from, ...(step.extra ?? [])].map((k) => [`doc:${k}`, hashOf(ctx.bodyOf(k) ?? '')]));
+  return out;
+}
+
+/** 입력 조각별 해시. used를 주면 실제로 쓴 입력(앞 문서가 없어 대신 쓴 것) 기준, 없으면 권장 입력 (from + extra) */
+export function inputHashes(key: DocKey, ctx: InputContext, used?: DocSource[]): Record<string, string> {
+  const step = stepOf(key);
+  return hashesFor(used ?? [step.from, ...(step.extra ?? [])], ctx);
 }
 
 export const hashOf = (text: string) => crypto.createHash('sha256').update(text.trim()).digest('hex').slice(0, 12);
@@ -157,7 +164,9 @@ function changesOf(key: DocKey, doc: Parsed, ctx: InputContext, legacySource: st
   if (doc.body === null) return [];
   const stored = asHashes(doc.data.inputs);
   if (stored) {
-    const now = inputHashes(key, ctx);
+    // 권장 입력과 실제로 쓴 입력을 모두 본다: 대신 쓴 문서가 바뀌어도, 빠졌던 문서가 생겨도 알린다
+    const step = stepOf(key);
+    const now = hashesFor([step.from, ...(step.extra ?? []), ...Object.keys(stored).map(sourceOfInput)], ctx);
     return Object.keys(now).filter((k) => (stored[k] ?? hashOf('')) !== now[k]) as DocChange[];
   }
   const sourceHash = typeof doc.data.sourceHash === 'string' ? doc.data.sourceHash : undefined;
@@ -169,6 +178,17 @@ function changesOf(key: DocKey, doc: Parsed, ctx: InputContext, legacySource: st
   const from = stepOf(key).from;
   if (sourceHash !== hashOf(legacySource)) out.push(from === 'idea' ? 'unknown' : `doc:${from}`);
   return out;
+}
+
+/** 만들 때 빠졌던 권장 입력과, 앞 문서 대신 쓴 것 (inputs가 있는 문서만) */
+function madeWith(step: (typeof DOC_STEPS)[number], doc: Parsed): { madeWithout?: DocKey[]; madeFrom?: DocKey | 'idea' } {
+  const stored = asHashes(doc.data.inputs);
+  if (!stored || step.from === 'idea' || doc.body === null) return {};
+  const without = [step.from, ...(step.extra ?? [])].filter((k) => !(`doc:${k}` in stored));
+  if (without.length === 0) return {};
+  // 화면 · 체험과 같은 규칙(docInputs)으로 대신 쓴 것을 되짚는다 (저장된 inputs에 있던 문서 = 그때 있던 문서)
+  const madeFrom = without.includes(step.from) ? docInputs(step.key, (k) => `doc:${k}` in stored).from : undefined;
+  return { madeWithout: without, ...(madeFrom ? { madeFrom } : {}) };
 }
 
 export async function getDocs(id: string): Promise<Doc[]> {
@@ -197,7 +217,7 @@ export async function getDocs(id: string): Promise<Doc[]> {
     const editedAt = isoOf(doc.data.editedAt);
     const draftAt = isoOf(draft.data.generatedAt);
     const d: DocDraft | null = doc.body !== null && draft.body !== null ? { content: draft.body, generatedAt: draftAt ?? '' } : null;
-    return { ...step, content: doc.body, stale: changes.length > 0, changes, generatedAt, editedAt, draft: d, versions: versions[step.key] };
+    return { ...step, content: doc.body, stale: changes.length > 0, changes, generatedAt, editedAt, draft: d, versions: versions[step.key], ...madeWith(step, doc) };
   });
 }
 

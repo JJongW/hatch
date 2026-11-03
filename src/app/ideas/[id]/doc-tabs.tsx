@@ -16,7 +16,7 @@ import { changeBadge } from './doc-changes';
 const LABELS: Record<DocStatus, string> = {
   running: '만드는 중',
   stale: '검토 필요', // 실제 원인은 labelOf가 문서의 changes로 바꿔 쓴다
-  done: '완료',
+  done: '생성됨',
   next: '다음 차례',
   wait: '대기',
 };
