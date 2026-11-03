@@ -123,9 +123,10 @@ export default function QuestionsPanel({ view, action, saveDecision, onBusy, dis
       </Button>
     </form>
   );
+  // 질문으로 만들지 않은 [확인 필요]: 이름 없이 표시만 있는 곳, 개수 상한을 넘은 것
   const skipped = [
-    view.unnamed > 0 ? `라벨 없는 표시 ${view.unnamed}곳` : '',
-    view.cut > 0 ? `${view.limit + 1}번째부터 ${view.cut}개` : '',
+    view.unnamed > 0 ? `이름 없이 [확인 필요]만 적힌 ${view.unnamed}곳은 질문으로 만들지 않았어요.` : '',
+    view.cut > 0 ? `질문이 많아 ${view.limit + 1}번째부터 ${view.cut}개는 뺐어요.` : '',
   ].filter(Boolean);
 
   return (
@@ -133,7 +134,7 @@ export default function QuestionsPanel({ view, action, saveDecision, onBusy, dis
       <FlexBox flexDirection="column" gap="12px" alignItems="flex-start">
         {!view.made ? (
           <>
-            {text(`[확인 필요] ${view.unknownTotal}곳, 라벨 ${view.labelTotal}개를 고객에게 물을 것과 담당자에게 확인할 것으로 나눠요. 1분쯤 걸려요.`)}
+            {text(`[확인 필요] ${view.unknownTotal}곳(이름 ${view.labelTotal}가지)을 고객에게 물을 것과 담당자에게 확인할 것으로 나눠요. 1분쯤 걸려요.`)}
             {make('질문 목록 만들기')}
           </>
         ) : (
@@ -150,13 +151,13 @@ export default function QuestionsPanel({ view, action, saveDecision, onBusy, dis
             {view.answered > 0 && caption(`답한 것 ${view.answered}개 — 결정 칸에 있어요.`)}
             {view.newLabels > 0 && (
               <FlexBox alignItems="center" gap="8px">
-                {text(`새로 생긴 확인 필요 ${view.newLabels}개`)}
-                {!demo && make('다시 만들기')}
+                {text(`질문을 만든 뒤 문서에 새 [확인 필요]가 ${view.newLabels}개 생겼어요.`)}
+                {!demo && make('질문 다시 만들기')}
               </FlexBox>
             )}
           </>
         )}
-        {skipped.length > 0 && caption(`질문에서 빠진 것: ${skipped.join(', ')}`)}
+        {skipped.length > 0 && caption(skipped.join(' '))}
         {state.error && <SectionMessage variant="negative">{state.error}</SectionMessage>}
       </FlexBox>
     </Box>

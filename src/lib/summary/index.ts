@@ -9,6 +9,7 @@ export type NextAction =
   | { kind: 'wait'; doc: DocKey }
   | { kind: 'check-stale'; doc: DocKey }
   | { kind: 'make-doc'; doc: DocKey }
+  | { kind: 'make-questions' }
   | { kind: 'collect-voc' }
   | { kind: 'review-prd' }
   | { kind: 'done' };
@@ -23,6 +24,9 @@ export type SummaryInput = {
   reviewedPrd: boolean;
   /** 저장된 결정 · 보류 (저장 순) */
   decisions: Decision[];
+  /** 확인 질문 목록을 만들었나. 넘기면 [확인 필요]가 남았을 때 고객 의견보다 질문 정리를 먼저 권한다.
+   * 지금은 흐름 체험(과제 순서: 질문 → 고객 의견)만 넘긴다. 상세 화면도 같은 순서가 맞다고 보이면 page.tsx에서도 넘긴다 */
+  questionsMade?: boolean;
 };
 
 export type Summary = {
@@ -61,12 +65,13 @@ function problemOf(idea: SummaryInput['idea'], plan: string | null): Summary['pr
 }
 
 // 위에서부터 첫 번째 하나 (spec §3 다음 행동 규칙)
-function nextOf({ docs, running, voc, reviewedPrd }: SummaryInput, unknownTotal: number): NextAction {
+function nextOf({ docs, running, voc, reviewedPrd, questionsMade }: SummaryInput, unknownTotal: number): NextAction {
   if (running) return { kind: 'wait', doc: running };
   const stale = docs.find((d) => d.content !== null && d.stale);
   if (stale) return { kind: 'check-stale', doc: stale.key };
   const has = (key: DocKey) => docs.some((d) => d.key === key && d.content !== null);
   if (!has('plan')) return { kind: 'make-doc', doc: 'plan' };
+  if (questionsMade === false && unknownTotal > 0) return { kind: 'make-questions' };
   if (!voc && unknownTotal > 0) return { kind: 'collect-voc' };
   if (has('prd') && !reviewedPrd) return { kind: 'review-prd' };
   const missing = docs.find((d) => d.content === null);

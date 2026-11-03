@@ -23,7 +23,7 @@ const LABELS: Record<DocStatus, string> = {
 const MARK = '12px';
 
 // 세로 목록의 상태 배지. 완료도 흐리지 않게 (spec detail-dashboard §1)
-// 바뀜은 주의 배지(옐로 배경 + 잉크 글자), 만드는 중과 다음 차례는 코발트 테두리 (spec color-system 5절)
+// 바뀜은 주의 배지(라일락 배경 + 검정 글자), 만드는 중과 다음 차례는 주색(검정) 테두리 (spec mono-montage 2절)
 const ACCENT: Partial<Record<DocStatus, 'semantic.foreground.brand.primary'>> = {
   running: 'semantic.foreground.brand.primary',
   next: 'semantic.foreground.brand.primary',
@@ -45,8 +45,8 @@ function StatusBadge({ status }: { status: DocStatus }) {
   );
 }
 
-// 상태 표시: 완료는 체크, 바뀜은 잉크 점, 만드는 중은 깜빡이는 코발트 점, 다음 차례는 코발트 원, 대기는 슬레이트 원 (spec chain-progress §2).
-// 옐로 점은 밝은 배경 위 1.39라 쓰지 않는다. 모양과 옆 글자 라벨로 구분한다
+// 상태 표시: 완료는 체크, 바뀜은 점, 만드는 중은 깜빡이는 점, 다음 차례는 진한 원, 대기는 옅은 원 (spec chain-progress §2).
+// 색은 모두 무채색이라 모양과 옆 글자 라벨로 구분한다. 진행 줄 모션은 #107 모션 PR에서 다시 본다
 function StatusMark({ status }: { status: DocStatus }) {
   if (status === 'done') {
     return <IconCheck aria-hidden sx={(t: Theme) => ({ width: MARK, height: MARK, color: t.semantic.foreground.brand.primary })} />;
@@ -101,6 +101,9 @@ export default function DocTabs({ docs, running, value, onChange, render }: Prop
               aria-current={value === doc.key ? 'true' : undefined}
               selected={value === doc.key}
               verticalPadding="small"
+              // button으로 바꾸면 브라우저 기본 버튼 배경(회색)이 남는다. 줄 모양은 ListCell이 맡는다
+              // 주색이 본문색과 같은 검정이라 ListCell의 선택 글자색만으로는 안 보인다 → 고른 줄은 굵게
+              sx={{ backgroundColor: 'transparent', textAlign: 'left', '&[aria-current="true"]': { fontWeight: 700 } }}
               onClick={() => onChange(doc.key)}
               trailingContent={
                 <ListCellContent variant="content-badge">

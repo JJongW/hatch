@@ -11,17 +11,14 @@ import type { PropsWithChildren } from 'react';
 
 type Props = PropsWithChildren<{ demo?: boolean }>;
 
-// 네비바 폭 + 본문 좌우 여백. 틀 최대 폭 = NAV + 본문 최대 폭 + GUTTER * 2 + 양옆 선 2px (전역 border-box)
-const NAV = 240;
 const GUTTER = 48;
-const frameWidth = (content: number) => `${NAV + content + GUTTER * 2 + 2}px`;
-const line = (t: Theme) => ({ borderInline: `1px solid ${t.semantic.line.neutral.primary}` });
 
 // 넓으면 좌측 네비바 + 본문, 좁으면 네비바가 위로.
-// 넓은 화면에서는 네비바와 본문을 한 틀로 묶어 가운데에 두고, 바깥은 옅은 배경으로 채운다 (#76)
+// 네비바는 늘 화면 왼쪽에 띄운 둥근 패널(side-nav.tsx)이고, 본문은 남은 폭 가운데 (#111).
+// 예전엔 네비+본문을 화면마다 다른 폭의 틀로 묶어 가운데에 둬서, 이동할 때 네비 위치와 양옆 세로선이 바뀌었다
 export default function AppShell({ children, demo }: Props) {
   return (
-    <Box sx={(t: Theme) => ({ [respondMore('768px')]: { background: t.semantic.background.neutral.secondary } })}>
+    <Box>
       {/* 설문 화면(FocusPage)에서는 네비바(첫 칸)를 숨긴다 (#71) */}
       <Box
         sx={(t: Theme) => ({
@@ -29,18 +26,7 @@ export default function AppShell({ children, demo }: Props) {
           flexDirection: 'column',
           background: t.semantic.background.neutral.primary,
           '&:has([data-focus-page]) > :first-child': { display: 'none' },
-          [respondMore('768px')]: {
-            flexDirection: 'row',
-            minHeight: '100vh',
-            maxWidth: frameWidth(880),
-            marginInline: 'auto',
-            '&:has([data-wide-page])': { maxWidth: frameWidth(1120) },
-            '&:has([data-focus-page])': { maxWidth: `${640 + GUTTER * 2 + 2}px` },
-          },
-          // 바깥 배경이 보일 만큼 넓을 때만 틀 양옆에 선을 긋는다. 틀 폭이 화면마다 달라 기준도 따로 둔다
-          [respondMore(frameWidth(880))]: line(t),
-          '&:has([data-wide-page])': { [respondMore(frameWidth(880))]: { borderInline: 'none' }, [respondMore(frameWidth(1120))]: line(t) },
-          '&:has([data-focus-page])': { [respondMore('768px')]: line(t) },
+          [respondMore('768px')]: { flexDirection: 'row', minHeight: '100vh' },
         })}
       >
         <Suspense fallback={<SideNavView pathname={null} />}>
@@ -53,6 +39,7 @@ export default function AppShell({ children, demo }: Props) {
               marginInline: 'auto',
               '&:has([data-wide-page])': { maxWidth: '1120px' },
               '&:has([data-focus-page])': { maxWidth: '640px' },
+              '&:has([data-focus-page="wide"])': { maxWidth: '880px' },
               '&:has([data-focus-page]) > [data-demo-banner]': { display: 'none' },
             }}
           >

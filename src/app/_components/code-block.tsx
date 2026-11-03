@@ -17,18 +17,18 @@ import { hatchColor } from '@/lib/theme/tokens';
 // 문서에서 나오는 펜스: 프롬프트(~~~text), 구성도(```mermaid, 그리기 실패 때만 여기로). 다른 언어가 생기면 이름을 더한다
 const LABELS: Record<string, string> = { text: '프롬프트', mermaid: '구성도' };
 
-const body = (theme: Theme) => ({
+const body = {
   display: 'grid',
   gridTemplateColumns: 'max-content 1fr',
   columnGap: '12px',
   padding: '10px 16px 12px 8px',
   maxHeight: '480px',
   overflowY: 'auto' as const,
-  background: theme.semantic.surface.neutral.secondary,
+  // 흰 바탕. 테두리 상자(Panel) 안이라 면을 따로 깔지 않는다 (spec mono-montage 2절)
   fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
   fontSize: '12.5px',
   lineHeight: '20px',
-});
+};
 
 export default function CodeBlock({ lang, code }: { lang: string; code: string }) {
   const toast = useToast();

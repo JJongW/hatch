@@ -25,6 +25,7 @@ export { appendUsage, listUsage } from './usage';
 export { FOLDER_MAX, UNFILED, folderNames, groupFolders, pickFolder, type FolderCount } from './folders';
 export { getQuestions, saveQuestions } from './questions';
 export { isValidId } from './ids';
+export { getShareState, saveShareState, type ShareState } from './share';
 export { progressOf } from './progress';
 export { getToolResult, isValidResultId, listToolResults, saveToolResult, type ToolResult } from './tools';
 export {

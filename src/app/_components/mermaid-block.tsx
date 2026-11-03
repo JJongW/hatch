@@ -6,8 +6,6 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { Box, FlexBox, TextButton, Typography, useToast } from '@montage-ui/core';
 import { IconCopy } from '@montage-ui/icon';
 
-import type { Theme } from '@montage-ui/core';
-
 import Panel from '@/components/panel';
 
 import CodeBlock from './code-block';
@@ -82,14 +80,13 @@ export default function MermaidBlock({ code }: { code: string }) {
         ref={boxRef}
         role="img"
         aria-label="데이터 구성도"
-        sx={(theme: Theme) => ({
+        sx={{
           minHeight: '160px',
           maxHeight: '560px',
           padding: '16px',
           overflow: 'auto',
-          background: theme.semantic.surface.neutral.secondary,
           '& svg': { display: 'block', margin: '0 auto' },
-        })}
+        }}
         // mermaid securityLevel 'strict'가 라벨의 HTML · 스크립트를 걸러 낸 SVG다
         dangerouslySetInnerHTML={{ __html: view.kind === 'svg' ? view.svg : '' }}
       />

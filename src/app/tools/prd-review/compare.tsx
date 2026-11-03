@@ -18,10 +18,10 @@ function Bar({ before, now }: Pick<CompareRow, 'before' | 'now'>) {
   return (
     <Box
       aria-hidden
-      sx={(t: Theme) => ({ position: 'relative', height: '8px', minWidth: '80px', borderRadius: '4px', backgroundColor: t.semantic.background.neutral.secondary })}
+      sx={(t: Theme) => ({ position: 'relative', height: '8px', minWidth: '80px', borderRadius: '4px', backgroundColor: t.semantic.surface.neutral.secondary })}
     >
       {before !== null && (
-        <Box sx={(t: Theme) => ({ position: 'absolute', inset: '0 auto 0 0', width: width(before), borderRadius: '4px', backgroundColor: t.semantic.line.neutral.primary })} />
+        <Box sx={(t: Theme) => ({ position: 'absolute', inset: '0 auto 0 0', width: width(before), borderRadius: '4px', backgroundColor: t.semantic.line.neutral.secondary })} />
       )}
       {now !== null && (
         <Box sx={(t: Theme) => ({ position: 'absolute', top: '2px', left: 0, height: '4px', width: width(now), borderRadius: '4px', backgroundColor: t.semantic.foreground.brand.primary })} />

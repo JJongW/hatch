@@ -6,7 +6,7 @@ Next.js(App Router) · Montage(원티드 디자인 시스템) · 생성은 로�
 ## 지금 단계
 **A · B 완료** — 아이디어 → 기획안 → 로드맵 → PRD → 기능명세 → 개발/디자인 프롬프트 생성.
 **C-1 진행: 공통 틀 + PRD 리뷰 위원회.** 다음: VOC · 지표 · 협상 도구 (`new-po-tool`).
-실행: `cp .env.example .env.local` → `npm run dev`. 앱은 Mac에서 돌린다 (생성은 로컬 `claude -p`). 다른 기기는 Tailscale Serve (README). `bridge/`는 보류 (spec §1).
+실행: `cp .env.example .env.local` → `npm run dev`. 앱은 내 컴퓨터(macOS · Linux · Windows)에서 돌린다 (생성은 로컬 `claude -p`, 개발과 확인은 맥). 다른 기기는 Tailscale Serve (README). `bridge/`는 보류 (spec §1).
 
 ## 폴더 지도 — 일할 폴더의 CLAUDE.md를 먼저 읽는다
 | 경로 | 역할 | 단계 | 에이전트 |
@@ -16,6 +16,7 @@ Next.js(App Router) · Montage(원티드 디자인 시스템) · 생성은 로�
 | `src/app/tools/` · `src/lib/tools/` | PO 도구 공통 틀 + 도구 4종 | C | `tool-builder` |
 | `src/components/` | 공용 UI (Montage 기반) | D | `ui-builder` |
 | `src/lib/storage/` | 아이디어 · 문서 저장 | A | `ui-builder` |
+| `src/lib/share/` | 공유 링크: 사본 모양 · 서명 · 토큰 · Supabase (`supabase/shares.sql`) | C | `ui-builder` |
 | `src/lib/questions/` | 확인 질문 (모으기 · 검사 · 만들기) | 4b | `ui-builder` |
 | `src/lib/claude/` | claude -p 실행기 | B | `chain-author` |
 | `src/lib/theme/` | 컬러 토큰 상수 · 대비 계산 (색 값은 `src/app/theme.css`) | D | `ui-builder` |

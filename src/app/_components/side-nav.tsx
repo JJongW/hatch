@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
@@ -15,7 +16,9 @@ import {
 } from '@montage-ui/core';
 
 import type { Theme } from '@montage-ui/core';
-import type { FocusEvent } from 'react';
+import type { FocusEvent, ReactNode } from 'react';
+
+import { hatchColor } from '@/lib/theme/tokens';
 
 import FlippingWordSwap from './flipping-word-swap';
 
@@ -37,19 +40,25 @@ const navStyle = (theme: Theme) => ({
   flexDirection: 'column' as const,
   gap: '16px',
   padding: '16px',
+  // 흰 바탕 (spec mono-montage 2절: 회색 면 없음). 좁은 화면에선 위에 놓이고 아래 1px 선으로 나눈다
+  background: theme.semantic.background.neutral.primary,
   borderBottom: `1px solid ${theme.semantic.line.neutral.primary}`,
+  // 넓은 화면: 화면 가장자리에서 12px 띄운 둥근 패널 (#111, 사용자 요청: 네비 전체를 라운드로 묶어 옆에).
+  // 회색은 선과 그림자에만. 화면 높이에 묶고 넘치면 패널 안에서 스크롤 (#76)
   [respondMore('768px')]: {
     width: '240px',
     flexShrink: 0,
-    // 틀 높이만큼 늘어나면 sticky가 듣지 않는다. 화면 높이로 묶고 넘치면 네비바 안에서 스크롤 (#76)
-    height: '100vh',
+    height: 'calc(100vh - 24px)',
+    margin: '12px 0 12px 12px',
     alignSelf: 'flex-start',
     overflowY: 'auto' as const,
     position: 'sticky' as const,
-    top: 0,
-    padding: '24px 16px',
+    top: '12px',
+    padding: '20px 12px',
     borderBottom: 'none',
-    borderRight: `1px solid ${theme.semantic.line.neutral.primary}`,
+    borderRadius: '16px',
+    border: `1px solid ${theme.semantic.line.neutral.primary}`,
+    boxShadow: theme.semantic.elevation.shadow.normal.small,
   },
 });
 
@@ -58,7 +67,7 @@ export default function SideNav() {
   return <SideNavView pathname={usePathname()} />;
 }
 
-// 로고: 'Hatch'(Avigea) ↔ '해치'(HS산토끼체). 마우스를 올리거나 키보드로 포커스하면 뒤집힌다
+// 로고: hatch_ic 아이콘(public/brand, 원본 1254px을 96px로 줄임) + 'Hatch'(Avigea) ↔ '해치'(HS산토끼체). 마우스를 올리거나 키보드로 포커스하면 뒤집힌다
 function BrandLogo() {
   const [swapped, setSwapped] = useState(false);
   return (
@@ -68,13 +77,14 @@ function BrandLogo() {
       variant="headline1"
       weight="bold"
       aria-label="Hatch 해치 — 아이디어 쓰기로"
-      sx={{ textDecoration: 'none' }}
+      sx={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '8px' }}
       onMouseEnter={() => setSwapped(true)}
       onMouseLeave={() => setSwapped(false)}
       onFocus={(e: FocusEvent<HTMLElement>) => setSwapped(e.currentTarget.matches(':focus-visible'))}
       onBlur={() => setSwapped(false)}
     >
-      🐣{' '}
+      {/* 이름은 링크 aria-label이 읽는다 → 그림은 장식 */}
+      <Image src="/brand/hatch-ic.png" alt="" width={24} height={24} />
       <FlippingWordSwap
         word1="Hatch"
         word2="해치"
@@ -83,6 +93,29 @@ function BrandLogo() {
         toStyle={{ fontFamily: 'var(--font-logo-ko)' }}
       />
     </Typography>
+  );
+}
+
+// 지금 있는 메뉴: 라벤더 바탕 + 굵은 글자 (#111). 색만으로 알리지 않게 ListCell selected의 굵은 글자는 두고 오른쪽 체크만 뺀다(trailingContent null).
+// full 변형 + 가로 여백 12px: 호버 층과 라벤더 바탕이 같은 폭으로 줄 안에 그려진다 (inset은 호버 층이 양옆으로 넘친다)
+function NavItem({ href, active, children }: { href: string; active: boolean; children: ReactNode }) {
+  return (
+    <ListCell
+      as={Link}
+      href={href}
+      variant="full"
+      selected={active}
+      trailingContent={null}
+      aria-current={active ? 'page' : undefined}
+      verticalPadding="small"
+      sx={{
+        '--list-cell-horizontal-padding': '12px',
+        borderRadius: '8px',
+        ...(active && { backgroundColor: hatchColor.highlight.bg, color: hatchColor.highlight.text }),
+      }}
+    >
+      {children}
+    </ListCell>
   );
 }
 
@@ -97,23 +130,23 @@ export function SideNavView({ pathname }: { pathname: string | null }) {
 
       <FlexBox flexDirection="column">
         {MAIN.map((m) => (
-          <ListCell key={m.href} as={Link} href={m.href} selected={isActive(m.href)} verticalPadding="small">
+          <NavItem key={m.href} href={m.href} active={isActive(m.href)}>
             {m.label}
-          </ListCell>
+          </NavItem>
         ))}
       </FlexBox>
 
       <Divider />
 
       <FlexBox flexDirection="column" gap="4px">
-        <Typography variant="caption1" color="semantic.foreground.neutral.tertiary">
+        <Typography variant="caption1" color="semantic.foreground.neutral.tertiary" sx={{ paddingInline: '20px' }}>
           PO 도구
         </Typography>
         {TOOL_LINKS.map((t) =>
           t.ready ? (
-            <ListCell key={t.href} as={Link} href={t.href} selected={isActive(t.href)} verticalPadding="small">
+            <NavItem key={t.href} href={t.href} active={isActive(t.href)}>
               {t.label}
-            </ListCell>
+            </NavItem>
           ) : (
             <ListCell
               key={t.href}
@@ -136,9 +169,9 @@ export function SideNavView({ pathname }: { pathname: string | null }) {
 
       <Divider />
 
-      <ListCell as={Link} href="/usage" selected={isActive('/usage')} verticalPadding="small">
+      <NavItem href="/usage" active={isActive('/usage')}>
         사용량
-      </ListCell>
+      </NavItem>
     </Box>
   );
 }
