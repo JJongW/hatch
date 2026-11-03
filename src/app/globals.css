@@ -24,10 +24,48 @@ button {
   from { opacity: 1; }
   to { opacity: 0.35; }
 }
+/* 로딩 표시 (#130): Montage 회전 아이콘 대신 Hatch 아이콘이 알을 깨듯 흔들린다.
+   아이콘은 마스크라 색은 글자색을 따른다 (검정 버튼 위에선 흰색, 외곽선 버튼 위에선 검정) */
+@keyframes hatch-wobble {
+  0%, 100% { transform: rotate(0deg) translateY(0); }
+  20% { transform: rotate(-10deg) translateY(0); }
+  40% { transform: rotate(8deg) translateY(-2px); }
+  60% { transform: rotate(-5deg) translateY(0); }
+  80% { transform: rotate(3deg) translateY(0); }
+}
+.hatch-loader,
+[data-role='button-loading']::before {
+  display: inline-block;
+  flex-shrink: 0;
+  width: var(--hatch-loader-size, 16px);
+  height: var(--hatch-loader-size, 16px);
+  background-color: currentColor;
+  -webkit-mask: url('/icons/hatch-loader.png') center / contain no-repeat;
+  mask: url('/icons/hatch-loader.png') center / contain no-repeat;
+  transform-origin: 50% 85%;
+  animation: hatch-wobble 1s ease-in-out infinite;
+}
+/* 버튼 안 로딩: Montage가 가운데 맞춘 자리(transform)는 그대로 두고, 원 대신 안쪽 ::before에 아이콘을 그린다 */
+[data-role='button-loading'] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+[data-role='button-loading']::before {
+  content: '';
+}
+[data-role='button-loading'] > svg {
+  display: none;
+}
+
 /* 줄인 모션 설정: 움직임을 끄고 최종 모습만 보인다 (반짝임은 RunningNote가 따로 끈다).
-   SVG는 뺀다 — 회전 아이콘(Loading)까지 멈추면 "도는 중" 신호가 사라진다 */
+   SVG · 로딩 아이콘은 뺀다 — 로딩 표시까지 멈추면 "도는 중" 신호가 사라진다. 로딩 아이콘은 흔들림 대신 천천히 옅어진다 */
 @media (prefers-reduced-motion: reduce) {
-  :where(*:not(svg, svg *)), *::before, *::after {
+  .hatch-loader,
+  [data-role='button-loading']::before {
+    animation: hatch-pulse 1.2s ease-in-out infinite alternate !important;
+  }
+  :where(*:not(svg, svg *, .hatch-loader)), *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-delay: 0ms !important;
     animation-iteration-count: 1 !important;
