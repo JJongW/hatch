@@ -14,10 +14,12 @@ import ContextPanel from './context-panel';
 import DecisionsPanel from './decisions-panel';
 import { detailStats } from './detail-stats';
 import DocCard from './doc-card';
+import { freshInputs } from './doc-changes';
 import DocTabs from './doc-tabs';
 import EvidencePanel from './evidence-panel';
 import { firstTab } from './first-tab';
-import NextBand, { type ToolLink } from './next-band';
+import NextBand from './next-band';
+import type { ToolLink } from './next-step';
 import QuestionsPanel from './questions-panel';
 import StatusCards, { type DetailTab } from './status-cards';
 
@@ -107,6 +109,7 @@ export default function IdeaDetail({
   const [sharing, setSharing] = useState(false);
   const [trashState, trashFormAction] = useActionState<{ error?: string }>(() => trashAction(), {});
   const [tab, setTab] = useState<DocKey>(() => firstTab(docs, summary.next));
+  const [contextOpen, setContextOpen] = useState(false);
   // 본문 탭. 처음은 문서 (spec detail-dashboard §2-4)
   const [section, setSection] = useState<DetailTab>('docs');
   // 현황 칸, 근거 링크로 탭을 바꾸면 그 탭으로 초점을 옮긴다 (키보드, 화면 읽기 사용자가 바뀐 곳을 알게)
@@ -205,10 +208,10 @@ export default function IdeaDetail({
       {/* 아이디어 수정 중에도 마운트해 둔다 (열어 둔 맥락 폼이 사라지지 않게).
           머리 아래 여백(24px)에 바로 붙이려고 gap 12px만큼 당긴다 */}
       <Box sx={{ marginTop: '-12px', marginBottom: '12px' }}>
-        <ContextPanel context={context} fields={contextFields} action={saveContextAction} disabled={generating} />
+        <ContextPanel context={context} fields={contextFields} action={saveContextAction} disabled={generating} open={contextOpen} onOpenChange={setContextOpen} />
       </Box>
 
-      <NextBand next={summary.next} docs={docs} ideaId={ideaId} onOpenDoc={openDoc} onOpenQuestions={() => openSection('questions')} goTool={goTool} />
+      <NextBand next={summary.next} then={summary.then} onOpenContext={() => setContextOpen(true)} docs={docs} ideaId={ideaId} onOpenDoc={openDoc} onOpenQuestions={() => openSection('questions')} goTool={goTool} />
       <StatusCards stats={stats} onOpen={openSection} />
 
       <Box ref={tabsRef} sx={{ marginTop: '12px' }}>
@@ -238,6 +241,7 @@ export default function IdeaDetail({
                   resolve={resolveDraftAction}
                   readVersion={readVersionAction}
                   docs={docs}
+                  fresh={doc.draft ? freshInputs(doc, summary.decisions.recorded, summary.evidence.items) : undefined}
                 />
               )}
             />

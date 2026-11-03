@@ -12,6 +12,9 @@ export type NextAction =
   | { kind: 'make-questions' }
   | { kind: 'collect-voc' }
   | { kind: 'review-prd' }
+  /** 체험 과제용: 맥락 적기 · 결정 남기기 (tryNext만 쓴다) */
+  | { kind: 'write-context' }
+  | { kind: 'decide' }
   | { kind: 'done' };
 
 export type SummaryInput = {
@@ -39,6 +42,8 @@ export type Summary = {
   /** open: 기획안 질문 중 결정이 없는 것 (최대 5) · recorded: 저장된 결정 전부 */
   decisions: { open: string[]; openMore: number; recorded: Decision[] };
   next: NextAction;
+  /** 그다음 하나 (없으면 null). 화면에 "그다음: …" 한 줄 */
+  then: NextAction | null;
 };
 
 const MAX = 5;
@@ -66,19 +71,20 @@ function problemOf(idea: SummaryInput['idea'], plan: string | null): Summary['pr
   return { text: idea.title, from: 'title' };
 }
 
-// 위에서부터 첫 번째 하나 (spec §3 다음 행동 규칙)
-function nextOf({ docs, running, voc, reviewedPrd, questionsMade }: SummaryInput, unknownTotal: number): NextAction {
-  if (running) return { kind: 'wait', doc: running };
-  const stale = docs.find((d) => d.content !== null && d.stale);
-  if (stale) return { kind: 'check-stale', doc: stale.key };
+// 위에서부터 해당하는 것을 차례로 (spec §3 다음 행동 규칙). 첫째가 다음 할 일, 둘째가 "그다음"
+function nextsOf({ docs, running, voc, reviewedPrd, questionsMade }: SummaryInput, unknownTotal: number): NextAction[] {
+  if (running) return [{ kind: 'wait', doc: running }];
+  const out: NextAction[] = [];
+  for (const d of docs) if (d.content !== null && d.stale) out.push({ kind: 'check-stale', doc: d.key });
   const has = (key: DocKey) => docs.some((d) => d.key === key && d.content !== null);
-  if (!has('plan')) return { kind: 'make-doc', doc: 'plan' };
-  if (questionsMade === false && unknownTotal > 0) return { kind: 'make-questions' };
-  if (!voc && unknownTotal > 0) return { kind: 'collect-voc' };
-  if (has('prd') && !reviewedPrd) return { kind: 'review-prd' };
-  const missing = docs.find((d) => d.content === null);
-  if (missing) return { kind: 'make-doc', doc: missing.key };
-  return { kind: 'done' };
+  if (!has('plan')) out.push({ kind: 'make-doc', doc: 'plan' });
+  if (questionsMade === false && unknownTotal > 0) out.push({ kind: 'make-questions' });
+  if (!voc && unknownTotal > 0) out.push({ kind: 'collect-voc' });
+  if (has('prd') && !reviewedPrd) out.push({ kind: 'review-prd' });
+  const missing = docs.find((d) => d.content === null && d.key !== 'plan');
+  if (missing && has('plan')) out.push({ kind: 'make-doc', doc: missing.key });
+  out.push({ kind: 'done' });
+  return out;
 }
 
 export function summarize(input: SummaryInput): Summary {
@@ -90,7 +96,10 @@ export function summarize(input: SummaryInput): Summary {
     unknowns: unknowns.slice(0, MAX),
     unknownTotal: unknowns.length,
     decisions: decisionsOf(plan, input.decisions),
-    next: nextOf(input, unknowns.length),
+    ...(() => {
+      const [next, then] = nextsOf(input, unknowns.length);
+      return { next, then: then && then.kind !== 'done' ? then : null };
+    })(),
   };
 }
 

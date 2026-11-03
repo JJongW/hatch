@@ -27,6 +27,11 @@ describe('다음 행동', () => {
   it('2. 내용 있고 바뀐 문서 중 가장 앞', () => {
     expect(summarize(input({ docs: docsWith(ALL, ['spec', 'roadmap']) })).next).toEqual({ kind: 'check-stale', doc: 'roadmap' });
   });
+  it('그다음: 해당하는 다음 규칙 하나 (바뀐 문서가 둘이면 둘째), 생성 중 · 다 됨이면 없음', () => {
+    expect(summarize(input({ docs: docsWith(ALL, ['spec', 'roadmap']) })).then).toEqual({ kind: 'check-stale', doc: 'spec' });
+    expect(summarize(input({ running: 'prd', docs: docsWith(ALL, ['spec']) })).then).toBeNull();
+    expect(summarize(input({ docs: docsWith(ALL, ['roadmap']), voc: { total: 1, top: 'a' }, reviewedPrd: true })).then).toBeNull();
+  });
   it('2. 내용 없는 문서의 stale은 무시', () => {
     expect(summarize(input({ docs: docsWith({ plan: PLAN }, ['roadmap']), voc: { total: 1, top: 'a' } })).next).toEqual({
       kind: 'make-doc',

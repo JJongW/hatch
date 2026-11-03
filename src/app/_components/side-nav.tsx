@@ -63,8 +63,8 @@ const navStyle = (theme: Theme) => ({
 });
 
 /** 현재 경로를 아는 네비바. 동적 라우트에선 Suspense 안에서만 쓸 수 있다 (app-shell 참고). */
-export default function SideNav() {
-  return <SideNavView pathname={usePathname()} />;
+export default function SideNav({ demo = false }: { demo?: boolean }) {
+  return <SideNavView pathname={usePathname()} demo={demo} />;
 }
 
 // 로고: hatch_ic 아이콘(public/brand, 원본 1254px을 96px로 줄임) + 'Hatch'(Avigea) ↔ '해치'(HS산토끼체). 마우스를 올리거나 키보드로 포커스하면 뒤집힌다
@@ -120,16 +120,18 @@ function NavItem({ href, active, children }: { href: string; active: boolean; ch
 }
 
 /** 경로를 모를 때(Suspense 대기 중)는 강조 없이 그린다 */
-export function SideNavView({ pathname }: { pathname: string | null }) {
+export function SideNavView({ pathname, demo = false }: { pathname: string | null; demo?: boolean }) {
   const isActive = (href: string) =>
     pathname !== null && (href === '/' ? pathname === '/' : pathname.startsWith(href));
+  // 데모 첫 화면은 쓰기 폼이 아니라 시작 안내라 이름을 맞춘다
+  const main = demo ? [{ href: '/', label: '시작' }, ...MAIN.slice(1)] : MAIN;
 
   return (
     <Box as="nav" aria-label="주 메뉴" sx={navStyle}>
       <BrandLogo />
 
       <FlexBox flexDirection="column">
-        {MAIN.map((m) => (
+        {main.map((m) => (
           <NavItem key={m.href} href={m.href} active={isActive(m.href)}>
             {m.label}
           </NavItem>

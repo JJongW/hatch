@@ -29,8 +29,8 @@ export default function AppShell({ children, demo }: Props) {
           [respondMore('768px')]: { flexDirection: 'row', minHeight: '100vh' },
         })}
       >
-        <Suspense fallback={<SideNavView pathname={null} />}>
-          <SideNav />
+        <Suspense fallback={<SideNavView pathname={null} demo={!!demo} />}>
+          <SideNav demo={!!demo} />
         </Suspense>
         <Box as="main" sx={{ flex: 1, minWidth: 0, padding: '32px 24px 64px', [respondMore('768px')]: { padding: `40px ${GUTTER}px 72px` } }}>
           <Box

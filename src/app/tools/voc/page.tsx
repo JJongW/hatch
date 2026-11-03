@@ -1,10 +1,12 @@
 import { connection } from 'next/server';
 
-import { vocSummary } from '@/lib/tools/voc/compute';
+import { isDemo } from '@/lib/demo';
+import { vocLines, vocSummary } from '@/lib/tools/voc/compute';
 
 import { runToolAction } from '../../actions';
 import { loadToolPage } from '../_frame/load';
 import ToolFrame from '../_frame/tool-frame';
+import VocInputLines from './input-lines';
 import VocInputs from './inputs';
 import VocSummary from './summary';
 
@@ -19,8 +21,15 @@ export default async function VocPage({ searchParams }: { searchParams: Promise<
     <ToolFrame
       {...data}
       run={runToolAction.bind(null, 'voc')}
-      inputFields={<VocInputs />}
-      resultSummary={summary && <VocSummary {...summary} />}
+      inputFields={<VocInputs shown={isDemo() && data.current ? vocLines(data.current.data) : undefined} />}
+      resultSummary={
+        data.current && (
+          <>
+            {summary && <VocSummary {...summary} />}
+            <VocInputLines lines={vocLines(data.current.data)} />
+          </>
+        )
+      }
     />
   );
 }

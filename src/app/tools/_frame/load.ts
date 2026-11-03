@@ -37,7 +37,7 @@ export type ToolFrameData = {
   results: { id: string; createdAt: string; source: string }[];
   /** ?result= 또는 최신 결과. data = compute 결과 (도구 페이지가 요약 화면을 그릴 때 해석한다)
    *  갈아탈 신호: 요약을 쓰는 도구가 3개를 넘거나 data가 수십 KB가 되면, current에서 data를 빼고 요약 쓰는 페이지만 따로 읽는다 (지금은 ToolFrame에 통째로 직렬화된다) */
-  current: { id: string; body: string; data: unknown } | null;
+  current: { id: string; body: string; data: unknown; /** DocKey 또는 'pasted' (데모가 이 결과의 입력 문서를 보인다) */ source: string } | null;
   busy: boolean;
 };
 
@@ -92,7 +92,7 @@ export async function loadToolPage(
     ideaId,
     none,
     results,
-    current: cur ? { id: cur.id, body: cur.body, data: cur.data } : null,
+    current: cur ? { id: cur.id, body: cur.body, data: cur.data, source: cur.source } : null,
     busy: isClaudeBusy(),
   };
 }

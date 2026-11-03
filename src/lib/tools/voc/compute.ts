@@ -12,6 +12,8 @@ export type VocResult = {
   topics: { rank: number; name: string; description: string; count: number; average: number | null; score: number; top: Voc[] }[];
   /** 빠진 줄(severity null) · 없는 주제로 분류된 줄 */
   unclassified: { count: number; top: (Omit<Voc, 'severity'> & { severity: number | null })[] };
+  /** 분석한 입력 원문 (1번부터). 예전 결과에는 없다 */
+  lines?: string[];
 };
 
 const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, Math.round(n)));
@@ -45,7 +47,13 @@ export function computeVoc(out: VocOutput, { lines }: VocInput): VocResult {
   // 점수가 같으면 같은 순위 (1, 2, 2, 4). 같은 순위 안에서는 건수 많은 순 → 입력 순으로 놓는다
   const withRank = ranked.map((t) => ({ rank: 1 + ranked.filter((x) => x.score > t.score).length, ...t }));
 
-  return { total: lines.length, topics: withRank, unclassified: { count: unclassified.length, top: unclassified.sort(bySeverity).slice(0, 3) } };
+  return {
+    total: lines.length,
+    topics: withRank,
+    unclassified: { count: unclassified.length, top: unclassified.sort(bySeverity).slice(0, 3) },
+    // 입력과 결과가 한 파일에서 나오게 원문을 같이 남긴다 (spec 2026-11-03 §5)
+    lines,
+  };
 }
 
 const vocLine = (v: { line: number; text: string; severity: number | null }) =>
@@ -99,4 +107,10 @@ export function vocSummary(data: unknown): VocSummary | null {
     ['frequent', `자주 나옴 (${VOC_FREQUENT}건 이상)`],
   ];
   return { rows, filters: labels.map(([key, label]) => ({ key, label, count: rows.filter((x) => x.filters.includes(key)).length })) };
+}
+
+/** 결과에 남은 입력 원문. 예전 결과(lines 없음)거나 모양이 다르면 null */
+export function vocLines(data: unknown): string[] | null {
+  const lines = (data as { lines?: unknown } | null)?.lines;
+  return Array.isArray(lines) && lines.every((l) => typeof l === 'string') ? lines : null;
 }

@@ -4,8 +4,19 @@ import { useState } from 'react';
 import { FlexBox, TextArea, Typography } from '@montage-ui/core';
 
 // 글자 수 대신 줄 수를 보여 준다 (빈 줄 제외, 한도는 MAX_VOC_LINES와 같다)
-export default function VocInputs() {
+// shown: 데모에서 보는 결과의 입력 (읽기 전용). null = 그 결과에 원문이 없음, undefined = 직접 입력
+export default function VocInputs({ shown }: { shown?: string[] | null }) {
   const [voc, setVoc] = useState('');
+  if (shown !== undefined) {
+    return (
+      <FlexBox flexDirection="column" gap="4px">
+        <TextArea value={shown?.join('\n') ?? ''} readOnly minRows={10} maxRows={20} width="100%" aria-label="VOC (이 결과의 입력)" />
+        <Typography variant="caption1" color="semantic.foreground.neutral.tertiary">
+          {shown ? `이 결과의 입력 ${shown.length}줄이에요. 데모라 고칠 수 없어요.` : '이 결과에는 입력 원문이 저장되지 않았어요.'}
+        </Typography>
+      </FlexBox>
+    );
+  }
   const count = voc.split('\n').filter((l) => l.trim()).length;
   return (
     <FlexBox flexDirection="column" gap="4px">

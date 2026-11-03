@@ -1,5 +1,5 @@
 // 문서 바뀜 알림 문구 (순수). 실제로 바뀐 입력만 말한다 — 원인을 모르면 모른다고 (spec 2026-11-03 §2)
-import { DOC_STEPS, type Doc, type DocChange, type DocKey } from '@/lib/storage/types';
+import { DOC_STEPS, type Decision, type Doc, type DocChange, type DocKey, type Evidence } from '@/lib/storage/types';
 
 const labelOf = (key: string) => DOC_STEPS.find((d) => d.key === key)?.label ?? key;
 
@@ -34,6 +34,24 @@ export function upstreamHint(doc: Doc, docs: Doc[]): string | null {
   if (doc.content === null || doc.stale || doc.from === 'idea') return null;
   const from = docs.find((d) => d.key === doc.from);
   return from?.content != null && from.stale ? `${from.label}${iGa(from.label)} 예전 기준이에요. ${from.label}부터 검토하세요.` : null;
+}
+
+/** 새 판에 새로 들어간 결정 · 근거 (그 조각이 바뀌었을 때만). 지금 판 시각 뒤 ~ 새 판 시각 전에 적은 것.
+ *  새 판 뒤에 적은 것은 새 판에 없다 (그건 draft.changes 경고로). 시각을 모르면(체험) 그쪽 경계는 보지 않는다.
+ *  지운 항목은 보이지 않는다 — 그래서 화면 제목은 "새로 생기거나 고친 것" */
+export function freshInputs(
+  doc: Pick<Doc, 'changes' | 'generatedAt'> & { draft?: Doc['draft'] },
+  decisions: Decision[],
+  evidence: Evidence[],
+): { decisions: string[]; evidence: string[] } {
+  const draftAt = doc.draft?.generatedAt || undefined;
+  const after = (at: string) => (!doc.generatedAt || at > doc.generatedAt) && (!draftAt || at <= draftAt);
+  return {
+    decisions: doc.changes.includes('decisions')
+      ? decisions.filter((d) => d.status !== 'proposed' && after(d.decidedAt)).map((d) => `${d.question} → ${d.status === 'decided' ? d.answer : '보류'}`)
+      : [],
+    evidence: doc.changes.includes('evidence') ? evidence.filter((e) => after(e.collectedAt)).map((e) => e.text) : [],
+  };
 }
 
 /** "개발 로드맵 없이 기획안으로 만들었어요" — 저장된 inputs 기준 (없으면 null) */

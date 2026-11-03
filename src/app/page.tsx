@@ -1,7 +1,9 @@
 import { connection } from 'next/server';
 
+import { DEMO_SAMPLE_IDEA, isDemo } from '@/lib/demo';
 import { folderNames, groupFolders, listIdeasWithProgress } from '@/lib/storage';
 
+import DemoHome from './_components/demo-home';
 import IdeaForm from './_components/idea-form';
 import IdeaList from './_components/idea-list';
 import PageHeader from './_components/page-header';
@@ -15,6 +17,17 @@ export default async function WritePage() {
   await connection(); // 파일을 읽으므로 빌드 때 미리 그리지 않는다
   const { items } = await listIdeasWithProgress();
   const folders = folderNames(groupFolders(items.map((i) => i.idea)));
+
+  if (isDemo()) {
+    return (
+      <>
+        <PageHeader title="Hatch" description="아이디어 한 줄에서 기획안 · 로드맵 · PRD · 기능명세까지 이어 가는 과정을 봐요." />
+        <DemoHome sampleId={DEMO_SAMPLE_IDEA} />
+        <SectionTitle>예시 아이디어</SectionTitle>
+        <IdeaList cards={items.slice(0, RECENT).map(toCard)} />
+      </>
+    );
+  }
 
   return (
     <>

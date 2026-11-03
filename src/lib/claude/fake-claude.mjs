@@ -24,6 +24,9 @@ process.stdin.on('end', () => {
         },
       }),
     );
+  } else if (mode === 'roadmap') {
+    const m = (name) => ({ name, goal: `${name} 목표`, scope: ['추천 목록'], doneWhen: ['예약 버튼이 동작한다'] });
+    console.log(JSON.stringify({ is_error: false, structured_output: { overview: '두 단계로 출시', milestones: [m('MVP'), m('확장')], outOfScope: [], openQuestions: [] } }));
   } else if (mode === 'prd-review') {
     const criteria = ['명확성', '실현 가능성', '측정 가능성', '사용자 가치', '위험 대응'];
     const scores = (base) => criteria.map((criterion, i) => ({ criterion, score: i % 2 ? base : base + 1, reason: '근거가 일부 부족하다' }));

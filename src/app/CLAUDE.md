@@ -4,7 +4,7 @@
 
 ## 파일 지도
 - `layout.tsx` (서버) → `providers.tsx` (Montage Theme → Cache) → `_components/app-shell.tsx` (네비바 + 본문)
-- `/` `page.tsx` 쓰기 · `/ideas` 모음(`?folder=` 폴더 칩) · `/ideas/[id]` 상세(`idea-detail.tsx`, 문서 탭 진행 계산은 `chain-progress.ts`) · `tools/` PO 도구 (C) · `/usage` 사용량(`?idea=`) · `/try` 흐름 체험 (상세 화면에 가짜 함수를 넘김, 쓰기 없음. 상태 계산은 `src/lib/try/`) · `/s/[token]` 공유 사본 읽기 전용(버튼 · 폼 없음, 보안 헤더는 `next.config.ts`) · `api/publish` 맥이 서명해 올리는 공유 사본 (판단은 `src/lib/share/`)
+- `/` `page.tsx` 쓰기 (데모면 `demo-home.tsx` 체험 · 예시 버튼) · `/ideas` 모음(`?folder=` 폴더 칩) · `/ideas/[id]` 상세(`idea-detail.tsx`, 문서 탭 진행 계산은 `chain-progress.ts`) · `tools/` PO 도구 (C) · `/usage` 사용량(`?idea=`) · `/try` 흐름 체험 (상세 화면에 가짜 함수를 넘김, 쓰기 없음. 상태 · 다음 할 일(`tryNext`)은 `src/lib/try/`) · `/s/[token]` 공유 사본 읽기 전용(버튼 · 폼 없음, 보안 헤더는 `next.config.ts`) · `api/publish` 맥이 서명해 올리는 공유 사본 (판단은 `src/lib/share/`)
 - `actions.ts` — Server Action (쓰기 · 수정 · 휴지통 · 문서 생성/편집 · 공유). storage · chain · share 호출 + `revalidatePath`
 - `_components/` — 이 라우트들만 쓰는 화면 조각 (2곳 넘게 쓰이면 `src/components/`로). `doc-markdown` · `use-refresh-while`은 문서 상세와 도구 틀이 공용 · `skeletons`는 경로별 `loading.tsx`, `running-note`는 생성 중 표시가 공용
 - `error.tsx` · `not-found.tsx` — 오류 · 없는 주소 화면 (네비바는 그대로, 다음 행동 버튼)
