@@ -34,7 +34,8 @@ button {
   80% { transform: rotate(3deg) translateY(0); }
 }
 .hatch-loader,
-[data-role='button-loading']::before {
+[data-role='button-loading']::before,
+[data-role='text-button-loading']::before {
   display: inline-block;
   flex-shrink: 0;
   width: var(--hatch-loader-size, 16px);
@@ -45,16 +46,21 @@ button {
   transform-origin: 50% 85%;
   animation: hatch-wobble 1s ease-in-out infinite;
 }
-/* 버튼 안 로딩: Montage가 가운데 맞춘 자리(transform)는 그대로 두고, 원 대신 안쪽 ::before에 아이콘을 그린다 */
-[data-role='button-loading'] {
+/* 버튼 안 로딩: Montage가 가운데 맞춘 자리(transform)와 버튼 크기별 칸(12~16px)은 그대로 두고, 원 대신 안쪽 ::before에 아이콘을 그린다.
+   Montage 내부 표시(data-role, 안의 svg)에 기대므로 @montage-ui를 올릴 때 버튼 로딩을 눌러 확인한다 (지금 4.1.5) */
+[data-role='button-loading'],
+[data-role='text-button-loading'] {
   display: flex;
   align-items: center;
   justify-content: center;
 }
-[data-role='button-loading']::before {
+[data-role='button-loading']::before,
+[data-role='text-button-loading']::before {
   content: '';
+  --hatch-loader-size: 100%;
 }
-[data-role='button-loading'] > svg {
+[data-role='button-loading'] > svg,
+[data-role='text-button-loading'] > svg {
   display: none;
 }
 
@@ -62,7 +68,8 @@ button {
    SVG · 로딩 아이콘은 뺀다 — 로딩 표시까지 멈추면 "도는 중" 신호가 사라진다. 로딩 아이콘은 흔들림 대신 천천히 옅어진다 */
 @media (prefers-reduced-motion: reduce) {
   .hatch-loader,
-  [data-role='button-loading']::before {
+  [data-role='button-loading']::before,
+  [data-role='text-button-loading']::before {
     animation: hatch-pulse 1.2s ease-in-out infinite alternate !important;
   }
   :where(*:not(svg, svg *, .hatch-loader)), *::before, *::after {

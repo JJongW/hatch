@@ -92,6 +92,7 @@ export default function MermaidBlock({ code }: { code: string }) {
       />
       {view.kind === 'loading' && (
         <Typography
+          role="status"
           variant="caption1"
           color="semantic.foreground.neutral.secondary"
           sx={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px' }}
