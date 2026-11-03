@@ -1,89 +1,77 @@
-# Vercel에서 PO가 직접 쓰기: 저장, 맥 워커, PO 로그인, 공유 링크 (2026-11-03, #117)
+# PO는 맥에서, 다른 사람은 공유 사본으로: 공유 링크와 보안 (2026-11-03, #117)
 
 ## 0. 사용자 요구 (원문)
-- "vercel 같은 아예 공유된 서비스에서 이걸 연결해서 하게끔", "orca나 실제 CLI를 다루게 하는 것(중간 게이트)와 Vercel을 이어서"
-- "사용자는 무조건 PO만이 가능한거고 타인은 볼 수 있게는 해야한다", "지금은 오로지 데모로서만 보는게 가능하고 PO조차도 vercel에서 동작이 안되는 상태"
+- "vercel 같은 아예 공유된 서비스에서 이걸 연결해서", "사용자는 무조건 PO만이 가능한거고 타인은 볼 수 있게는 해야한다"
+- "코드나 모든 자료는 이미 mac서버에 있는거고 회사라고 한다면 회사 서버", "인터넷이 안되는 환경에서는 자료를 만질 수가 없는 거잖아", "보안은 ?", "우선 보안을 체크하고 해줘"
 
-정한 것 (사용자 선택): 다른 사람은 **아이디어별 공유 링크**로만 읽는다 / `~/Hatch` 데이터는 **한 번 옮긴다**.
-이 문서는 `2026-10-28-b-doc-chain-design.md` §1의 "bridge 보류"를 푼다. 갈아탈 신호(Vercel 배포, 다른 사람도 봄)가 왔다.
+정한 것: 자료 원본은 PO 맥(`~/Hatch`)에 그대로 둔다. 다른 사람은 **아이디어별 공유 링크**로, PO가 올린 **읽기 전용 사본**만 본다 (방식 C).
+버린 안: A(Supabase가 원본 — 자료 전부가 밖에 남고 오프라인에서 못 씀), B(터널로 맥 공개 — 맥이 인터넷에 열림).
+`2026-10-28-b-doc-chain-design.md` §1(Tailscale만, Funnel 안 씀)은 그대로 지킨다.
 
-## 1. 모양 — Orca 릴레이와 같은 방식
+## 1. 모양
 ```
-[PO 브라우저] ──로그인──▶ Vercel (Hatch) ──▶ Supabase ◀── 밖으로만 연결 ── [PO 맥: 워커] ── claude -p
-[다른 사람] ──/s/<공유 토큰>──▶ Vercel (읽기 전용)   (hatch_files · hatch_jobs)
+[PO 기기] ─Tailscale(내 기기만)─▶ [PO 맥: Hatch + ~/Hatch 원본] ─claude -p─▶ Claude
+                                         │ 공유 누를 때만, 밖으로 HTTPS POST (발행 토큰)
+                                         ▼
+[보는 사람] ─/s/<토큰>─▶ [Vercel: 공유 화면 + /api/publish] ──비밀 키──▶ Supabase hatch_shares
 ```
-- 맥은 포트를 열지 않는다. 워커가 Supabase에 요청만 보낸다 (Orca 릴레이와 같다. Tailscale · Funnel 필요 없음)
-- 생성은 PO 한 사람의 요청을 PO 맥에서 PO 계정으로 돌린다. 지금 로컬 사용과 같다
-- 읽기는 Supabase에서 바로 한다. **맥이 꺼져 있어도 공유 링크는 열린다.** 맥은 생성할 때만 켜져 있으면 된다
+- PO 쪽은 지금과 같다. 로그인 없음, tailnet 기기만, 오프라인에서도 맥에서 읽고 고친다 (생성만 인터넷 필요)
+- 맥은 **밖으로 보내기만** 한다. 받는 포트, 터널, Funnel 없음
+- Vercel은 공유 화면 하나와 올리기 API 하나만 한다. 데모 `/try`는 그대로
 
-| 모드 | 저장 | 생성 | 쓰는 곳 |
-| --- | --- | --- | --- |
-| 로컬 (지금 그대로, 기본) | `~/Hatch` 파일 | 직접 `claude -p` | 맥 `npm run dev`, Tailscale |
-| 호스팅 (새로) | Supabase `hatch_files` | `hatch_jobs` → 맥 워커 | Vercel |
-| 데모 | 예시 파일 | 안 함 | `/try` (호스팅에서도 남김) |
+## 2. 보안 점검 (2026-11-03, 지금 코드)
+| 항목 | 지금 | 판단 |
+| --- | --- | --- |
+| PO 접속 범위 | Tailscale Serve, tailnet에 PO 기기 3대만 (`tailscale status`). Funnel 꺼짐 | 유지. 기기 하나를 잃으면 전부 열림 → §3-1 |
+| Server Action 출처 | `serverActions.allowedOrigins`에 Serve 주소 하나, 와일드카드 안 씀 (`next.config.ts`) | 유지 |
+| 경로 조작 | 아이디어 id는 `isValidId` 정규식 통과만 경로에 씀 | 유지. 공유 토큰도 같은 방식으로 형식 검사 |
+| 문서 안 HTML · 스크립트 | `react-markdown` 기본값(원문 HTML 안 그림, `javascript:` 링크 제거). mermaid `securityLevel: 'strict'` | 유지 |
+| 문서 안 바깥 이미지 | `react-markdown`이 `![](https://…)`를 그대로 그림 | **고침** — 공유 화면에서 열면 보는 사람 IP가 그 서버로 샘 → §3-4 |
+| 생성 | `claude -p --tools ""` 도구 없음. 프롬프트 본문 로그 안 남김 | 유지. 문서에 지시문이 섞여도 맥에서 명령을 못 돌림 |
+| 보안 헤더 | 없음 (CSP, Referrer-Policy, 프레임 막기) | **추가** — 공유 화면에 §3-4 |
 
-env 두 개로 고른다: `HATCH_STORE=file|supabase`(기본 file) · `HATCH_RUNNER=local|queue`(기본 local). `HATCH_DEMO=1`은 지금 뜻 그대로.
+## 3. 막는 방법
+### 3-1. 맥 (원본)
+- 인터넷에서 맥으로 들어오는 길을 만들지 않는다. 공유는 맥 → Vercel 한 방향 POST
+- tailnet: 새 기기는 관리 화면에서 승인해야 들어오게(Device approval), 잃어버린 기기는 바로 제거. Tailscale 키 만료는 끄지 않는다
+- 맥은 FileVault 켬. 회사 기기면 회사 정책 우선
+### 3-2. 올리기 (`/api/publish`)
+- 맥은 Supabase 키를 갖지 않는다. 갖는 건 `HATCH_PUBLISH_TOKEN` 하나 — 공유 사본을 올리고 지우는 것만 할 수 있다
+- 요청마다 `HMAC-SHA256(본문 + 시각)` 서명, 시각이 5분 넘게 차이 나면 거절 (가로챈 요청 다시 보내기 막기)
+- Vercel이 받은 본문을 zod로 검사: 허용한 칸만, 문서 하나 200KB · 전체 1MB 넘으면 거절
+- 토큰이 새면: Vercel env에서 바꾸고 재배포 → 옛 토큰 즉시 무효
+### 3-3. 무엇을 올리나 (허용 목록)
+- 올림: 제목, 메모, 맥락 4칸, 생성 문서 본문(머리말 뺌), 확인 질문과 답, 결정 · 보류
+- **안 올림:** 이전 판(`.history`), 사용량, 생성 중 표시, PO 도구 결과, 휴지통, 다른 아이디어, 폴더 이름
+- 올리기 전 PO에게 보여 주기: "이 아이디어의 문서 N개, 질문 N개, 결정 N개를 공유해요" → 확인 후 올림
+- 다시 올리기는 PO가 `공유 새로고침`을 누를 때만. 맥에서 고쳐도 저절로 올라가지 않는다
+### 3-4. 공유 화면 (`/s/<토큰>`)
+- 토큰: 24바이트 난수(192비트) base64url. DB에는 **SHA-256 해시만** 저장 → DB가 새어도 링크를 못 만든다
+- 형식이 틀린 토큰은 DB를 묻지 않고 바로 "공유가 끝난 링크예요." (없는 링크와 같은 답 → 있는지 알 수 없음)
+- 읽기만: 버튼, 폼, Server Action 없음. 네비 없음
+- 헤더: `Referrer-Policy: no-referrer`(문서 안 링크를 눌러도 토큰이 바깥으로 안 샘) · `X-Robots-Tag: noindex, nofollow` · `Cache-Control: private, no-store`(공유를 끄면 바로 안 보이게) · `Content-Security-Policy`(스크립트는 우리 것만, `img-src 'self' data:`, `frame-ancestors 'none'`)
+- 문서 안 바깥 이미지는 그리지 않고 "바깥 이미지 (공유 화면에서는 숨김)"로
+- 공유 화면에 `'use cache'` 쓰지 않음. 매번 DB에서 읽는다
+### 3-5. 저장 (Supabase)
+- 표 `hatch_shares(token_hash text pk, idea_id text, payload jsonb, created_at, updated_at)` 하나. RLS 켜고 정책 없음 → 비밀 키(Vercel 서버 env)만 읽고 쓴다. 브라우저는 Supabase에 직접 닿지 않는다
+- 공유 끄기 · 새 링크 · 맥에서 휴지통 이동 → 그 줄을 **바로 지운다** (사본이라 지워도 원본은 맥에 있음)
+- 맥은 `~/Hatch/ideas/<id>/share.json`에 `{ createdAt, publishedAt }`만 남긴다. 토큰 원문은 PO 화면에 한 번 보여 주고 맥 파일에도 남긴다(다시 복사용). 해시만 밖에 있다
+### 3-6. 남는 위험 (받아들임)
+- 링크를 아는 사람은 누구나 본다. 링크를 다시 전달하는 것은 막을 수 없다 → 민감한 아이디어는 공유하지 않는다. 화면 위에 "링크가 있는 사람은 누구나 볼 수 있어요"
+- Vercel, Supabase는 공유한 사본 내용을 볼 수 있다 (업체 저장 암호화는 됨)
+- **갈아탈 신호:** 보는 사람을 정해야 한다(회사 사람만) → Vercel 앞에 이메일 확인(Vercel Authentication 또는 Cloudflare Access)
 
-## 2. 저장 — md 파일을 그대로 표 한 줄로
-- `src/lib/storage` 안의 `fs` 호출(10개 파일, 약 90곳)을 `storage/fs.ts` 하나로 모은다. 같은 함수 모양(`readFile · writeFile · appendFile · readdir · stat · mkdir · rename · rm · copyFile`)에 구현 두 개: 로컬 파일 / Supabase
-- Supabase 표 `hatch_files(path text primary key, content text not null, updated_at timestamptz)`. `path`는 `HATCH_DATA_DIR` 기준 상대 경로(`ideas/<id>/docs/plan.md`)
-  - `readdir`는 `path like '<dir>/%'`에서 바로 아래 이름만 계산. `mkdir`은 할 일 없음. `rename`은 앞부분이 같은 줄을 모두 바꿈 (휴지통 이동)
-  - 머리말 형식, 파싱, stale, 이전 판 보관은 **하나도 안 바뀐다.** 저장 함수의 밖 모양도 그대로 (storage CLAUDE.md 규칙)
-- 왜 정식 표가 아닌가: 형식이 이미 md 머리말로 정해져 있고 테스트가 그 위에 있다. 바꾸는 곳이 한 파일로 줄고, 옮기기와 되돌리기가 파일 올리기 · 내려받기뿐이다
-  - **갈아탈 신호:** 아이디어 검색 · 집계를 DB에서 해야 하거나, 한 화면 읽기가 표 요청 20번을 넘으면 → 아이디어 · 문서를 정식 열로 나눈다
-- `try/load.ts`(데모 예시)는 지금처럼 레포 안 파일을 읽는다. 바꾸지 않는다
-- 표는 RLS 켜고 정책 없음 → 비밀 키(서버 · 워커)만 읽고 쓴다. 브라우저는 Supabase에 직접 닿지 않는다
-- 옮기기: `npm run migrate:supabase` — `~/Hatch` 아래 파일을 모두 올린다. 이미 있는 path는 건너뛰고 개수를 알린다. `.trash/`도 올린다 (지우지 않음 규칙)
+## 4. 만들 것 (PR 2개)
+1. **Vercel 쪽:** `hatch_shares` 표(supabase/shares.sql) · `/api/publish`(올리기 · 지우기, 서명 검사) · `/s/[token]` 읽기 화면 + 헤더 · 바깥 이미지 숨김
+2. **맥 쪽:** 상세 머리에 `공유` 버튼 → 확인 → 올리기 · 링크 복사 · `공유 새로고침 · 공유 끄기 · 새 링크` · 휴지통 이동 시 지우기. env `HATCH_PUBLISH_URL · HATCH_PUBLISH_TOKEN`
+- 배포: 1 머지 → 사용자가 Vercel env(`HATCH_PUBLISH_TOKEN`, Supabase 키는 이미 있음) · 표 만들기 · 배포 → 2 머지 → 맥 `.env.local`에 같은 토큰
 
-## 3. 생성 — 작업 대기열과 맥 워커
-- 표 `hatch_jobs(id uuid, status queued|running|done|failed, prompt text, json_schema jsonb, timeout_ms int, result jsonb, error text, worker text, created_at, claimed_at, finished_at)`
-- 가져가기는 함수 `claim_hatch_job(worker)` 하나: `for update skip locked`로 가장 오래된 queued 한 줄을 running으로 바꿔 돌려준다 (두 워커가 같은 작업을 잡지 않게)
-- `runClaude`를 둘로 나눈다. 밖 모양(인자, 반환, `ChainError`, 사용량 장부)은 그대로
-  - 실행부: 지금의 `claude -p` 띄우기. `local`이면 Vercel 대신 이 자리에서 바로, `queue`면 워커가 이걸 부른다
-  - `queue` 구현: 작업을 넣고 2초마다 상태를 본다. done → `structured_output` 반환, failed → 그 오류를 `ChainError`로
-  - 30초 안에 아무도 안 가져가면 작업을 failed로 바꾸고 "맥 워커가 꺼져 있어요. 맥에서 `npm run worker`를 켜 주세요."
-  - 전체 280초를 넘으면 실패 (Vercel 함수 300초 안). 지금 생성은 20~50초 (2026-11-03 실측: 기획안 22초, PRD 리뷰 48초)
-- 워커: `npm run worker` (맥에서, `.env.local`의 `SUPABASE_URL · SUPABASE_SECRET_KEY`). 2초마다 `claim_hatch_job` → 실행부 → 결과 쓰기. 한 번에 하나
-  - 끝나면 `prompt`를 지운다 (아이디어 내용이 DB에 오래 남지 않게). 결과는 Vercel이 읽은 뒤 7일 지나면 지워도 된다 (지우기는 이번 범위 밖)
-  - 로그에 프롬프트 본문을 남기지 않는다 (지금 규칙 그대로)
-- 사용량 장부(`usage.jsonl`)는 지금처럼 `runClaude` 쪽에서 쓴다 → 호스팅에서는 `hatch_files`의 `usage.jsonl`. `appendFile`은 줄 하나를 덧붙이는 함수(`append_hatch_file`)로
-- 생성 중 표시(`.running.json`)는 지금 그대로 파일 어댑터를 탄다
-- **갈아탈 신호:** 2초 확인이 무료 한도를 압박하거나 기다림이 답답하면 → Supabase Realtime 구독. 워커가 2대 이상 → `worker`별 상태 화면
+## 5. 테스트
+- 서명: 틀린 서명, 5분 지난 시각, 같은 요청 다시 보내기, 큰 본문, 허용 밖 칸 → 모두 거절
+- 허용 목록: 올리는 본문에 `.history`, 사용량, 도구 결과, 머리말이 없는지
+- 토큰: 해시만 저장되는지, 형식 틀림 · 없음 · 끔이 같은 답인지
+- 공유 화면: 헤더 5개, 버튼 · 폼 0개, 바깥 이미지 숨김, 끈 직후 다시 열면 안 보임
+- 화면: 맥 dev → 공유 → 다른 브라우저(로그인 없음)로 링크 열기 → 끄기 → 다시 열기. 콘솔 확인
 
-## 4. PO 로그인 — 한 사람만
-- `HATCH_RUNNER=queue` 또는 `HATCH_STORE=supabase`면 로그인이 켜진다. 로컬 기본 모드는 지금처럼 로그인 없음
-- `/login`: 비밀번호 한 칸. 값은 env `HATCH_OWNER_PASSWORD`, 비교는 상수 시간
-- 맞으면 쿠키 `hatch_session` (httpOnly, Secure, SameSite=Lax, 30일) = `만료시각.HMAC(HATCH_SESSION_SECRET)`. 계정 표 없음
-- 막기: 모든 Server Action(쓰기, 생성, 공유)은 맨 앞에서 `requireOwner()`. 페이지는 PO가 아니면 `/try`로 보낸다 (`/s/*`, `/try`, `/login`, `/survey` 제외)
-- 5번 틀리면 15분 잠금 (IP 기준, 메모리 대신 `hatch_files`의 작은 파일 하나)
-- 왜 Supabase Auth가 아닌가: 사람이 한 명이라 가입, 메일 설정이 필요 없다. **갈아탈 신호:** PO가 2명 이상 → Supabase Auth (메일 링크)
-
-## 5. 공유 링크 — 아이디어별, 읽기만
-- 상세 머리에 `공유` 버튼 (PO만): 누르면 `ideas/<id>/share.json`에 `{ token, createdAt }`을 만들고 주소 `/s/<token>`을 복사. 다시 누르면 `공유 끄기 · 새 링크`
-  - token은 `crypto.randomBytes(24)` base64url. 머리말이 아니라 따로 파일 → `IDEA_FILE_VERSION`을 안 올린다
-- `/s/<token>`: token으로 아이디어를 찾는다 (`share-index.json` 한 파일에 token → id). 없거나 끈 링크면 "공유가 끝난 링크예요."
-- 화면은 지금 아이디어 상세를 읽기 전용으로: 문서, 확인 질문(답 보기만), 결정, 문제와 근거. 만들기 · 수정 · 맥락 · 답 적기 버튼은 숨긴다 (지금 데모 모드가 버튼을 숨기는 방식 재사용)
-  - 네비는 보이지 않는다 (아이디어 모음 · 도구 · 사용량은 PO 전용). `noindex`
-  - PO 도구 결과(PRD 리뷰 등)는 이번에 포함하지 않는다 → 갈아탈 신호: 공유받은 사람이 리뷰 결과도 봐야 한다고 하면
-- 공유한 아이디어를 휴지통에 넣으면 링크도 끈다
-
-## 6. 배포 순서 (안전)
-1. 저장 어댑터 (PR 1) → 2. 대기열 + 워커 (PR 2) → 3. PO 로그인 (PR 3) → 4. 공유 링크 (PR 4)
-- **Vercel은 3이 머지될 때까지 지금 데모 그대로.** 1, 2만 켜면 로그인 없이 쓰기가 열린다
-- 3까지 머지 → 옮기기 → Vercel env (`HATCH_STORE=supabase · HATCH_RUNNER=queue · HATCH_OWNER_PASSWORD · HATCH_SESSION_SECRET`, `HATCH_DEMO` 끄기) → 배포. env와 배포는 사용자가 한다
-- 되돌리기: Vercel env를 `HATCH_DEMO=1`로 되돌리고 재배포. 데이터는 `hatch_files`에 남는다
-
-## 7. 테스트
-- 저장 테스트를 두 어댑터로 돈다. Supabase 쪽은 가짜 REST(메모리)로 — 실제 Supabase는 테스트에서 쓰지 않는다
-- 대기열: 가짜 표로 넣기 → 가져가기 → 끝 / 30초 아무도 안 가져감 / 실패 전달 / 280초 초과
-- 워커: `fake-claude.mjs`로 한 바퀴. 끝난 뒤 `prompt`가 비었는지
-- 로그인: 틀린 비밀번호, 만료 쿠키, 위조 쿠키, 잠금. 모든 Server Action이 `requireOwner`를 부르는지 (목록 검사 테스트)
-- 공유: 끈 링크, 없는 token, 휴지통 이동 뒤 링크, 읽기 화면에 쓰기 버튼 0개
-- 화면: 로컬 dev에서 `HATCH_STORE=supabase`(테스트용 Supabase 프로젝트) + 워커로 아이디어 → 기획안 → 공유 링크를 다른 브라우저로 열기. 콘솔 확인
-
-## 8. 범위 밖
-PO 2명 이상 · 보는 사람 로그인 · 댓글 · 실시간 진행 글자 · 워커 여러 대 · 오래된 작업 지우기 · 공유 화면의 PO 도구 결과 · 휴대폰 화면 다듬기 · 다크 모드(#97)
-
-## 9. 확인 필요
-- Supabase 무료 한도: 2초 확인 × 생성 50초 = 작업 하나에 25번 요청. 하루 생성 100번이어도 2,500번이라 넉넉할 것으로 본다. PR 2에서 실제 수를 잰다
-- 워커가 맥에 비밀 키를 들고 있다. PO 맥이라 받아들인다. 갈아탈 신호: 다른 사람 맥에 워커를 둔다 → 워커 전용 키(작업 표만 쓰는 함수)로
+## 6. 범위 밖
+PO가 Vercel에서 작업하기 · 보는 사람 로그인 · 댓글 · 공유 화면의 PO 도구 결과 · 자동 다시 올리기 · 휴대폰 화면 다듬기 · 다크 모드(#97)
