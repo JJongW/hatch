@@ -49,6 +49,9 @@ type Props = {
   running: DocKey | null;
   generateAction: (key: DocKey, prev: DocActionState) => Promise<DocActionState>;
   updateDocAction: (key: DocKey, prev: DocActionState, formData: FormData) => Promise<DocActionState>;
+  resolveDraftAction: (key: DocKey, prev: DocActionState, formData: FormData) => Promise<DocActionState>;
+  /** 이전 버전 읽기. 체험에는 없다 (저장한 판이 없음) */
+  readVersionAction?: (key: DocKey, name: string) => Promise<{ content?: string; error?: string }>;
   updateAction: (prev: FormState, formData: FormData) => Promise<FormState>;
   /** 성공하면 목록으로 이동. 공유를 못 끄면 error (휴지통으로 안 옮김) */
   trashAction: () => Promise<{ error?: string }>;
@@ -80,6 +83,8 @@ export default function IdeaDetail({
   running,
   generateAction,
   updateDocAction,
+  resolveDraftAction,
+  readVersionAction,
   updateAction,
   trashAction,
   usage,
@@ -231,6 +236,9 @@ export default function IdeaDetail({
                   locked={asking}
                   generate={generateAction}
                   update={updateDocAction}
+                  resolve={resolveDraftAction}
+                  readVersion={readVersionAction}
+                  docs={docs}
                 />
               )}
             />

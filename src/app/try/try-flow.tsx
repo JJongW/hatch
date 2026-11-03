@@ -16,7 +16,7 @@ import { collectUnknowns } from '@/lib/questions/collect';
 import { CONTEXT_FIELDS, DOC_STEPS, EVIDENCE_MAX, EVIDENCE_SOURCES, type Decision, type DocKey, type Evidence, type IdeaContext } from '@/lib/storage/types';
 import { questionView, summarize, vocEvidence } from '@/lib/summary';
 import { TASKS } from '@/lib/survey/questions';
-import { docsOf, editDoc, generate, START, tasksDone, type TryFixture, type TryState } from '@/lib/try/flow';
+import { applyDraft, docsOf, editDoc, generate, keepCurrent, START, tasksDone, type TryFixture, type TryState } from '@/lib/try/flow';
 import type { ContextState, DecisionState, DocActionState, EvidenceState, FormState, QuestionsState } from '../actions';
 import { decisionValues, evidenceValues } from '../_components/form-values';
 import TryTool from './try-tool';
@@ -143,6 +143,13 @@ export default function TryFlow({ fixture }: { fixture: TryFixture }) {
     return { savedAt: Date.now() };
   };
 
+  // 실제와 같은 규칙: 다시 만든 판은 비교 후 고른다 (이전 버전은 저장이 없어 체험에서 보이지 않음)
+  const resolveDraft = async (key: DocKey, _prev: DocActionState, fd: FormData): Promise<DocActionState> => {
+    const mode = String(fd.get('mode') ?? '');
+    setState((s) => (mode === 'keep' ? keepCurrent(s, key) : mode === 'edit' ? applyDraft(s, key, String(fd.get('body') ?? '')) : applyDraft(s, key)));
+    return { savedAt: Date.now() };
+  };
+
   const restart = () => {
     setState(START);
     setView('detail');
@@ -207,6 +214,7 @@ export default function TryFlow({ fixture }: { fixture: TryFixture }) {
                 running={null}
                 generateAction={generateDoc}
                 updateDocAction={updateDoc}
+                resolveDraftAction={resolveDraft}
                 updateAction={async () => ({})}
                 trashAction={async () => ({})}
                 usage={null}

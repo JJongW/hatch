@@ -1,7 +1,7 @@
 // 흐름 체험(/try) 상태. 서버에 쓰지 않고 브라우저 메모리에서만 바뀐다 (spec 2026-11-02-try §4)
 // 화면 컴포넌트와 같은 모양(Doc, Decision, QuestionSet)으로 만들어 실제 상세 화면을 그대로 쓴다
 import { norm } from '../summary/parse';
-import { DOC_STEPS, EMPTY_CONTEXT, type Decision, type Doc, type DocKey, type Evidence, type IdeaContext, type QuestionSet } from '../storage/types';
+import { DOC_STEPS, EMPTY_CONTEXT, type Decision, type Doc, type DocChange, type DocKey, type Evidence, type IdeaContext, type QuestionSet } from '../storage/types';
 
 export type ToolInfo = { label: string; description: string; continueLabel?: string };
 
@@ -16,8 +16,8 @@ export type TryFixture = {
   tools: { prdReview: ToolInfo; voc: ToolInfo };
 };
 
-/** 만든 문서: 본문과 만들 때의 입력. 입력이 지금과 다르면 '앞 문서가 바뀌었어요' */
-type Made = { content: string; source: string };
+/** 만든 문서: 본문, 만들 때의 입력 조각(실제 저장의 inputs와 같은 키), 다시 만든 판(적용 전), 손으로 고쳤나 */
+type Made = { content: string; inputs: Record<string, string>; draft?: { content: string; inputs: Record<string, string>; at: string }; edited?: boolean };
 
 export type TryState = {
   idea: { title: string; memo: string; folder: string } | null;
@@ -39,17 +39,37 @@ const DECIDED = '정한 것';
 /** 기획안에 들어가는 결정: 정함 · 보류. 제안은 팀이 확정하기 전이라 넣지 않는다 (storage/docs.ts projectBlock과 같은 규칙) */
 const settled = (decisions: Decision[]) => decisions.filter((d) => d.status !== 'proposed');
 
-/** 기획안 입력: 아이디어, 맥락, 결정 (실제 체인처럼 결정이 바뀌면 기획안이 예전 기준이 된다) */
-const sourceOf = (s: TryState, key: DocKey): string | null => {
-  const from = DOC_STEPS.find((d) => d.key === key)!.from;
-  if (from === 'idea') return JSON.stringify([s.idea, s.context, settled(s.decisions).map((d) => [d.question, d.status, d.answer])]);
-  return s.made[from]?.content ?? null;
+/** 입력 조각: 기획안은 아이디어 · 결정 · 근거, 나머지는 앞 문서 · extra (storage/docs.ts inputHashes와 같은 키) */
+function inputsOf(s: TryState, key: DocKey): Record<string, string> {
+  const step = DOC_STEPS.find((d) => d.key === key)!;
+  if (step.from === 'idea') {
+    return {
+      idea: JSON.stringify([s.idea, s.context]),
+      decisions: JSON.stringify(settled(s.decisions).map((d) => [d.question, d.status, d.answer])),
+      evidence: JSON.stringify(s.evidence.map((e) => [e.text, e.source, e.sourceNote])),
+    };
+  }
+  return Object.fromEntries([step.from, ...(step.extra ?? [])].map((k) => [`doc:${k}`, s.made[k]?.content ?? '']));
+}
+
+const changesOf = (s: TryState, key: DocKey, made: Made): DocChange[] => {
+  const now = inputsOf(s, key);
+  return Object.keys(now).filter((k) => made.inputs[k] !== now[k]) as DocChange[];
 };
 
 export function docsOf(s: TryState): Doc[] {
   return DOC_STEPS.map((step) => {
     const made = s.made[step.key];
-    return { ...step, content: made?.content ?? null, stale: !!made && made.source !== sourceOf(s, step.key) };
+    const changes = made ? changesOf(s, step.key, made) : [];
+    return {
+      ...step,
+      content: made?.content ?? null,
+      stale: changes.length > 0,
+      changes,
+      editedAt: made?.edited ? new Date(0).toISOString() : undefined, // 체험은 시각을 안 남긴다. 고쳤는지만 본다
+      draft: made?.draft ? { content: made.draft.content, generatedAt: made.draft.at } : null,
+      versions: [],
+    };
   });
 }
 
@@ -71,15 +91,34 @@ export function reflectDecisions(plan: string, all: Decision[]): string {
   return `${kept.join('\n').trimEnd()}\n\n## ${DECIDED}\n${done.join('\n')}\n`;
 }
 
+/** 처음 만들면 바로 문서, 이미 있으면 초안으로 (실제 생성과 같은 규칙: 지금 판을 덮지 않는다) */
 export function generate(s: TryState, key: DocKey, fixture: TryFixture): TryState {
   const content = key === 'plan' ? reflectDecisions(fixture.docs.plan, s.decisions) : fixture.docs[key];
-  return { ...s, made: { ...s.made, [key]: { content, source: sourceOf(s, key) ?? '' } } };
+  const inputs = inputsOf(s, key);
+  const made = s.made[key];
+  const next: Made = made ? { ...made, draft: { content, inputs, at: new Date().toISOString() } } : { content, inputs };
+  return { ...s, made: { ...s.made, [key]: next } };
+}
+
+/** 초안 적용 (body를 주면 고쳐서 적용) · 지금 판 유지 */
+export function applyDraft(s: TryState, key: DocKey, body?: string): TryState {
+  const made = s.made[key];
+  if (!made?.draft) return s;
+  const edited = body !== undefined && body.trim() !== made.draft.content.trim();
+  return { ...s, made: { ...s.made, [key]: { content: edited ? body : made.draft.content, inputs: made.draft.inputs, edited } } };
+}
+
+export function keepCurrent(s: TryState, key: DocKey): TryState {
+  const made = s.made[key];
+  if (!made?.draft) return s;
+  const { draft: _drop, ...rest } = made; // eslint-disable-line @typescript-eslint/no-unused-vars -- 체험은 버린 초안을 남길 곳이 없다 (저장 안 함)
+  return { ...s, made: { ...s.made, [key]: rest } };
 }
 
 /** 손으로 고친 본문. 입력은 그대로라 예전 기준 표시는 바뀌지 않는다 */
 export function editDoc(s: TryState, key: DocKey, content: string): TryState {
   const made = s.made[key];
-  return made ? { ...s, made: { ...s.made, [key]: { ...made, content } } } : s;
+  return made ? { ...s, made: { ...s.made, [key]: { ...made, content, edited: true } } } : s;
 }
 
 /** 설문 과제 7개(TASKS 순서)를 마쳤나 (spec §2 마침 조건) */

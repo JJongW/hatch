@@ -11,6 +11,10 @@ import RunningNote from '../../_components/running-note';
 import { DOC_RUNNING_STEPS, formatElapsed } from '../../_components/running-steps';
 import { useConfirmSubmit } from '../../_components/use-confirm-submit';
 
+import { changeBadge, changeSentence, upstreamHint } from './doc-changes';
+import DraftReview from './draft-review';
+import VersionList from './version-list';
+
 import type { Doc, DocKey } from '@/lib/storage';
 import type { DocActionState } from '../../actions';
 
@@ -31,9 +35,15 @@ type Props = {
   locked: boolean;
   generate: (key: DocKey, prev: DocActionState) => Promise<DocActionState>;
   update: (key: DocKey, prev: DocActionState, formData: FormData) => Promise<DocActionState>;
+  /** 다시 만든 판 고르기 (적용 · 고쳐서 적용 · 유지) */
+  resolve: (key: DocKey, prev: DocActionState, formData: FormData) => Promise<DocActionState>;
+  /** 이전 버전 본문 읽기. 없으면(체험) 목록을 보이지 않는다 */
+  readVersion?: (key: DocKey, name: string) => Promise<{ content?: string; error?: string }>;
+  /** 모든 문서 — 앞 문서가 예전 기준인지 알리려고 */
+  docs: Doc[];
 };
 
-export default function DocCard({ doc, ready, hasSource, running, onBusy, locked, generate, update }: Props) {
+export default function DocCard({ doc, ready, hasSource, running, onBusy, locked, generate, update, resolve, readVersion, docs }: Props) {
   const demo = useDemo();
   const [editing, setEditing] = useState(false);
 
@@ -63,7 +73,13 @@ export default function DocCard({ doc, ready, hasSource, running, onBusy, locked
   const error = genState.error ?? saveState.error;
 
   const ask = useConfirmSubmit();
-  const confirmRegenerate = ask({ title: '문서를 새로 만들까요?', content: '지금 문서는 .history에 남아요.', confirm: '새로 만들기' });
+  // 다시 만들어도 지금 판은 바뀌지 않는다: 새 판을 비교한 뒤 고른다 (spec 2026-11-03 §2)
+  const confirmRegenerate = ask({
+    title: '새 판을 만들까요?',
+    content: doc.draft ? '지금 판은 그대로예요. 비교 중인 새 판은 이전 버전으로 옮기고 다시 만들어요.' : '지금 판은 그대로예요. 새 판이 나오면 비교해 보고 적용할지 고를 수 있어요.',
+    confirm: '새 판 만들기',
+  });
+  const hint = upstreamHint(doc, docs);
 
   const generateForm = (label: string, variant: 'solid' | 'outlined', onSubmit?: (e: React.FormEvent<HTMLFormElement>) => void) => (
     <form
@@ -94,10 +110,26 @@ export default function DocCard({ doc, ready, hasSource, running, onBusy, locked
         </ContentBadge>
         {doc.content !== null && doc.stale && (
           <ContentBadge size="xsmall" variant="solid" sx={highlightSx}>
-            앞 문서가 바뀌었어요
+            {changeBadge(doc.changes[0], doc)}
+          </ContentBadge>
+        )}
+        {doc.content !== null && doc.editedAt && (
+          <ContentBadge size="xsmall" variant="outlined" color="neutral">
+            직접 고침
           </ContentBadge>
         )}
       </FlexBox>
+      {/* 무엇이 바뀌었는지 실제 입력 기준으로만 말한다. 원인을 모르는 예전 문서는 '입력이 바뀌었어요' */}
+      {doc.content !== null && doc.stale && !doc.draft && (
+        <Typography variant="caption1" color="semantic.foreground.neutral.secondary" sx={{ display: 'block', marginBottom: '8px' }}>
+          {doc.changes.map((c) => changeSentence(doc, c)).join(' · ')}. 다시 만들면 지금 판과 비교해 고를 수 있어요.
+        </Typography>
+      )}
+      {hint && (
+        <Typography variant="caption1" color="semantic.foreground.neutral.secondary" sx={{ display: 'block', marginBottom: '8px' }}>
+          {hint}
+        </Typography>
+      )}
 
       {/* 이 화면에서 만든 문서: 대기 화면이 한 줄로 접힌다. 누르면 예상 순서를 펼친다 */}
       {!busy && genState.tookSec !== undefined && doc.content !== null && (
@@ -157,6 +189,7 @@ export default function DocCard({ doc, ready, hasSource, running, onBusy, locked
         </form>
       ) : (
         <>
+          {doc.draft && !demo && <DraftReview doc={{ ...doc, content: doc.content, draft: doc.draft }} resolve={(prev, fd) => resolve(doc.key, prev, fd)} disabled={blocked} keepsVersions={!!readVersion} />}
           <Typography as="div" variant="body2">
             <DocMarkdown>{doc.content}</DocMarkdown>
           </Typography>
@@ -166,9 +199,10 @@ export default function DocCard({ doc, ready, hasSource, running, onBusy, locked
               <Button type="button" size="small" variant="outlined" color="assistive" onClick={() => setEditing(true)} disabled={blocked}>
                 편집
               </Button>
-              {ready && generateForm('다시 만들기', 'outlined', confirmRegenerate)}
+              {ready && generateForm(doc.draft ? '새 판 다시 만들기' : '다시 만들기', 'outlined', confirmRegenerate)}
             </FlexBox>
           )}
+          {readVersion && <VersionList doc={{ ...doc, content: doc.content }} read={(name) => readVersion(doc.key, name)} disabled={blocked} />}
         </>
       )}
 

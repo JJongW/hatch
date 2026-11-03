@@ -37,12 +37,13 @@ describe('근거', () => {
     await expect(saveEvidence(idea.id, { ...heard, source: 'x' as 'voc' })).rejects.toThrow('어디서 확인했는지 골라 주세요.');
     await expect(saveEvidence(idea.id, { ...heard, text: 'a'.repeat(1001) })).rejects.toThrow('내용은 1000자, 출처 메모는 200자까지예요.');
   });
-  it('근거를 저장해도 결정 · 기획안 입력(예전 기준 표시)은 그대로', async () => {
+  it('근거를 저장해도 결정은 그대로, 예전 기획안은 "근거" 때문에 검토할 것으로', async () => {
     const idea = await createIdea({ title: 'x', memo: '' });
     await saveDocAndHash(idea.id);
+    await new Promise((r) => setTimeout(r, 5)); // 근거 시각이 문서보다 뒤
     await saveEvidence(idea.id, heard);
     expect(await listDecisions(idea.id)).toEqual([]);
-    expect((await getDocs(idea.id)).find((d) => d.key === 'plan')?.stale).toBe(false);
+    expect((await getDocs(idea.id)).find((d) => d.key === 'plan')?.changes).toEqual(['evidence']);
   });
   it('고치면 내용이 바뀌고 id · 질문은 그대로, 이전 판은 .history에', async () => {
     const idea = await createIdea({ title: 'x', memo: '' });

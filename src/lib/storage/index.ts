@@ -10,14 +10,19 @@ export {
   updateIdeaContext,
 } from './ideas';
 export {
+  applyDraft,
   clearRunning,
   getDocs,
+  inputHashes,
+  keepCurrent,
   getRunning,
   hashOf,
   ideaSource,
   markRunning,
   projectBlock,
+  readVersion,
   saveDoc,
+  saveDraft,
   updateDocBody,
 } from './docs';
 export { listDecisions, removeDecision, saveDecision } from './decisions';
@@ -41,8 +46,11 @@ export {
   type Decision,
   type DecisionInput,
   type Doc,
+  type DocChange,
+  type DocDraft,
   type DocKey,
   type DocStep,
+  type DocVersion,
   type Evidence,
   type EvidenceInput,
   type EvidenceSource,

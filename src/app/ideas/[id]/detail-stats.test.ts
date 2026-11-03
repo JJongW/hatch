@@ -6,7 +6,7 @@ import type { QuestionView, Summary } from '@/lib/summary';
 import { detailStats } from './detail-stats';
 
 const docsWith = (...keys: DocKey[]): Doc[] =>
-  DOC_STEPS.map((s) => ({ ...s, content: keys.includes(s.key) ? '내용' : null, stale: false }));
+  DOC_STEPS.map((s) => ({ ...s, content: keys.includes(s.key) ? '내용' : null, stale: false, changes: [], draft: null, versions: [] }));
 
 const line = (label: string) => ({ label, question: `${label}?`, count: 1 }) as QuestionView['customer'][number];
 

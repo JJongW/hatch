@@ -23,6 +23,9 @@ import {
   trashIdea,
   updateDocBody,
   updateIdea,
+  applyDraft,
+  keepCurrent,
+  readVersion,
   updateIdeaContext,
   type DecisionInput,
   type DocKey,
@@ -209,6 +212,31 @@ export async function updateDocAction(
   }
   revalidateIdeas();
   return { savedAt: Date.now() };
+}
+
+/** 다시 만든 판(초안) 고르기: apply 적용 · edit 고쳐서 적용(body) · keep 지금 판 유지 (spec 2026-11-03 §2) */
+export async function resolveDraftAction(id: string, key: DocKey, _prev: DocActionState, formData: FormData): Promise<DocActionState> {
+  if (isDemo()) return { error: DEMO_MESSAGE };
+  const mode = String(formData.get('mode') ?? '');
+  try {
+    if (mode === 'keep') await keepCurrent(id, key);
+    else if (mode === 'apply') await applyDraft(id, key);
+    else if (mode === 'edit') await applyDraft(id, key, String(formData.get('body') ?? ''));
+    else return { error: '무엇을 할지 골라 주세요.' };
+  } catch (e) {
+    return { error: toMessage(e) };
+  }
+  revalidateIdeas();
+  return { savedAt: Date.now() };
+}
+
+/** 이전 버전 본문 읽기 (읽기만 — 데모에서도 된다) */
+export async function readVersionAction(id: string, key: DocKey, name: string): Promise<{ content?: string; error?: string }> {
+  try {
+    return { content: await readVersion(id, key, name) };
+  } catch (e) {
+    return { error: toMessage(e) };
+  }
 }
 
 export type ToolActionState = { error?: string; resultId?: string; ideaId?: string | null };

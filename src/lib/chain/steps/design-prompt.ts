@@ -20,7 +20,6 @@ export type DesignPromptOutput = z.infer<typeof designPromptSchema>;
 export const designPromptStep: ChainStep<DesignPromptOutput> = {
   key: 'design-prompt',
   // 화면 목록 · 동작은 기능명세, 필드 · 예시값은 데이터 구성(from)에서
-  extra: ['spec'],
   schema: designPromptSchema,
   prompt: DESIGN_PROMPT_PROMPT,
   render: (o) =>

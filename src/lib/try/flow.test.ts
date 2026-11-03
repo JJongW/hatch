@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { Decision, DocKey } from '../storage/types';
 import { section } from '../summary/parse';
-import { docsOf, generate, reflectDecisions, START, tasksDone, type TryFixture, type TryState } from './flow';
+import { applyDraft, docsOf, editDoc, generate, keepCurrent, reflectDecisions, START, tasksDone, type TryFixture, type TryState } from './flow';
 
 const PLAN = ['## 문제', '본문', '', '## 확인 필요', '- 첫 출시 지역을 어디로 할 것인가?', '- 수요가 있는가? [확인 필요: 사용자 조사]', '', '## 메모', '- 남김'].join('\n');
 const decision = (question: string, answer = '성수동'): Decision => ({
@@ -35,10 +35,10 @@ describe('reflectDecisions', () => {
     expect(reflectDecisions(PLAN, [{ ...decision('첫 출시 지역을 어디로 할 것인가?'), status: 'proposed' }])).toBe(PLAN);
   });
 
-  it('근거는 기획안 입력이 아니라 예전 기준 표시를 바꾸지 않는다', () => {
+  it('근거가 더해지면 기획안은 "근거" 때문에 검토할 것, 제안은 바뀜이 아니다', () => {
     const made = generate({ ...START, idea }, 'plan', fixture);
     const ev = { id: 'e1', text: '퇴근 후 연다', source: 'interview' as const, sourceNote: '', question: '', collectedAt: '' };
-    expect(docsOf({ ...made, evidence: [ev] }).find((d) => d.key === 'plan')?.stale).toBe(false);
+    expect(docsOf({ ...made, evidence: [ev] }).find((d) => d.key === 'plan')?.changes).toEqual(['evidence']);
     expect(docsOf({ ...made, decisions: [{ ...decision('x'), status: 'proposed' }] }).find((d) => d.key === 'plan')?.stale).toBe(false);
   });
 
@@ -55,13 +55,33 @@ describe('docsOf, generate', () => {
     expect(docsOf(s).filter((d) => d.stale)).toEqual([]);
 
     s = { ...s, decisions: [decision('첫 출시 지역을 어디로 할 것인가?')] };
-    expect(docsOf(s).find((d) => d.key === 'plan')!.stale).toBe(true);
+    expect(docsOf(s).find((d) => d.key === 'plan')!.changes).toEqual(['decisions']);
 
+    // 다시 만들면 초안으로 남고, 적용해야 지금 판이 바뀐다
     s = generate(s, 'plan', fixture);
+    expect(docsOf(s).find((d) => d.key === 'plan')!.draft).not.toBeNull();
+    expect(docsOf(s).find((d) => d.key === 'plan')!.stale).toBe(true);
+    s = applyDraft(s, 'plan');
     const docs = docsOf(s);
     expect(docs.find((d) => d.key === 'plan')!.stale).toBe(false);
-    expect(docs.find((d) => d.key === 'roadmap')!.stale).toBe(true);
+    expect(docs.find((d) => d.key === 'plan')!.draft).toBeNull();
+    expect(docs.find((d) => d.key === 'roadmap')!.changes).toEqual(['doc:plan']);
     expect(docs.find((d) => d.key === 'prd')!.content).toBeNull();
+  });
+
+  it('PRD는 함께 넣은 기획안이 바뀌어도 알린다 (extra)', () => {
+    let s = generate({ ...START, idea }, 'plan', fixture);
+    for (const k of ['roadmap', 'prd'] as DocKey[]) s = generate(s, k, fixture);
+    s = editDoc(s, 'plan', '고친 기획안');
+    expect(docsOf(s).find((d) => d.key === 'prd')!.changes).toEqual(['doc:plan']);
+    expect(docsOf(s).find((d) => d.key === 'plan')!.editedAt).toBeDefined();
+  });
+
+  it('지금 판 유지: 초안만 사라지고 본문은 그대로, 고쳐서 적용: 고친 본문', () => {
+    let s = generate({ ...START, idea }, 'roadmap', fixture);
+    s = generate(s, 'roadmap', fixture);
+    expect(docsOf(keepCurrent(s, 'roadmap')).find((d) => d.key === 'roadmap')).toMatchObject({ content: 'roadmap 본문', draft: null });
+    expect(docsOf(applyDraft(s, 'roadmap', '내가 고침')).find((d) => d.key === 'roadmap')?.content).toBe('내가 고침');
   });
 });
 
@@ -75,7 +95,7 @@ describe('tasksDone', () => {
     // 결정만 저장하고 기획안을 다시 만들지 않으면 과제 5는 아직
     s = { ...s, decisions: [decision('첫 출시 지역을 어디로 할 것인가?')], questions: { createdAt: '', labels: [], items: [] } };
     expect(tasksDone(s)[4]).toBe(false);
-    s = generate(s, 'plan', fixture);
+    s = applyDraft(generate(s, 'plan', fixture), 'plan');
     expect(tasksDone({ ...s, reviews: 2, vocRan: true })).toEqual([true, true, true, true, true, true, true]);
   });
 });
