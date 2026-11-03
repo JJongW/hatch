@@ -14,7 +14,10 @@ const view = (over: Partial<QuestionView> = {}): QuestionView => ({
   made: true,
   customer: [],
   owner: [],
+  decision: [],
   answered: 0,
+  byEvidence: 0,
+  byDecision: 0,
   newLabels: 0,
   unknownTotal: 0,
   labelTotal: 0,
@@ -52,6 +55,23 @@ describe('detailStats', () => {
 
   it('결정: 정한 것만 세고, 안 정한 것은 화면에 안 보이는 수까지', () => {
     const d = detailStats(docsWith(), null, view(), decisions(['q1', 'q2'], 3, [decision('decided'), decision('deferred')])).decisions;
-    expect(d).toEqual({ decided: 1, deferred: 1, open: 5 });
+    expect(d).toEqual({ decided: 1, deferred: 1, proposed: 0, open: 5 });
+  });
+
+  it('제안은 정한 것으로 세지 않는다', () => {
+    const d = detailStats(docsWith(), null, view(), decisions([], 0, [decision('proposed'), decision('decided')])).decisions;
+    expect([d.decided, d.proposed]).toEqual([1, 1]);
+  });
+
+  it('근거는 결정과 따로 세고, 결정에 연결된 수를 센다', () => {
+    const ev = (id: string) => ({ id, text: 't', source: 'interview' as const, sourceNote: '', question: '', collectedAt: '' });
+    const linked = { ...decision('decided'), evidenceIds: ['e1'] };
+    const s = detailStats(docsWith(), null, view(), decisions([], 0, [linked]), [ev('e1'), ev('e2')]);
+    expect(s.evidence).toEqual({ total: 2, linked: 1 });
+    expect(s.decisions.decided).toBe(1);
+  });
+
+  it('팀이 정할 질문도 남은 질문에 센다', () => {
+    expect(detailStats(docsWith(), null, view({ decision: [line('x')] }), decisions([], 0, [])).questions.open).toBe(1);
   });
 });

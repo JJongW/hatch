@@ -21,6 +21,7 @@ export {
   updateDocBody,
 } from './docs';
 export { listDecisions, removeDecision, saveDecision } from './decisions';
+export { listEvidence, saveEvidence } from './evidence';
 export { appendUsage, listUsage } from './usage';
 export { FOLDER_MAX, UNFILED, folderNames, groupFolders, pickFolder, type FolderCount } from './folders';
 export { getQuestions, saveQuestions } from './questions';
@@ -33,6 +34,8 @@ export {
   CONTEXT_MAX,
   DOC_STEPS,
   EMPTY_CONTEXT,
+  EVIDENCE_MAX,
+  EVIDENCE_SOURCES,
   QUESTION_MAX,
   QUESTION_ROLES,
   type Decision,
@@ -40,6 +43,9 @@ export {
   type Doc,
   type DocKey,
   type DocStep,
+  type Evidence,
+  type EvidenceInput,
+  type EvidenceSource,
   type Idea,
   type IdeaContext,
   type QuestionItem,

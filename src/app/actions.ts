@@ -18,6 +18,7 @@ import {
   saveShareState,
   removeDecision,
   saveDecision,
+  saveEvidence,
   StorageError,
   trashIdea,
   updateDocBody,
@@ -25,9 +26,12 @@ import {
   updateIdeaContext,
   type DecisionInput,
   type DocKey,
+  type EvidenceInput,
   type IdeaContext,
 } from '@/lib/storage';
 import { buildSharePayload } from '@/lib/share/build';
+
+import { decisionValues, evidenceValues } from './_components/form-values';
 import { sendPublish, ShareError } from '@/lib/share/client';
 import { newShareToken } from '@/lib/share/token';
 import { ChainError as ToolError, runTool, TOOLS, type ToolKey, type ToolSource } from '@/lib/tools';
@@ -97,21 +101,28 @@ export async function saveContextAction(id: string, _prev: ContextState, formDat
 
 export type DecisionState = { error?: string; values?: DecisionInput; savedAt?: number };
 
+/** savedId: 방금 저장한 근거 — '이 근거로 결정 적기'에 연결한다 */
+export type EvidenceState = { error?: string; values?: EvidenceInput; savedAt?: number; savedId?: string };
+
+export async function saveEvidenceAction(id: string, evidenceId: string | null, _prev: EvidenceState, formData: FormData): Promise<EvidenceState> {
+  const values = evidenceValues(formData);
+  if (isDemo()) return { error: DEMO_MESSAGE, values };
+  try {
+    const saved = await saveEvidence(id, values, evidenceId ?? undefined);
+    revalidateIdeas();
+    return { savedAt: Date.now(), savedId: saved.id };
+  } catch (e) {
+    return { error: toMessage(e), values };
+  }
+}
+
 export async function saveDecisionAction(
   id: string,
   decisionId: string | null,
   _prev: DecisionState,
   formData: FormData,
 ): Promise<DecisionState> {
-  const get = (k: string) => String(formData.get(k) ?? '');
-  const from = get('from');
-  const values: DecisionInput = {
-    question: get('question'),
-    status: get('status') === 'deferred' ? 'deferred' : 'decided',
-    answer: get('answer'),
-    reason: get('reason'),
-    from: from === 'plan' || from === 'question' ? from : 'manual',
-  };
+  const values = decisionValues(formData);
   if (isDemo()) return { error: DEMO_MESSAGE, values };
   try {
     await saveDecision(id, values, decisionId ?? undefined);

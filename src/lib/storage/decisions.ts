@@ -20,8 +20,9 @@ function isDecision(v: unknown): v is Decision {
   const d = v as Record<string, unknown>;
   return (
     ['id', 'question', 'answer', 'reason', 'decidedAt'].every((k) => typeof d[k] === 'string') &&
-    (d.status === 'decided' || d.status === 'deferred') &&
-    (d.from === 'plan' || d.from === 'manual' || d.from === 'question')
+    (d.status === 'decided' || d.status === 'deferred' || d.status === 'proposed') &&
+    (d.from === 'plan' || d.from === 'manual' || d.from === 'question') &&
+    (d.evidenceIds === undefined || (Array.isArray(d.evidenceIds) && d.evidenceIds.every((e) => typeof e === 'string')))
   );
 }
 
@@ -45,22 +46,28 @@ export async function listDecisions(id: string): Promise<Decision[]> {
 }
 
 function clean(input: DecisionInput): DecisionInput {
-  if (input.status !== 'decided' && input.status !== 'deferred') throw new StorageError('정함이나 보류 중 하나를 골라 주세요.');
+  if (input.status !== 'decided' && input.status !== 'deferred' && input.status !== 'proposed') {
+    throw new StorageError('제안, 정함, 보류 중 하나를 골라 주세요.');
+  }
   const question = input.question.trim();
-  const answer = input.status === 'decided' ? input.answer.trim() : '';
+  const needsAnswer = input.status !== 'deferred'; // 제안도 무엇을 제안하는지 있어야 한다
+  const answer = needsAnswer ? input.answer.trim() : '';
   const reason = input.reason.trim();
   if (!question) throw new StorageError('정할 것을 적어 주세요.');
-  if (input.status === 'decided' && !answer) throw new StorageError('고른 답을 적어 주세요.');
+  if (needsAnswer && !answer) throw new StorageError(input.status === 'proposed' ? '제안하는 답을 적어 주세요.' : '고른 답을 적어 주세요.');
   if (!reason) throw new StorageError('이유를 적어 주세요.');
   if (question.length > LIMIT.question || answer.length > LIMIT.answer || reason.length > LIMIT.reason) {
     throw new StorageError('정할 것은 200자, 답과 이유는 500자까지예요.');
   }
+  const evidenceIds = [...new Set((input.evidenceIds ?? []).map((e) => e.trim()).filter(Boolean))];
   return {
     question,
     status: input.status,
     answer,
     reason,
     from: input.from === 'plan' || input.from === 'question' ? input.from : 'manual',
+    // 연결이 없으면 칸을 쓰지 않는다 (예전 파일과 같은 모양)
+    ...(evidenceIds.length ? { evidenceIds } : {}),
   };
 }
 
@@ -79,7 +86,8 @@ export async function saveDecision(id: string, input: DecisionInput, decisionId?
   if (decisionId) {
     const i = items.findIndex((d) => d.id === decisionId);
     if (i < 0) throw new StorageError('결정을 찾을 수 없어요. 새로고침해 주세요.');
-    saved = { ...items[i], ...c, from: items[i].from, decidedAt };
+    const { evidenceIds: _old, ...rest } = items[i]; // eslint-disable-line @typescript-eslint/no-unused-vars -- 고칠 때 받은 연결로 바꾼다
+    saved = { ...rest, ...c, from: items[i].from, decidedAt };
     items[i] = saved;
   } else {
     let newId: string;

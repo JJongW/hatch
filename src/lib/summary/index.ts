@@ -1,7 +1,7 @@
 // 아이디어 상세 요약 판. 이미 읽은 값만으로 계산한다 — AI 없이 즉시 · 무료 · 같은 문서면 같은 요약
 import { countUnknowns, firstParagraph, norm, planDecisions, section } from './parse';
 
-import type { Decision, Doc, DocKey } from '../storage/types';
+import type { Decision, Doc, DocKey, Evidence } from '../storage/types';
 
 export type VocEvidence = { total: number; top: string };
 
@@ -22,8 +22,10 @@ export type SummaryInput = {
   voc: VocEvidence | null;
   /** 이 아이디어 PRD로 돌린 PRD 리뷰가 있나 */
   reviewedPrd: boolean;
-  /** 저장된 결정 · 보류 (저장 순) */
+  /** 저장된 결정 · 보류 · 제안 (저장 순) */
   decisions: Decision[];
+  /** 확인한 근거 (저장 순). 결정 수에 들어가지 않는다 */
+  evidence?: Evidence[];
   /** 확인 질문 목록을 만들었나. 넘기면 [확인 필요]가 남았을 때 고객 의견보다 질문 정리를 먼저 권한다.
    * 지금은 흐름 체험(과제 순서: 질문 → 고객 의견)만 넘긴다. 상세 화면도 같은 순서가 맞다고 보이면 page.tsx에서도 넘긴다 */
   questionsMade?: boolean;
@@ -31,7 +33,7 @@ export type SummaryInput = {
 
 export type Summary = {
   problem: { text: string; from: 'plan' | 'memo' | 'title' };
-  evidence: { voc: VocEvidence | null };
+  evidence: { voc: VocEvidence | null; items: Evidence[] };
   unknowns: { label: string; count: number }[];
   unknownTotal: number;
   /** open: 기획안 질문 중 결정이 없는 것 (최대 5) · recorded: 저장된 결정 전부 */
@@ -84,7 +86,7 @@ export function summarize(input: SummaryInput): Summary {
   const unknowns = countUnknowns(input.docs.flatMap((d) => (d.content === null ? [] : [d.content])));
   return {
     problem: problemOf(input.idea, plan),
-    evidence: { voc: input.voc },
+    evidence: { voc: input.voc, items: input.evidence ?? [] },
     unknowns: unknowns.slice(0, MAX),
     unknownTotal: unknowns.length,
     decisions: decisionsOf(plan, input.decisions),

@@ -57,7 +57,8 @@ export type Decision = {
   /** 4자 랜덤 (목록 안에서만 유일) */
   id: string;
   question: string;
-  status: 'decided' | 'deferred';
+  /** 정함 / 보류 / 제안(팀이 아직 확정 안 함 — 기획안 입력에 넣지 않는다) */
+  status: 'decided' | 'deferred' | 'proposed';
   /** 보류면 '' */
   answer: string;
   reason: string;
@@ -65,9 +66,40 @@ export type Decision = {
   from: 'plan' | 'manual' | 'question';
   /** ISO 8601, 고칠 때 갱신 */
   decidedAt: string;
+  /** 이 결정의 근거 id (evidence.md). 예전 결정엔 없다 */
+  evidenceIds?: string[];
 };
-export type DecisionInput = Pick<Decision, 'question' | 'status' | 'answer' | 'reason' | 'from'>;
+export type DecisionInput = Pick<Decision, 'question' | 'status' | 'answer' | 'reason' | 'from' | 'evidenceIds'>;
+// 1판 그대로: proposed · evidenceIds는 새 값 · 없어도 되는 칸이라 예전 파일은 변환 없이 읽힌다
 export const DECISION_FILE_VERSION = 1;
+
+/** 근거를 얻은 곳 (화면 순서) */
+export const EVIDENCE_SOURCES = [
+  { key: 'interview', label: '인터뷰' },
+  { key: 'voc', label: 'VOC' },
+  { key: 'survey', label: '설문' },
+  { key: 'teammate', label: '담당자 확인' },
+  { key: 'other', label: '기타' },
+] as const;
+export type EvidenceSource = (typeof EVIDENCE_SOURCES)[number]['key'];
+
+/** 고객 · 담당자에게서 확인한 사실 (관찰). 결정이 아니다 — 결정 수 · 정한 것에 들어가지 않는다 */
+export type Evidence = {
+  /** 4자 랜덤 (목록 안에서만 유일) */
+  id: string;
+  /** 들은 것 · 본 것 */
+  text: string;
+  source: EvidenceSource;
+  /** 누구에게 · 언제 (선택) */
+  sourceNote: string;
+  /** 확인 질문에 답한 거면 그 질문 문장 (없으면 '') */
+  question: string;
+  /** ISO 8601, 고칠 때 갱신 */
+  collectedAt: string;
+};
+export type EvidenceInput = Pick<Evidence, 'text' | 'source' | 'sourceNote' | 'question'>;
+export const EVIDENCE_FILE_VERSION = 1;
+export const EVIDENCE_MAX = { text: 1000, sourceNote: 200 } as const;
 
 /** 확인 질문 담당 역할 (화면 묶음 순서) */
 export const QUESTION_ROLES = ['기획', '개발', '디자인', '데이터', '법무', '운영'] as const;
@@ -76,9 +108,9 @@ export type QuestionRole = (typeof QUESTION_ROLES)[number];
 export type QuestionItem = {
   /** 문서의 `[확인 필요: 라벨]` 라벨 그대로 */
   label: string;
-  /** 고객에게 물을 것 / 담당자에게 확인할 것 */
-  kind: 'customer' | 'owner';
-  /** owner면 역할, customer면 '' */
+  /** 고객에게 물을 것 / 담당자에게 확인할 것 (둘 다 답 = 근거) / 팀이 정할 것 (답 = 결정) */
+  kind: 'customer' | 'owner' | 'decision';
+  /** owner면 역할, customer · decision이면 '' */
   role: QuestionRole | '';
   /** 한 문장, 최대 QUESTION_MAX자 (결정 "정할 것" 한도와 같음) */
   question: string;

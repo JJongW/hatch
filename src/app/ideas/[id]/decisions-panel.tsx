@@ -7,12 +7,14 @@ import { useDemo } from '../../_components/demo';
 import { useConfirmSubmit } from '../../_components/use-confirm-submit';
 import DecisionForm from './decision-form';
 
-import type { Decision } from '@/lib/storage';
+import type { Decision, Evidence } from '@/lib/storage';
 import type { Summary } from '@/lib/summary';
 import type { DecisionState } from '../../actions';
 
 type Props = {
   decisions: Summary['decisions'];
+  /** 결정에 연결된 근거를 보여 줄 때 쓴다 */
+  evidence?: Evidence[];
   saveDecision: (decisionId: string | null, prev: DecisionState, formData: FormData) => Promise<DecisionState>;
   removeDecision: (decisionId: string) => Promise<void>;
   disabled: boolean;
@@ -72,11 +74,19 @@ function Row({ label, description, badge, actions, below }: RowProps) {
   );
 }
 
-const detailOf = (d: Decision) => (d.status === 'decided' ? `${d.answer} (이유: ${d.reason})` : `보류 이유: ${d.reason}`);
+const BADGE: Record<Decision['status'], string | undefined> = { decided: undefined, deferred: '보류', proposed: '제안' };
+
+/** 결정 값 · 이유, 연결된 근거가 있으면 그 내용까지 (지워진 근거 id는 건너뛴다) */
+function detailOf(d: Decision, evidence: Map<string, Evidence>) {
+  const main = d.status === 'deferred' ? `보류 이유: ${d.reason}` : `${d.status === 'proposed' ? '제안: ' : ''}${d.answer} (이유: ${d.reason})`;
+  const linked = (d.evidenceIds ?? []).flatMap((id) => evidence.get(id)?.text ?? []);
+  return linked.length ? `${main} · 근거: ${linked.join(' / ')}` : main;
+}
 
 /** 결정 탭 (spec detail-dashboard §2 탭 안) */
-export default function DecisionsPanel({ decisions, saveDecision, removeDecision, disabled, locked, onForm }: Props) {
+export default function DecisionsPanel({ decisions, evidence = [], saveDecision, removeDecision, disabled, locked, onForm }: Props) {
   const { open, openMore, recorded } = decisions;
+  const byId = new Map(evidence.map((e) => [e.id, e]));
   const hasDecisions = open.length > 0 || recorded.length > 0;
   const demo = useDemo();
   const [opening, setOpening] = useState<Opening>(null);
@@ -111,21 +121,21 @@ export default function DecisionsPanel({ decisions, saveDecision, removeDecision
       )}
       {recorded.length > 0 && (
         <Box>
-          {sub(`정한 것과 보류한 것 (${recorded.length})`)}
+          {sub(`남긴 결정 (${recorded.length})`)}
           <List flexDirection="column">
             {recorded.map((d) => (
               <Row
                 key={d.id}
                 label={d.question}
-                description={detailOf(d)}
-                badge={d.status === 'deferred' ? '보류' : undefined}
+                description={detailOf(d, byId)}
+                badge={BADGE[d.status]}
                 actions={
                   canOpen && (
                     <FlexBox gap="4px">
                       {outlined('수정', () => setOpening({ kind: 'edit', id: d.id }))}
                       <form
                         action={() => removeDecision(d.id)}
-                        onSubmit={ask({ title: '이 결정을 지울까요?', content: '이전 판은 .history에 남아요.', confirm: '지우기', negative: true })}
+                        onSubmit={ask({ title: '이 결정을 지울까요?', content: '지워도 이전 버전은 남아요.', confirm: '지우기', negative: true })}
                       >
                         <Button type="submit" size="small" variant="outlined" color="assistive" disabled={disabled}>
                           지우기

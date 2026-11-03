@@ -13,11 +13,12 @@ import IdeaDetail from '../ideas/[id]/idea-detail';
 import type { Theme } from '@montage-ui/core';
 
 import { collectUnknowns } from '@/lib/questions/collect';
-import { CONTEXT_FIELDS, DOC_STEPS, type Decision, type DocKey, type IdeaContext } from '@/lib/storage/types';
+import { CONTEXT_FIELDS, DOC_STEPS, EVIDENCE_MAX, EVIDENCE_SOURCES, type Decision, type DocKey, type Evidence, type IdeaContext } from '@/lib/storage/types';
 import { questionView, summarize, vocEvidence } from '@/lib/summary';
 import { TASKS } from '@/lib/survey/questions';
 import { docsOf, editDoc, generate, START, tasksDone, type TryFixture, type TryState } from '@/lib/try/flow';
-import type { ContextState, DecisionState, DocActionState, FormState, QuestionsState } from '../actions';
+import type { ContextState, DecisionState, DocActionState, EvidenceState, FormState, QuestionsState } from '../actions';
+import { decisionValues, evidenceValues } from '../_components/form-values';
 import TryTool from './try-tool';
 
 type View = 'detail' | 'prd-review' | 'voc';
@@ -83,18 +84,11 @@ export default function TryFlow({ fixture }: { fixture: TryFixture }) {
   };
 
   const saveDecision = async (decisionId: string | null, _prev: DecisionState, fd: FormData): Promise<DecisionState> => {
-    const get = (k: string) => String(fd.get(k) ?? '').trim();
-    const from = get('from');
-    const values = {
-      question: get('question'),
-      status: get('status') === 'deferred' ? 'deferred' : 'decided',
-      answer: get('answer'),
-      reason: get('reason'),
-      from: from === 'plan' || from === 'question' ? from : 'manual',
-    } as const;
+    const raw = decisionValues(fd);
+    const values = { ...raw, question: raw.question.trim(), answer: raw.status === 'deferred' ? '' : raw.answer.trim(), reason: raw.reason.trim() };
     // 실제 저장과 같은 검사 문구 (storage/decisions.ts)
     if (!values.question) return { error: '정할 것을 적어 주세요.', values };
-    if (values.status === 'decided' && !values.answer) return { error: '고른 답을 적어 주세요.', values };
+    if (values.status !== 'deferred' && !values.answer) return { error: values.status === 'proposed' ? '제안하는 답을 적어 주세요.' : '고른 답을 적어 주세요.', values };
     if (!values.reason) return { error: '이유를 적어 주세요.', values };
     await wait(400);
     setState((s) => {
@@ -103,6 +97,25 @@ export default function TryFlow({ fixture }: { fixture: TryFixture }) {
       return { ...s, decisions };
     });
     return { savedAt: Date.now() };
+  };
+
+  const saveEvidence = async (evidenceId: string | null, _prev: EvidenceState, fd: FormData): Promise<EvidenceState> => {
+    const raw = evidenceValues(fd);
+    const values = { ...raw, text: raw.text.trim(), sourceNote: raw.sourceNote.trim() };
+    // 실제 저장과 같은 검사 문구 (storage/evidence.ts)
+    if (!values.text) return { error: '들은 내용을 적어 주세요.', values };
+    if (!EVIDENCE_SOURCES.some((x) => x.key === values.source)) return { error: '어디서 확인했는지 골라 주세요.', values };
+    if (values.text.length > EVIDENCE_MAX.text || values.sourceNote.length > EVIDENCE_MAX.sourceNote) {
+      return { error: `내용은 ${EVIDENCE_MAX.text}자, 출처 메모는 ${EVIDENCE_MAX.sourceNote}자까지예요.`, values };
+    }
+    await wait(400);
+    const id = evidenceId ?? `try-e${nextId.current++}`;
+    setState((s) => {
+      const e: Evidence = { ...values, id, collectedAt: new Date().toISOString() };
+      // 고칠 때 질문은 처음 것 그대로 (storage/evidence.ts와 같은 규칙)
+      return { ...s, evidence: evidenceId ? s.evidence.map((x) => (x.id === evidenceId ? { ...e, question: x.question } : x)) : [...s.evidence, e] };
+    });
+    return { savedAt: Date.now(), savedId: id };
   };
 
   const removeDecision = async (decisionId: string) => {
@@ -144,6 +157,7 @@ export default function TryFlow({ fixture }: { fixture: TryFixture }) {
         voc: state.vocRan ? vocEvidence(fixture.voc.data) : null,
         reviewedPrd: state.reviews > 0,
         decisions: state.decisions,
+        evidence: state.evidence,
         questionsMade: state.questions !== null,
       })
     : null;
@@ -183,9 +197,10 @@ export default function TryFlow({ fixture }: { fixture: TryFixture }) {
                 contextFields={CONTEXT_FIELDS}
                 saveContextAction={saveContext}
                 saveDecisionAction={saveDecision}
+                saveEvidenceAction={saveEvidence}
                 removeDecisionAction={removeDecision}
                 summary={summary}
-                questions={questionView(state.questions, collectUnknowns(docs), state.decisions)}
+                questions={questionView(state.questions, collectUnknowns(docs), state.decisions, state.evidence)}
                 makeQuestionsAction={makeQuestions}
                 docs={docs}
                 generatable={ALL_KEYS}
