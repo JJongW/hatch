@@ -91,7 +91,13 @@ export default function MermaidBlock({ code }: { code: string }) {
         dangerouslySetInnerHTML={{ __html: view.kind === 'svg' ? view.svg : '' }}
       />
       {view.kind === 'loading' && (
-        <Typography variant="caption1" color="semantic.foreground.neutral.secondary" sx={{ display: 'block', padding: '8px 16px' }}>
+        <Typography
+          role="status"
+          variant="caption1"
+          color="semantic.foreground.neutral.secondary"
+          sx={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px' }}
+        >
+          <span className="hatch-loader" aria-hidden style={{ '--hatch-loader-size': '14px' } as React.CSSProperties} />
           구성도를 그리는 중이에요
         </Typography>
       )}
