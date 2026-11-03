@@ -5,6 +5,8 @@ import { Box, Button, FlexBox, Typography } from '@montage-ui/core';
 
 import Panel from '@/components/panel';
 
+import { changeSentence } from './doc-changes';
+
 import type { Doc, DocKey } from '@/lib/storage';
 import type { NextAction } from '@/lib/summary';
 
@@ -22,12 +24,17 @@ type Props = {
 
 type Step = { text: string; open?: { doc: DocKey; label: string }; go?: { tool: ToolLink; label: string }; questions?: string };
 
-function stepOf(next: NextAction, label: (key: DocKey) => string): Step {
+function stepOf(next: NextAction, label: (key: DocKey) => string, docOf: (key: DocKey) => Doc | undefined): Step {
   switch (next.kind) {
     case 'wait':
       return { text: `${label(next.doc)} 만드는 중이에요.` };
-    case 'check-stale':
-      return { text: `앞 문서가 바뀌어서 ${label(next.doc)} 내용이 예전 기준이에요.`, open: { doc: next.doc, label: `${label(next.doc)} 확인하기` } };
+    case 'check-stale': {
+      // 실제로 바뀐 입력으로 말한다 (원인을 모르는 예전 문서는 '입력이 바뀌었어요')
+      const d = docOf(next.doc);
+      if (d?.draft) return { text: `${label(next.doc)} 새 판이 있어요. 지금 판과 비교해 고르세요.`, open: { doc: next.doc, label: '새 판 비교하기' } };
+      const why = d?.changes.length ? changeSentence(d, d.changes[0]) : '만든 뒤 입력이 바뀌었어요';
+      return { text: `${label(next.doc)}: ${why}. 검토해 보세요.`, open: { doc: next.doc, label: `${label(next.doc)} 검토하기` } };
+    }
     case 'make-doc':
       return { text: `다음으로 만들 문서는 ${label(next.doc)}예요.`, open: { doc: next.doc, label: `${label(next.doc)} 열기` } };
     case 'make-questions':
@@ -43,7 +50,7 @@ function stepOf(next: NextAction, label: (key: DocKey) => string): Step {
 
 /** 머리 바로 아래 "다음 할 일" 한 줄 + 주 버튼 하나 (spec detail-dashboard §2-2) */
 export default function NextBand({ next, docs, ideaId, onOpenDoc, onOpenQuestions, goTool }: Props) {
-  const step = stepOf(next, (key) => docs.find((d) => d.key === key)?.label ?? key);
+  const step = stepOf(next, (key) => docs.find((d) => d.key === key)?.label ?? key, (key) => docs.find((d) => d.key === key));
   return (
     <Box as="section" aria-label="다음 할 일">
       <Panel>

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { DOC_STEPS, progressOf, type Doc } from '.';
 
 const docsWith = (...keys: string[]): Doc[] =>
-  DOC_STEPS.map((s) => ({ ...s, content: keys.includes(s.key) ? '내용' : null, stale: false }));
+  DOC_STEPS.map((s) => ({ ...s, content: keys.includes(s.key) ? '내용' : null, stale: false, changes: [], draft: null, versions: [] }));
 
 describe('progressOf', () => {
   it('문서가 없으면 "아이디어"', () => {

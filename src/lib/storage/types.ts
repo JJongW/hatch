@@ -26,24 +26,42 @@ export const CONTEXT_MAX = 1000;
 
 export type DocKey = 'plan' | 'roadmap' | 'prd' | 'spec' | 'data' | 'dev-prompt' | 'design-prompt';
 
-export type DocStep = { key: DocKey; label: string; file: string; from: DocKey | 'idea' };
+/** extra: from 말고 함께 넣는 문서 (prd ← plan). 생성(chain)과 바뀜 계산(storage)이 같이 쓴다 */
+export type DocStep = { key: DocKey; label: string; file: string; from: DocKey | 'idea'; extra?: DocKey[] };
+
+/** 만든 뒤 바뀐 입력. doc:<키> = 그 문서, idea = 아이디어 · 맥락, unknown = 예전 문서라 무엇인지 모름 */
+export type DocChange = `doc:${DocKey}` | 'idea' | 'decisions' | 'evidence' | 'unknown';
+
+/** 다시 만든 판 (적용 전). 지금 판을 덮지 않고 따로 둔다 */
+export type DocDraft = { content: string; generatedAt: string };
+
+/** 이전 버전 하나 (`.history`). name은 파일 이름 — 읽을 때 그대로 넘긴다 */
+export type DocVersion = { name: string; at: string };
 
 export type Doc = DocStep & {
   /** 머리말을 뺀 본문. 파일이 없으면 null */
   content: string | null;
-  /** 만들 때의 입력 해시 ≠ 지금 앞 문서 해시 */
+  /** 만든 뒤 입력이 바뀌었나 (changes가 하나라도 있으면 true) */
   stale: boolean;
+  /** 무엇이 바뀌었나 (비면 최신) */
+  changes: DocChange[];
+  /** 만든 시각 · 손으로 고친 시각 (ISO, 없으면 undefined) */
+  generatedAt?: string;
+  editedAt?: string;
+  draft: DocDraft | null;
+  /** 새것부터 */
+  versions: DocVersion[];
 };
 
 /** 문서 체인 순서. 각 단계는 from(앞 단계)을 입력으로 만든다. */
 export const DOC_STEPS: ReadonlyArray<DocStep> = [
   { key: 'plan', label: '기획안', file: 'plan.md', from: 'idea' },
   { key: 'roadmap', label: '개발 로드맵', file: 'roadmap.md', from: 'plan' },
-  { key: 'prd', label: 'PRD', file: 'prd.md', from: 'roadmap' },
+  { key: 'prd', label: 'PRD', file: 'prd.md', from: 'roadmap', extra: ['plan'] },
   { key: 'spec', label: '기능명세', file: 'spec.md', from: 'prd' },
   { key: 'data', label: '데이터 구성', file: 'data.md', from: 'spec' },
   { key: 'dev-prompt', label: '개발 프롬프트', file: 'dev-prompt.md', from: 'spec' },
-  { key: 'design-prompt', label: '디자인 프롬프트', file: 'design-prompt.md', from: 'data' },
+  { key: 'design-prompt', label: '디자인 프롬프트', file: 'design-prompt.md', from: 'data', extra: ['spec'] },
 ];
 
 export const DOC_FILE_VERSION = 1;

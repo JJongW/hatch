@@ -5,7 +5,7 @@ import { DOC_STEPS, EMPTY_CONTEXT, type Decision, type Doc } from '@/lib/storage
 import { buildSharePayload, shareCounts } from './build';
 import { sharePayloadSchema } from './payload';
 
-const docs: Doc[] = DOC_STEPS.map((s) => ({ ...s, content: s.key === 'plan' ? '## 문제\n노쇼' : s.key === 'prd' ? '## 목표' : null, stale: false }));
+const docs: Doc[] = DOC_STEPS.map((s) => ({ ...s, content: s.key === 'plan' ? '## 문제\n노쇼' : s.key === 'prd' ? '## 목표' : null, stale: false, changes: [], draft: null, versions: [] }));
 const decisions: Decision[] = [
   { id: 'a1b2', question: '알림 채널', status: 'decided', answer: '슬랙', reason: '이미 씀', from: 'question', decidedAt: '2026-11-03T00:00:00Z' },
 ];

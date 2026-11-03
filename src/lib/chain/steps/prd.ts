@@ -28,7 +28,6 @@ export type PrdOutput = z.infer<typeof prdSchema>;
 
 export const prdStep: ChainStep<PrdOutput> = {
   key: 'prd',
-  extra: ['plan'],
   schema: prdSchema,
   prompt: PRD_PROMPT,
   render: (o) =>

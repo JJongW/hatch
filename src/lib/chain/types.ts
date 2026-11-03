@@ -2,11 +2,9 @@ import type { z } from 'zod';
 
 import type { DocKey } from '@/lib/storage';
 
-/** 체인 단계 하나. 앞 단계(from)는 storage의 DOC_STEPS에 있다. */
+/** 체인 단계 하나. 앞 단계(from) · 함께 넣는 문서(extra)는 storage의 DOC_STEPS에 있다 (바뀜 계산에도 쓴다) */
 export type ChainStep<T> = {
   key: DocKey;
-  /** from 말고 함께 넣는 문서 (예: prd ← plan) */
-  extra?: DocKey[];
   schema: z.ZodType<T>;
   /** src/lib/prompts/chain/<key>.ts 의 상수 */
   prompt: string;

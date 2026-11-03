@@ -20,6 +20,7 @@ Next.js(App Router) · Montage(원티드 디자인 시스템) · 생성은 로�
 | `src/lib/questions/` | 확인 질문 (모으기 · 검사 · 만들기) | 4b | `ui-builder` |
 | `src/lib/claude/` | claude -p 실행기 | B | `chain-author` |
 | `src/lib/theme/` | 컬러 토큰 상수 · 대비 계산 (색 값은 `src/app/theme.css`) | D | `ui-builder` |
+| `src/lib/diff/` | 두 판 줄 단위 비교 · 바뀐 절 요약 (순수, 의존성 없음) | B | `ui-builder` |
 | `src/lib/usage/` | 사용량 계산 (기능별 · 아이디어별 · 신호) | B | `chain-author` |
 | `src/lib/chain/` | 문서 생성 체인 단계 | B | `chain-author` |
 | `src/lib/prompts/` | 프롬프트 문자열 (여기에만) | B · C | `chain-author` |

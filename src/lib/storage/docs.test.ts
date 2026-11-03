@@ -20,6 +20,7 @@ import {
   updateIdea,
   updateIdeaContext,
   type Decision,
+  type DocKey,
 } from '.';
 
 let dir: string;
@@ -206,5 +207,110 @@ describe('문서 자리 docs/', () => {
     await fs.mkdir(at(idea.id, 'docs'));
     await fs.writeFile(at(idea.id, 'docs', 'plan.md'), '# 새 자리');
     expect((await getDocs(idea.id))[0].content).toBe('# 새 자리');
+  });
+});
+
+describe('바뀐 원인 · 초안 · 이전 버전 (spec 2026-11-03 §2)', () => {
+  const planInputs = async (id: string) => {
+    const { inputHashes, getIdea, listDecisions } = await import('.');
+    const idea = (await getIdea(id))!;
+    return inputHashes('plan', { idea, decisions: await listDecisions(id), evidence: [], bodyOf: () => null });
+  };
+
+  it('입력 조각별로 무엇이 바뀌었는지: 결정만 바꾸면 decisions', async () => {
+    const idea = await createIdea({ title: 'x', memo: '' });
+    await saveDoc(idea.id, 'plan', '기획', { sourceHash: hashOf(ideaSource(idea)), inputs: await planInputs(idea.id) });
+    expect((await getDocs(idea.id))[0].changes).toEqual([]);
+    await saveDecision(idea.id, { question: '지역', status: 'decided', answer: '성수', reason: '많다', from: 'manual' });
+    expect((await getDocs(idea.id))[0]).toMatchObject({ stale: true, changes: ['decisions'] });
+  });
+
+  it('새 형식 기획안: 근거만 더하면 evidence, 다시 초안을 만들면 앞 초안은 이전 버전 폴더로', async () => {
+    const { saveEvidence, saveDraft } = await import('.');
+    const idea = await createIdea({ title: 'x', memo: '' });
+    await saveDoc(idea.id, 'plan', '기획', { sourceHash: hashOf(ideaSource(idea)), inputs: await planInputs(idea.id) });
+    await saveEvidence(idea.id, { text: '퇴근 후 연다', source: 'interview', sourceNote: '', question: '' });
+    expect((await getDocs(idea.id))[0].changes).toEqual(['evidence']);
+    await saveDraft(idea.id, 'plan', '초안1', { sourceHash: 'a' });
+    await saveDraft(idea.id, 'plan', '초안2', { sourceHash: 'b' });
+    expect((await getDocs(idea.id))[0].draft?.content).toBe('초안2');
+    const hist = await fs.readdir(path.join(dir, 'ideas', idea.id, '.history'));
+    expect(hist.filter((f) => f.startsWith('plan-draft-'))).toHaveLength(1);
+  });
+
+  it('예전 문서(inputs 없음)는 sourceHash로만 보고 원인은 unknown', async () => {
+    const idea = await createIdea({ title: 'x', memo: '' });
+    await saveDoc(idea.id, 'plan', '기획', { sourceHash: hashOf(ideaSource(idea)) });
+    await updateIdea(idea.id, { title: 'y', memo: '', folder: '' });
+    expect((await getDocs(idea.id))[0].changes).toEqual(['unknown']);
+  });
+
+  it('예전 뒤 문서(inputs 없음)는 앞 문서가 바뀐 것으로 안다', async () => {
+    const idea = await createIdea({ title: 'x', memo: '' });
+    await saveDoc(idea.id, 'plan', '기획', { sourceHash: hashOf(ideaSource(idea)) });
+    await saveDoc(idea.id, 'roadmap', '로드맵', { sourceHash: hashOf('기획') });
+    await updateDocBody(idea.id, 'plan', '고친 기획');
+    expect((await getDocs(idea.id)).find((d) => d.key === 'roadmap')?.changes).toEqual(['doc:plan']);
+  });
+
+  it('PRD는 extra(기획안)가 바뀌어도 알린다', async () => {
+    const idea = await createIdea({ title: 'x', memo: '' });
+    await saveDoc(idea.id, 'plan', '기획', { sourceHash: hashOf(ideaSource(idea)) });
+    await saveDoc(idea.id, 'roadmap', '로드맵', { sourceHash: hashOf('기획') });
+    await saveDoc(idea.id, 'prd', 'PRD', { sourceHash: hashOf('로드맵'), inputs: { 'doc:roadmap': hashOf('로드맵'), 'doc:plan': hashOf('기획') } });
+    await updateDocBody(idea.id, 'plan', '고친 기획');
+    const docs = await getDocs(idea.id);
+    expect(docs.find((d) => d.key === 'prd')?.changes).toEqual(['doc:plan']);
+    expect(docs.find((d) => d.key === 'plan')?.editedAt).toBeDefined();
+  });
+
+  it('초안: 저장해도 지금 판은 그대로, 적용하면 바뀌고 이전 판은 이전 버전으로', async () => {
+    const { saveDraft, applyDraft, readVersion } = await import('.');
+    const idea = await createIdea({ title: 'x', memo: '' });
+    await saveDoc(idea.id, 'plan', '첫 판', { sourceHash: 'a' });
+    await saveDraft(idea.id, 'plan', '새 판', { sourceHash: 'b' });
+    let plan = (await getDocs(idea.id))[0];
+    expect([plan.content, plan.draft?.content]).toEqual(['첫 판', '새 판']);
+    await applyDraft(idea.id, 'plan');
+    plan = (await getDocs(idea.id))[0];
+    expect([plan.content, plan.draft, plan.editedAt]).toEqual(['새 판', null, undefined]);
+    expect(plan.versions).toHaveLength(1);
+    expect(await readVersion(idea.id, 'plan', plan.versions[0].name)).toBe('첫 판');
+    expect(plan.versions[0].at).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/);
+  });
+
+  it('고쳐서 적용하면 고친 본문 + 고친 표시, 유지하면 초안만 이전 버전 폴더로 (지우지 않음)', async () => {
+    const { saveDraft, applyDraft, keepCurrent } = await import('.');
+    const idea = await createIdea({ title: 'x', memo: '' });
+    await saveDoc(idea.id, 'plan', '첫 판', { sourceHash: 'a' });
+    await saveDraft(idea.id, 'plan', '새 판', { sourceHash: 'b' });
+    await applyDraft(idea.id, 'plan', '새 판 + 내 수정');
+    expect((await getDocs(idea.id))[0]).toMatchObject({ content: '새 판 + 내 수정', draft: null });
+    expect((await getDocs(idea.id))[0].editedAt).toBeDefined();
+    await saveDraft(idea.id, 'plan', '또 새 판', { sourceHash: 'c' });
+    await keepCurrent(idea.id, 'plan');
+    expect((await getDocs(idea.id))[0]).toMatchObject({ content: '새 판 + 내 수정', draft: null });
+    const hist = await fs.readdir(path.join(dir, 'ideas', idea.id, '.history'));
+    expect(hist.filter((f) => f.startsWith('plan-draft-'))).toHaveLength(2);
+    await expect(applyDraft(idea.id, 'plan')).rejects.toThrow('적용할 새 판이 없어요');
+  });
+
+  it('이전 버전 이름은 목록 모양만 받는다', async () => {
+    const { readVersion } = await import('.');
+    const idea = await createIdea({ title: 'x', memo: '' });
+    await expect(readVersion(idea.id, 'plan', '../idea.md')).rejects.toThrow('이전 버전을 찾을 수 없어요.');
+    await expect(readVersion(idea.id, 'plan', 'roadmap-20261103T000000-abcd.md')).rejects.toThrow('이전 버전을 찾을 수 없어요.');
+    // key도 클라이언트가 바꿀 수 있다: 정규식 · 경로에 넣기 전에 막는다
+    await expect(readVersion(idea.id, '.*' as DocKey, '../../x-20261103T000000-abcd.md')).rejects.toThrow('모르는 문서예요.');
+    const { applyDraft } = await import('.');
+    await expect(applyDraft(idea.id, '../x' as DocKey)).rejects.toThrow('모르는 문서예요.');
+  });
+
+  it('근거가 없으면 기획안 입력은 예전과 같다 (기존 해시 유지)', async () => {
+    const idea = await createIdea({ title: 'x', memo: 'm' });
+    expect(ideaSource(idea, [], [])).toBe(ideaSource(idea));
+    const ev = { id: 'e1', text: '연다', source: 'voc' as const, sourceNote: 'A', question: '', collectedAt: '' };
+    expect(ideaSource(idea, [], [ev])).toContain('### 확인한 근거');
+    expect(ideaSource(idea, [], [ev])).toContain('- 연다 (출처: VOC, A)');
   });
 });

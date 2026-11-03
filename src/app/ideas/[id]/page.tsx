@@ -10,7 +10,7 @@ import { CONTEXT_FIELDS, folderNames, getDocs, getIdea, getQuestions, getRunning
 import { questionView, summarize, vocEvidence } from '@/lib/summary';
 import { summarizeUsage } from '@/lib/usage/summary';
 
-import { generateDocAction, makeQuestionsAction, shareAction, removeDecisionAction, saveContextAction, saveDecisionAction, saveEvidenceAction, trashIdeaAction, updateDocAction, updateIdeaAction } from '../../actions';
+import { generateDocAction, makeQuestionsAction, shareAction, removeDecisionAction, saveContextAction, saveDecisionAction, saveEvidenceAction, trashIdeaAction, updateDocAction, updateIdeaAction, resolveDraftAction, readVersionAction } from '../../actions';
 import WidePage from '../../_components/wide-page';
 import IdeaDetail from './idea-detail';
 
@@ -84,6 +84,8 @@ export default async function IdeaPage({ params }: { params: Promise<{ id: strin
         running={runningKey}
         generateAction={generateDocAction.bind(null, id)}
         updateDocAction={updateDocAction.bind(null, id)}
+        resolveDraftAction={resolveDraftAction.bind(null, id)}
+        readVersionAction={readVersionAction.bind(null, id)}
         updateAction={updateIdeaAction.bind(null, id)}
         trashAction={trashIdeaAction.bind(null, id)}
         usage={usage}

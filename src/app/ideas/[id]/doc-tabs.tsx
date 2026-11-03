@@ -11,10 +11,11 @@ import type { ReactNode } from 'react';
 import type { Doc, DocKey } from '@/lib/storage';
 
 import { chainProgress, summaryLine, type DocStatus } from './chain-progress';
+import { changeBadge } from './doc-changes';
 
 const LABELS: Record<DocStatus, string> = {
   running: '만드는 중',
-  stale: '앞 문서가 바뀜',
+  stale: '검토 필요', // 실제 원인은 labelOf가 문서의 changes로 바꿔 쓴다
   done: '완료',
   next: '다음 차례',
   wait: '대기',
@@ -29,11 +30,21 @@ const ACCENT: Partial<Record<DocStatus, 'semantic.foreground.brand.primary'>> = 
   next: 'semantic.foreground.brand.primary',
 };
 
-function StatusBadge({ status }: { status: DocStatus }) {
+/** 바뀐 문서는 실제 원인(근거 추가됨 · 결정 바뀜 …), 새 판이 있으면 '새 판 있음' */
+const labelOf = (status: DocStatus, doc: Doc) =>
+  (status === 'stale' || status === 'done') && doc.draft
+    ? '새 판 있음'
+    : status !== 'stale'
+      ? LABELS[status]
+      : doc.changes[0]
+        ? changeBadge(doc.changes[0], doc)
+        : LABELS.stale;
+
+function StatusBadge({ status, doc }: { status: DocStatus; doc: Doc }) {
   if (status === 'stale') {
     return (
       <ContentBadge size="xsmall" variant="solid" sx={highlightSx}>
-        {LABELS[status]}
+        {labelOf(status, doc)}
       </ContentBadge>
     );
   }
@@ -107,7 +118,7 @@ export default function DocTabs({ docs, running, value, onChange, render }: Prop
               onClick={() => onChange(doc.key)}
               trailingContent={
                 <ListCellContent variant="content-badge">
-                  <StatusBadge status={progress.status[doc.key]} />
+                  <StatusBadge status={progress.status[doc.key]} doc={doc} />
                 </ListCellContent>
               }
             >
@@ -129,7 +140,7 @@ export default function DocTabs({ docs, running, value, onChange, render }: Prop
                       variant="caption2"
                       color={status === 'next' ? 'semantic.foreground.brand.primary' : 'semantic.foreground.neutral.secondary'}
                     >
-                      {LABELS[status]}
+                      {labelOf(status, doc)}
                     </Typography>
                   </Box>
                 </TabListItem>

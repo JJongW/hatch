@@ -4,7 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { createIdea, DOC_STEPS, getDocs, getRunning, hashOf, listUsage, markRunning, saveDoc, type DocKey } from '@/lib/storage';
+import { createIdea, DOC_STEPS, getDocs, getRunning, hashOf, listUsage, markRunning, saveDoc, updateDocBody, type DocKey } from '@/lib/storage';
 
 import { runClaude } from '@/lib/claude/run';
 
@@ -36,6 +36,19 @@ describe('generateDoc', () => {
     expect(plan.content).toContain('## 한 줄 요약');
     expect(plan.stale).toBe(false);
     expect(await getRunning(idea.id)).toBeNull();
+  });
+  it('이미 있는 문서를 다시 만들면 지금 판은 그대로 두고 초안으로, 입력 조각 해시를 남긴다', async () => {
+    process.env.FAKE_CLAUDE = 'plan';
+    const idea = await createIdea({ title: '동네 클래스', memo: '' });
+    await generateDoc(idea.id, 'plan');
+    await updateDocBody(idea.id, 'plan', '# 내가 고친 기획안');
+    await generateDoc(idea.id, 'plan');
+    const plan = (await getDocs(idea.id))[0];
+    expect(plan.content).toBe('# 내가 고친 기획안');
+    expect(plan.draft?.content).toContain('## 한 줄 요약');
+    expect(plan.editedAt).toBeDefined();
+    const raw = await fs.readFile(path.join(dir, 'ideas', idea.id, 'docs', 'plan.md'), 'utf8');
+    expect(raw).toMatch(/inputs:\n\s+idea: \w+\n\s+decisions: \w+\n\s+evidence: \w+/);
   });
   it('GENERATABLE은 DOC_STEPS의 7개 key와 같다', () => {
     expect(GENERATABLE).toEqual(DOC_STEPS.map((s) => s.key));

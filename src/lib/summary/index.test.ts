@@ -8,7 +8,7 @@ const PLAN = '## 문제\n퇴근 후 클래스를 찾기 어렵다. [확인 필�
 const ALL: Partial<Record<DocKey, string>> = { plan: PLAN, roadmap: 'r', prd: 'p', spec: 's', data: 'm', 'dev-prompt': 'd', 'design-prompt': 'g' };
 
 const docsWith = (content: Partial<Record<DocKey, string>>, stale: DocKey[] = []): Doc[] =>
-  DOC_STEPS.map((s) => ({ ...s, content: content[s.key] ?? null, stale: stale.includes(s.key) }));
+  DOC_STEPS.map((s) => ({ ...s, content: content[s.key] ?? null, stale: stale.includes(s.key), changes: stale.includes(s.key) ? ['unknown'] : [], draft: null, versions: [] }));
 
 const input = (over: Partial<SummaryInput> = {}): SummaryInput => ({
   idea: { title: '퇴근 후 원데이 클래스', memo: '' },

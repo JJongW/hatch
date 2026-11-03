@@ -5,7 +5,7 @@ import { DOC_STEPS, type Doc, type DocKey } from '@/lib/storage';
 import { chainProgress, summaryLine } from './chain-progress';
 
 const docsWith = (...keys: DocKey[]): Doc[] =>
-  DOC_STEPS.map((s) => ({ ...s, content: keys.includes(s.key) ? '내용' : null, stale: false }));
+  DOC_STEPS.map((s) => ({ ...s, content: keys.includes(s.key) ? '내용' : null, stale: false, changes: [], draft: null, versions: [] }));
 
 const stale = (docs: Doc[], key: DocKey) => docs.map((d) => (d.key === key ? { ...d, stale: true } : d));
 

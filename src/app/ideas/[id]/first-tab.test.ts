@@ -7,7 +7,7 @@ import { firstTab } from './first-tab';
 import type { Doc } from '@/lib/storage';
 
 const docs = (filled: string[]): Doc[] =>
-  DOC_STEPS.map((s) => ({ ...s, content: filled.includes(s.key) ? '본문' : null, stale: false }));
+  DOC_STEPS.map((s) => ({ ...s, content: filled.includes(s.key) ? '본문' : null, stale: false, changes: [], draft: null, versions: [] }));
 
 describe('firstTab', () => {
   it('다음 행동이 문서를 가리키면 그 문서', () => {

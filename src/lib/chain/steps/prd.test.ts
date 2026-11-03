@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
+import { DOC_STEPS } from '@/lib/storage/types';
+
 import { prdStep } from './prd';
 
 const ok = {
@@ -28,7 +30,7 @@ describe('prdStep', () => {
     expect(z.toJSONSchema(prdStep.schema)).toMatchObject({ type: 'object', required: expect.arrayContaining(['background']) });
   });
   it('plan을 extra로 함께 받는다', () => {
-    expect(prdStep.extra).toEqual(['plan']);
+    expect(DOC_STEPS.find((d) => d.key === 'prd')?.extra).toEqual(['plan']);
   });
   it('render는 제목 칸을 모두 담고 요구사항 번호를 준 순서대로 붙인다', () => {
     const md = prdStep.render(ok);
