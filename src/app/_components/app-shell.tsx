@@ -39,6 +39,7 @@ export default function AppShell({ children, demo }: Props) {
               marginInline: 'auto',
               '&:has([data-wide-page])': { maxWidth: '1120px' },
               '&:has([data-focus-page])': { maxWidth: '640px' },
+              '&:has([data-focus-page="wide"])': { maxWidth: '880px' },
               '&:has([data-focus-page]) > [data-demo-banner]': { display: 'none' },
             }}
           >

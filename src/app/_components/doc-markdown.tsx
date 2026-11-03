@@ -61,6 +61,16 @@ const components: Components = {
   pre: Pre,
 };
 
-export default function DocMarkdown({ children }: { children: string }) {
-  return <ReactMarkdown components={components}>{children}</ReactMarkdown>;
+// 공유 화면: 문서 속 바깥 이미지를 열면 보는 사람 IP가 그 서버로 샌다 → 글자로만 (spec 2026-11-03-hosted-po §3-4)
+const hiddenImage: Components = {
+  img: ({ alt }) => (
+    <Typography as="span" variant="body2" color="semantic.foreground.neutral.secondary" sx={{ display: 'inline' }}>
+      {`[이미지${alt ? `: ${alt}` : ''} (공유 화면에서는 숨김)]`}
+    </Typography>
+  ),
+};
+const sharedComponents: Components = { ...components, ...hiddenImage };
+
+export default function DocMarkdown({ children, images = 'show' }: { children: string; images?: 'show' | 'hide' }) {
+  return <ReactMarkdown components={images === 'hide' ? sharedComponents : components}>{children}</ReactMarkdown>;
 }
