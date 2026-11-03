@@ -56,10 +56,11 @@ process.stdin.on('end', () => {
       : { persona: { role: '영업 본부장', goal: '분기 계약 목표 달성', pressure: '대형 고객 이탈 위험' }, request: '엑셀 내보내기를 이번 출시에 넣어 주세요.' };
     console.log(JSON.stringify({ is_error: false, structured_output: out }));
   } else if (mode === 'questions') {
-    // '### 확인 필요 목록' 아래 `- 라벨 (N곳)` 줄마다 하나. 짝수 번째는 고객, 홀수 번째는 개발 담당
+    // '### 확인 필요 목록' 아래 `- 라벨 (N곳)` 줄마다 하나. 고객 → 개발 담당 → 팀이 정할 것 순서로 돈다
     const list = input.split('### 확인 필요 목록')[1] ?? '';
     const labels = [...list.matchAll(/^- (.+) \(\d+곳\)$/gm)].map((m) => m[1]);
-    const items = labels.map((label, i) => ({ label, kind: i % 2 ? 'owner' : 'customer', role: i % 2 ? '개발' : '', question: `${label}은 어떻게 하나요?` }));
+    const kinds = ['customer', 'owner', 'decision'];
+    const items = labels.map((label, i) => ({ label, kind: kinds[i % 3], role: i % 3 === 1 ? '개발' : '', question: `${label}은 어떻게 하나요?` }));
     console.log(JSON.stringify({ is_error: false, structured_output: { items } }));
   } else if (mode === 'usage') {
     console.log(

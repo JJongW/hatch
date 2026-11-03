@@ -19,10 +19,13 @@ export function buildSharePayload({ idea, docs, questions, decisions }: Input): 
     context: CONTEXT_FIELDS.filter((f) => idea.context[f.key].trim()).map((f) => ({ label: f.label, value: idea.context[f.key] })),
     docs: docs.flatMap((d) => (d.content ? [{ label: d.label, content: d.content }] : [])),
     questions: (questions?.items ?? []).map((q) => ({
-      group: q.kind === 'customer' ? '고객에게 물을 것' : `${q.role} 담당자에게 확인할 것`,
+      group: q.kind === 'customer' ? '고객에게 물을 것' : q.kind === 'decision' ? '팀이 정할 것' : `${q.role} 담당자에게 확인할 것`,
       question: q.question,
     })),
-    decisions: decisions.map((d) => ({ question: d.question, status: d.status, answer: d.answer, reason: d.reason })),
+    // 제안은 아직 팀 결정이 아니라 공유하지 않는다 (공유 형식도 정함 · 보류만 받는다)
+    decisions: decisions.flatMap((d) =>
+      d.status === 'proposed' ? [] : [{ question: d.question, status: d.status, answer: d.answer, reason: d.reason }],
+    ),
   };
 }
 

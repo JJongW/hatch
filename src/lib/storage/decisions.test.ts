@@ -34,7 +34,7 @@ describe('결정', () => {
     await expect(saveDecision(idea.id, { ...decided, reason: '' })).rejects.toThrow('이유를 적어 주세요.');
     await expect(saveDecision(idea.id, { ...decided, question: 'a'.repeat(201) })).rejects.toThrow('정할 것은 200자, 답과 이유는 500자까지예요.');
     await expect(saveDecision(idea.id, { ...decided, reason: 'a'.repeat(501) })).rejects.toThrow('정할 것은 200자, 답과 이유는 500자까지예요.');
-    await expect(saveDecision(idea.id, { ...decided, status: 'x' as 'decided' })).rejects.toThrow('정함이나 보류 중 하나를 골라 주세요.');
+    await expect(saveDecision(idea.id, { ...decided, status: 'x' as 'decided' })).rejects.toThrow('제안, 정함, 보류 중 하나를 골라 주세요.');
   });
   it('수정하면 내용 · 시각이 바뀌고 출처 · id는 그대로, 이전 판은 .history에', async () => {
     const idea = await createIdea({ title: 'x', memo: '' });
@@ -66,5 +66,23 @@ describe('결정', () => {
     expect((await listDecisions(idea.id))[0].from).toBe('question');
     const b = await saveDecision(idea.id, { ...decided, from: 'x' as 'manual' });
     expect(b.from).toBe('manual');
+  });
+  it('제안은 답이 있어야 하고, 근거 연결은 중복 · 빈 값을 빼서 저장한다', async () => {
+    const idea = await createIdea({ title: 'x', memo: '' });
+    await expect(saveDecision(idea.id, { ...decided, status: 'proposed', answer: '' })).rejects.toThrow('제안하는 답을 적어 주세요.');
+    const a = await saveDecision(idea.id, { ...decided, status: 'proposed', evidenceIds: ['e1', ' ', 'e1', 'e2'] });
+    expect(a).toMatchObject({ status: 'proposed', evidenceIds: ['e1', 'e2'] });
+    expect((await listDecisions(idea.id))[0].evidenceIds).toEqual(['e1', 'e2']);
+    const b = await saveDecision(idea.id, { ...decided }, a.id);
+    expect(b.status).toBe('decided');
+    expect('evidenceIds' in b).toBe(false);
+  });
+  it('예전 결정(근거 칸 없음)도 그대로 읽힌다', async () => {
+    const idea = await createIdea({ title: 'x', memo: '' });
+    const file = path.join(dir, 'ideas', idea.id, 'decisions.md');
+    await fs.writeFile(file, "---\nversion: 1\nitems:\n  - id: ab12\n    question: 지역\n    status: decided\n    answer: 성수\n    reason: 많다\n    from: question\n    decidedAt: '2026-10-29T00:00:00.000Z'\n---\n");
+    const [d] = await listDecisions(idea.id);
+    expect(d).toMatchObject({ id: 'ab12', status: 'decided', from: 'question' });
+    expect(d.evidenceIds).toBeUndefined();
   });
 });

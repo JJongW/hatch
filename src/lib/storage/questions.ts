@@ -18,7 +18,7 @@ function isQuestionItem(v: unknown): v is QuestionItem {
   const q = v as Record<string, unknown>;
   if (typeof q.label !== 'string' || typeof q.question !== 'string') return false;
   if (!q.question.trim() || q.question.length > QUESTION_MAX) return false;
-  if (q.kind === 'customer') return q.role === '';
+  if (q.kind === 'customer' || q.kind === 'decision') return q.role === '';
   return q.kind === 'owner' && (QUESTION_ROLES as readonly unknown[]).includes(q.role);
 }
 

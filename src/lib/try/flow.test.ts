@@ -31,6 +31,17 @@ describe('reflectDecisions', () => {
     expect(out.endsWith('## 정한 것\n- 첫 출시 지역을 어디로 할 것인가?: 성수동\n- 수요가 있는가?: 보류\n')).toBe(true);
   });
 
+  it('제안은 기획안에 넣지 않는다 (팀이 확정하기 전)', () => {
+    expect(reflectDecisions(PLAN, [{ ...decision('첫 출시 지역을 어디로 할 것인가?'), status: 'proposed' }])).toBe(PLAN);
+  });
+
+  it('근거는 기획안 입력이 아니라 예전 기준 표시를 바꾸지 않는다', () => {
+    const made = generate({ ...START, idea }, 'plan', fixture);
+    const ev = { id: 'e1', text: '퇴근 후 연다', source: 'interview' as const, sourceNote: '', question: '', collectedAt: '' };
+    expect(docsOf({ ...made, evidence: [ev] }).find((d) => d.key === 'plan')?.stale).toBe(false);
+    expect(docsOf({ ...made, decisions: [{ ...decision('x'), status: 'proposed' }] }).find((d) => d.key === 'plan')?.stale).toBe(false);
+  });
+
   it('다른 절의 같은 글은 남긴다', () => {
     const plan = '## 위험\n- 첫 출시 지역을 어디로 할 것인가?\n';
     expect(reflectDecisions(plan, [decision('첫 출시 지역을 어디로 할 것인가?')])).toContain('## 위험\n- 첫 출시 지역을 어디로 할 것인가?');

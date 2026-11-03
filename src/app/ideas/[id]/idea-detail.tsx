@@ -24,7 +24,7 @@ import StatusCards, { type DetailTab } from './status-cards';
 import type { Doc, DocKey, IdeaContext } from '@/lib/storage';
 import type { QuestionView, Summary } from '@/lib/summary';
 import { formatCost, formatTokens } from '@/lib/usage/summary';
-import type { ContextState, DecisionState, DocActionState, FormState, QuestionsState, ShareActionState, ShareOp } from '../../actions';
+import type { ContextState, DecisionState, DocActionState, EvidenceState, FormState, QuestionsState, ShareActionState, ShareOp } from '../../actions';
 import SharePanel, { type ShareInfo } from './share-panel';
 
 // 탭 안 위 여백. 숨은 탭은 Montage가 감춘다
@@ -38,6 +38,7 @@ type Props = {
   contextFields: ReadonlyArray<{ key: keyof IdeaContext; label: string }>;
   saveContextAction: (prev: ContextState, formData: FormData) => Promise<ContextState>;
   saveDecisionAction: (decisionId: string | null, prev: DecisionState, formData: FormData) => Promise<DecisionState>;
+  saveEvidenceAction: (evidenceId: string | null, prev: EvidenceState, formData: FormData) => Promise<EvidenceState>;
   removeDecisionAction: (decisionId: string) => Promise<void>;
   summary: Summary;
   questions: QuestionView;
@@ -69,6 +70,7 @@ export default function IdeaDetail({
   contextFields,
   saveContextAction,
   saveDecisionAction,
+  saveEvidenceAction,
   removeDecisionAction,
   summary,
   questions,
@@ -120,7 +122,7 @@ export default function IdeaDetail({
     setSection('docs');
     setTab(key);
   };
-  const stats = detailStats(docs, busy ?? running, questions, summary.decisions);
+  const stats = detailStats(docs, busy ?? running, questions, summary.decisions, summary.evidence.items);
   const tabCount = (n: number) => (n > 0 ? ` ${n}` : '');
   // 저장에 성공하면 읽기로 돌아간다
   const saveIdea = async (prev: FormState, fd: FormData) => {
@@ -234,10 +236,10 @@ export default function IdeaDetail({
             />
           </TabPanel>
           <TabPanel value="questions" mountMode="force-mount" sx={PANEL}>
-            <QuestionsPanel view={questions} action={makeQuestionsAction} saveDecision={saveDecisionAction} onBusy={setAsking} disabled={generating} locked={formIn === 'decisions'} onForm={onQuestionsForm} />
+            <QuestionsPanel view={questions} action={makeQuestionsAction} saveDecision={saveDecisionAction} saveEvidence={saveEvidenceAction} onBusy={setAsking} disabled={generating} locked={formIn === 'decisions'} onForm={onQuestionsForm} />
           </TabPanel>
           <TabPanel value="decisions" mountMode="force-mount" sx={PANEL}>
-            <DecisionsPanel decisions={summary.decisions} saveDecision={saveDecisionAction} removeDecision={removeDecisionAction} disabled={generating} locked={formIn === 'questions'} onForm={onDecisionsForm} />
+            <DecisionsPanel decisions={summary.decisions} evidence={summary.evidence.items} saveDecision={saveDecisionAction} removeDecision={removeDecisionAction} disabled={generating} locked={formIn === 'questions'} onForm={onDecisionsForm} />
           </TabPanel>
           <TabPanel value="evidence" mountMode="force-mount" sx={PANEL}>
             <EvidencePanel summary={summary} unknownPlaces={questions.unknownTotal} onOpenQuestions={() => openSection('questions')} />

@@ -41,11 +41,19 @@ function Card({ title, value, caption, onClick }: { title: string; value: string
   );
 }
 
-/** 현황 3칸: 문서, 확인 질문, 결정. 누르면 그 탭 (spec detail-dashboard §2-3) */
+/** 현황 4칸: 문서, 확인 질문, 근거, 결정. 근거와 결정은 따로 센다 (spec 2026-11-03 §1). 누르면 그 탭 */
 export default function StatusCards({ stats, onOpen }: Props) {
-  const { docs, questions, decisions } = stats;
+  const { docs, questions, decisions, evidence } = stats;
+  const decisionCaption = [`안 정한 것 ${decisions.open}개`, decisions.proposed > 0 && `제안 ${decisions.proposed}개`, decisions.deferred > 0 && `보류 ${decisions.deferred}개`]
+    .filter(Boolean)
+    .join(', ');
   return (
-    <Box as="section" aria-label="현황" sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '8px' }}>
+    <Box
+      as="section"
+      aria-label="현황"
+      // 휴대폰 폭에선 2칸씩 두 줄
+      sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: '8px', '@media (max-width: 600px)': { gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' } }}
+    >
       <Card
         title="문서"
         value={`${docs.done} / ${docs.total}`}
@@ -59,11 +67,12 @@ export default function StatusCards({ stats, onOpen }: Props) {
         onClick={() => onOpen('questions')}
       />
       <Card
-        title="결정"
-        value={`${decisions.decided}개`}
-        caption={`안 정한 것 ${decisions.open}개${decisions.deferred > 0 ? `, 보류 ${decisions.deferred}개` : ''}`}
-        onClick={() => onOpen('decisions')}
+        title="근거"
+        value={`${evidence.total}개`}
+        caption={evidence.total > 0 ? `결정에 쓴 것 ${evidence.linked}개` : '확인한 사실'}
+        onClick={() => onOpen('evidence')}
       />
+      <Card title="결정" value={`${decisions.decided}개`} caption={decisionCaption} onClick={() => onOpen('decisions')} />
     </Box>
   );
 }

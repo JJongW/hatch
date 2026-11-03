@@ -7,7 +7,7 @@ export const questionsSchema = z.object({
   items: z.array(
     z.object({
       label: z.string(),
-      kind: z.enum(['customer', 'owner']),
+      kind: z.enum(['customer', 'owner', 'decision']),
       role: z.enum(['', ...QUESTION_ROLES]),
       question: z.string(),
     }),
@@ -28,7 +28,7 @@ export function validateQuestions(labels: string[], raw: unknown): QuestionItem[
     if (typeof label !== 'string' || !want.has(label) || byLabel.has(label) || typeof question !== 'string') continue;
     const q = question.replace(/\s+/g, ' ').trim();
     if (!q || q.length > QUESTION_MAX) continue;
-    if (kind === 'customer') byLabel.set(label, { label, kind, role: '', question: q });
+    if (kind === 'customer' || kind === 'decision') byLabel.set(label, { label, kind, role: '', question: q });
     else if (kind === 'owner' && (role === '' || isRole(role))) {
       byLabel.set(label, { label, kind, role: role === '' ? '기획' : role, question: q });
     }

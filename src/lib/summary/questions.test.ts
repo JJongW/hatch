@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { Decision, QuestionItem, QuestionRole, QuestionSet } from '@/lib/storage/types';
+import type { Decision, Evidence, QuestionItem, QuestionRole, QuestionSet } from '@/lib/storage/types';
 
 import { questionView } from './questions';
 
@@ -15,7 +15,7 @@ const decision = (question: string): Decision => ({
 describe('questionView', () => {
   it('안 만들었으면 수만', () => {
     expect(questionView(null, { groups: [G('a', 3), G('b', 1)], unnamed: 2 }, [])).toEqual({
-      made: false, customer: [], owner: [], answered: 0, newLabels: 0, unknownTotal: 6, labelTotal: 2, unnamed: 2, cut: 0, limit: 30,
+      made: false, customer: [], owner: [], decision: [], answered: 0, byEvidence: 0, byDecision: 0, newLabels: 0, unknownTotal: 6, labelTotal: 2, unnamed: 2, cut: 0, limit: 30,
     });
   });
   it('고객 · 역할 순서로 묶고 지금 수를 붙이며, 문서에서 사라진 라벨은 숨긴다', () => {
@@ -31,6 +31,18 @@ describe('questionView', () => {
     const v = questionView(set([c('b', '첫 출시 지역은?')]), { groups: [G('b', 2)], unnamed: 0 }, [decision(' 첫  출시 지역은? ')]);
     expect(v.customer).toEqual([]);
     expect(v.answered).toBe(1);
+  });
+  it('근거로 답한 질문도 답한 것으로 빼고, 근거 수와 결정 수를 따로 센다', () => {
+    const ev: Evidence = { id: 'e1', text: '퇴근 후 앱을 연다', source: 'interview', sourceNote: '', question: '언제 여나요?', collectedAt: '2026-11-03T00:00:00.000Z' };
+    const v = questionView(set([c('a', '언제 여나요?'), c('b', '첫 출시 지역은?')]), { groups: [G('a', 1), G('b', 1)], unnamed: 0 }, [decision('첫 출시 지역은?')], [ev]);
+    expect(v.customer).toEqual([]);
+    expect([v.answered, v.byEvidence, v.byDecision]).toEqual([2, 1, 1]);
+  });
+  it('팀이 정할 것은 따로 묶는다', () => {
+    const d: QuestionItem = { label: 'a', kind: 'decision', role: '', question: '범위는?' };
+    const v = questionView(set([d]), { groups: [G('a', 1)], unnamed: 0 }, []);
+    expect(v.decision.map((q) => q.question)).toEqual(['범위는?']);
+    expect(v.customer).toEqual([]);
   });
   it('새 라벨은 30개 안에서만 세고, 31번째부터는 빠진 수', () => {
     const groups = Array.from({ length: 32 }, (_, i) => G(`l${i}`, 40 - i));
