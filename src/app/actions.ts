@@ -9,7 +9,13 @@ import { makeQuestions } from '@/lib/questions';
 import {
   CONTEXT_FIELDS,
   createIdea,
+  getDocs,
+  getIdea,
+  getQuestions,
+  getShareState,
   isValidId,
+  listDecisions,
+  saveShareState,
   removeDecision,
   saveDecision,
   StorageError,
@@ -21,6 +27,9 @@ import {
   type DocKey,
   type IdeaContext,
 } from '@/lib/storage';
+import { buildSharePayload } from '@/lib/share/build';
+import { sendPublish, ShareError } from '@/lib/share/client';
+import { newShareToken } from '@/lib/share/token';
 import { ChainError as ToolError, runTool, TOOLS, type ToolKey, type ToolSource } from '@/lib/tools';
 
 export type FormState = {
@@ -121,6 +130,12 @@ export async function removeDecisionAction(id: string, decisionId: string) {
 
 export async function trashIdeaAction(id: string) {
   if (isDemo()) return; // 상단 안내가 읽기 전용임을 알린다
+  // 공유 중이면 밖의 사본부터 지운다. 못 지우면 휴지통으로 옮기지 않는다 (옮기면 화면에서 끌 길이 없다)
+  const share = await getShareState(id);
+  if (share?.token) {
+    await sendPublish({ op: 'delete', token: share.token });
+    await saveShareState(id, { token: null, closedAt: new Date().toISOString() });
+  }
   await trashIdea(id);
   revalidateIdeas();
   redirect('/ideas');
@@ -211,5 +226,39 @@ export async function runToolAction(key: ToolKey, _prev: ToolActionState, formDa
       error:
         e instanceof ToolError || e instanceof StorageError ? e.message : '도구를 실행하지 못했어요. 서버 로그를 확인해 주세요.',
     };
+  }
+}
+
+export type ShareActionState = { error?: string; doneAt?: number };
+export type ShareOp = 'publish' | 'refresh' | 'new' | 'off';
+
+// 공유 (spec 2026-11-03-hosted-po §3). publish = 새로 공유, refresh = 같은 링크에 지금 내용, new = 옛 링크를 끄고 새 링크, off = 끄기
+export async function shareAction(id: string, op: ShareOp): Promise<ShareActionState> {
+  if (isDemo() || !isValidId(id)) return { error: DEMO_MESSAGE };
+  try {
+    const state = await getShareState(id);
+    const current = state?.token ?? null;
+    if (op === 'off' || op === 'new') {
+      if (current) await sendPublish({ op: 'delete', token: current });
+      if (op === 'off') {
+        await saveShareState(id, { token: null, closedAt: new Date().toISOString() });
+        revalidatePath(`/ideas/${id}`);
+        return { doneAt: Date.now() };
+      }
+    }
+    const idea = await getIdea(id);
+    if (!idea) return { error: '아이디어를 찾지 못했어요.' };
+    const [docs, questions, decisions] = await Promise.all([getDocs(id), getQuestions(id).catch(() => null), listDecisions(id)]);
+    const payload = buildSharePayload({ idea, docs, questions, decisions });
+    const token = op === 'refresh' && current ? current : newShareToken();
+    await sendPublish({ op: 'put', token, ideaId: id, payload });
+    const now = new Date().toISOString();
+    await saveShareState(id, { token, createdAt: op === 'refresh' && state?.token ? state.createdAt : now, publishedAt: now });
+    revalidatePath(`/ideas/${id}`);
+    return { doneAt: Date.now() };
+  } catch (e) {
+    if (e instanceof ShareError || e instanceof StorageError) return { error: e.message };
+    console.error('[share] 공유 실패', e);
+    return { error: '공유하지 못했어요. 서버 로그를 확인해 주세요.' };
   }
 }
