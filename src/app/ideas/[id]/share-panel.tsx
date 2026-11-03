@@ -1,7 +1,7 @@
 'use client';
 
-import { useActionState, useState } from 'react';
-import { Box, Button, FlexBox, SectionMessage, Typography } from '@montage-ui/core';
+import { useActionState } from 'react';
+import { Box, Button, FlexBox, SectionMessage, Typography, useToast } from '@montage-ui/core';
 
 import Panel from '@/components/panel';
 
@@ -23,7 +23,7 @@ export default function SharePanel({ active, counts, action, disabled, onClose }
     (_prev, fd) => action(String(fd.get('op')) as ShareOp),
     {},
   );
-  const [copied, setCopied] = useState(false);
+  const toast = useToast();
   const ask = useConfirmSubmit();
   const confirmOff = ask({ title: '공유를 끌까요?', content: '이 링크는 바로 "공유가 끝난 링크"가 되고, 다시 켤 수 없어요. 원본은 맥에 그대로 있어요.', confirm: '공유 끄기', negative: true });
   const confirmNew = ask({ title: '새 링크를 만들까요?', content: '지금 링크는 바로 끝나요. 새 링크를 다시 보내야 해요.', confirm: '새 링크' });
@@ -39,11 +39,16 @@ export default function SharePanel({ active, counts, action, disabled, onClose }
     </form>
   );
 
-  const copy = async () => {
+  // 결과는 Toast로 (code-block과 같은 방식). 클립보드가 막히면 링크를 선택해 둔다
+  const copy = () => {
     if (!active) return;
-    await navigator.clipboard.writeText(active.link);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    const select = () => {
+      const el = document.getElementById('share-link');
+      if (el) window.getSelection()?.selectAllChildren(el);
+      toast({ variant: 'cautionary', content: '복사가 막혀 링크를 선택해 뒀어요. ⌘C로 복사해요.' });
+    };
+    if (!navigator.clipboard) return select();
+    navigator.clipboard.writeText(active.link).then(() => toast({ variant: 'positive', content: '링크를 복사했어요' }), select);
   };
 
   return (
@@ -55,15 +60,15 @@ export default function SharePanel({ active, counts, action, disabled, onClose }
               공유 중
             </Typography>
             <FlexBox alignItems="center" gap="8px" sx={{ flexWrap: 'wrap' }}>
-              <Box as="code" sx={{ fontSize: '14px', wordBreak: 'break-all', flex: '1 1 320px' }}>
+              <Box as="code" id="share-link" sx={{ fontSize: '14px', wordBreak: 'break-all', flex: '1 1 320px' }}>
                 {active.link}
               </Box>
               <Button size="small" variant="outlined" color="assistive" onClick={copy}>
-                {copied ? '복사했어요' : '링크 복사'}
+                링크 복사
               </Button>
             </FlexBox>
             <Typography variant="label1" color="semantic.foreground.neutral.secondary">
-              {`${active.publishedAt}에 올린 사본이에요. 맥에서 고친 내용은 '공유 새로고침'을 눌러야 보여요. 지금 누르면 ${what}가 올라가요.`}
+              {`${active.publishedAt}에 올린 사본이에요. 맥에서 고친 내용은 "공유 새로고침"을 눌러야 보여요. 지금 누르면 ${what}가 올라가요.`}
             </Typography>
             <FlexBox gap="8px" sx={{ flexWrap: 'wrap' }}>
               {op('refresh', '공유 새로고침', { primary: true })}

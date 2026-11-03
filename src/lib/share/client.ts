@@ -7,10 +7,21 @@ import { signPublish } from './sign';
 // 맥 → Vercel /api/publish (spec §3-2). 맥은 Supabase 키가 아니라 발행 토큰 하나만 갖는다
 export class ShareError extends Error {}
 
+// https만, 또는 로컬 확인용 http://localhost. 정규식 대신 URL로 읽어 userinfo(`http://localhost:@evil.com`) 같은 꼼수를 막는다
+const safeUrl = (raw: string | undefined) => {
+  try {
+    const u = new URL(raw?.trim() ?? '');
+    if (u.username || u.password) return null;
+    return u.protocol === 'https:' || (u.protocol === 'http:' && u.hostname === 'localhost') ? u.toString() : null;
+  } catch {
+    return null;
+  }
+};
+
 const config = () => {
-  const url = process.env.HATCH_PUBLISH_URL?.trim();
+  const url = safeUrl(process.env.HATCH_PUBLISH_URL);
   const secret = process.env.HATCH_PUBLISH_TOKEN?.trim() ?? '';
-  return url && /^https:\/\/|^http:\/\/localhost[:/]/.test(url) && secret.length >= PUBLISH_SECRET_MIN ? { url, secret } : null;
+  return url && secret.length >= PUBLISH_SECRET_MIN ? { url, secret } : null;
 };
 
 /** 공유 버튼을 보일지. 설정이 없으면 상세 화면에 버튼이 없다 */

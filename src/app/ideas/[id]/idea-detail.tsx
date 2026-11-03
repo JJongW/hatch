@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useCallback, useRef, useState } from 'react';
-import { Box, Button, ContentBadge, FlexBox, Tab, TabList, TabListItem, TabPanel, TextButton } from '@montage-ui/core';
+import { useActionState, useCallback, useRef, useState } from 'react';
+import { Box, Button, ContentBadge, FlexBox, SectionMessage, Tab, TabList, TabListItem, TabPanel, TextButton } from '@montage-ui/core';
 
 import { useDemo } from '../../_components/demo';
 import IdeaForm from '../../_components/idea-form';
@@ -49,7 +49,8 @@ type Props = {
   generateAction: (key: DocKey, prev: DocActionState) => Promise<DocActionState>;
   updateDocAction: (key: DocKey, prev: DocActionState, formData: FormData) => Promise<DocActionState>;
   updateAction: (prev: FormState, formData: FormData) => Promise<FormState>;
-  trashAction: () => Promise<void>;
+  /** 성공하면 목록으로 이동. 공유를 못 끄면 error (휴지통으로 안 옮김) */
+  trashAction: () => Promise<{ error?: string }>;
   /** 이 아이디어에 쓴 사용량 합계. 기록이 없으면 null (줄을 숨김) */
   usage: { calls: number; tokens: number; cost: number } | null;
   /** false면 수정 버튼을 숨긴다 (흐름 체험) */
@@ -97,6 +98,7 @@ export default function IdeaDetail({
 
   const [editing, setEditing] = useState(false);
   const [sharing, setSharing] = useState(false);
+  const [trashState, trashFormAction] = useActionState<{ error?: string }>(() => trashAction(), {});
   const [tab, setTab] = useState<DocKey>(() => firstTab(docs, summary.next));
   // 본문 탭. 처음은 문서 (spec detail-dashboard §2-4)
   const [section, setSection] = useState<DetailTab>('docs');
@@ -177,7 +179,7 @@ export default function IdeaDetail({
         <Box sx={{ marginBottom: '24px' }}>
           <IdeaForm action={saveIdea} submitLabel="수정 저장" primary={false} initial={idea} folders={folders} disabled={generating} />
           <FlexBox justifyContent="space-between" sx={{ marginTop: '8px' }}>
-            <form action={trashAction} onSubmit={confirmTrash}>
+            <form action={trashFormAction} onSubmit={confirmTrash}>
               <Button type="submit" variant="outlined" color="assistive" size="small" disabled={generating}>
                 휴지통으로
               </Button>
@@ -186,6 +188,11 @@ export default function IdeaDetail({
               취소
             </Button>
           </FlexBox>
+          {trashState.error && (
+            <Box sx={{ marginTop: '8px' }}>
+              <SectionMessage variant="negative">{trashState.error}</SectionMessage>
+            </Box>
+          )}
         </Box>
       )}
       {/* 아이디어 수정 중에도 마운트해 둔다 (열어 둔 맥락 폼이 사라지지 않게).

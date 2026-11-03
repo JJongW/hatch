@@ -21,8 +21,12 @@ describe('맥 → 올리기', () => {
     vi.stubEnv('HATCH_PUBLISH_TOKEN', 'short');
     expect(isShareReady()).toBe(false);
     vi.stubEnv('HATCH_PUBLISH_TOKEN', SECRET);
-    vi.stubEnv('HATCH_PUBLISH_URL', 'http://evil.example.com/api/publish');
-    expect(isShareReady()).toBe(false);
+    for (const url of ['http://evil.example.com/api/publish', 'http://localhost.evil.com/api/publish', 'http://localhost:@evil.com/api/publish', 'https://u:p@hatch.example.com/x', 'not a url']) {
+      vi.stubEnv('HATCH_PUBLISH_URL', url);
+      expect(isShareReady(), url).toBe(false);
+    }
+    vi.stubEnv('HATCH_PUBLISH_URL', 'http://localhost:3402/api/publish');
+    expect(isShareReady()).toBe(true);
   });
 
   it('링크는 같은 사이트의 /s/<토큰>', () => {

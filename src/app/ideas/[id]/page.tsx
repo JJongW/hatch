@@ -3,6 +3,7 @@ import { connection } from 'next/server';
 
 import { GENERATABLE } from '@/lib/chain';
 import { collectUnknowns } from '@/lib/questions';
+import { isDemo } from '@/lib/demo';
 import { buildSharePayload, shareCounts } from '@/lib/share/build';
 import { isShareReady, shareLink } from '@/lib/share/client';
 import { CONTEXT_FIELDS, folderNames, getDocs, getIdea, getQuestions, getRunning, getShareState, groupFolders, isValidId, listDecisions, listIdeas, listToolResults, listUsage } from '@/lib/storage';
@@ -47,8 +48,10 @@ export default async function IdeaPage({ params }: { params: Promise<{ id: strin
   const questions = questionView(questionSet, collectUnknowns(docs), decisions);
   const used = summarizeUsage(usageLog.entries, id);
   const usage = used.calls > 0 ? { calls: used.calls, tokens: used.tokens, cost: used.cost } : null;
-  const shareState = isShareReady() ? await getShareState(id).catch(() => null) : null;
-  const share = isShareReady()
+  // 데모에선 버튼이 없으니 계산하지 않는다
+  const shareOn = isShareReady() && !isDemo();
+  const shareState = shareOn ? await getShareState(id).catch(() => null) : null;
+  const share = shareOn
     ? {
         active: shareState?.token
           ? { link: shareLink(shareState.token), publishedAt: new Date(shareState.publishedAt).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }) }
