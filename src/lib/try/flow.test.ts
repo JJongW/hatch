@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { Decision, DocKey } from '../storage/types';
 import { section } from '../summary/parse';
-import { applyDraft, docsOf, editDoc, generate, keepCurrent, reflectDecisions, START, tasksDone, type TryFixture, type TryState } from './flow';
+import { applyDraft, docsOf, editDoc, generate, keepCurrent, reflectDecisions, START, tasksDone, tryNext, type TryFixture, type TryState } from './flow';
 
 const PLAN = ['## 문제', '본문', '', '## 확인 필요', '- 첫 출시 지역을 어디로 할 것인가?', '- 수요가 있는가? [확인 필요: 사용자 조사]', '', '## 메모', '- 남김'].join('\n');
 const decision = (question: string, answer = '성수동'): Decision => ({
@@ -105,5 +105,34 @@ describe('tasksDone', () => {
     expect(tasksDone(s)[4]).toBe(false);
     s = applyDraft(generate(s, 'plan', fixture), 'plan');
     expect(tasksDone({ ...s, reviews: 2, vocRan: true })).toEqual([true, true, true, true, true, true, true]);
+  });
+});
+
+describe('tryNext', () => {
+  it('지금 과제와 주 행동, 그다음이 과제 목록과 같은 단계를 가리킨다', () => {
+    let s: TryState = { ...START, idea };
+    expect(tryNext(s)).toEqual({ task: 1, next: { kind: 'write-context' }, then: { kind: 'make-doc', doc: 'plan' } });
+    s = { ...s, context: { ...s.context, goal: '예약 전환' } };
+    expect(tryNext(s).next).toEqual({ kind: 'make-doc', doc: 'plan' });
+    s = generate(s, 'plan', fixture);
+    expect(tryNext(s)).toMatchObject({ task: 3, next: { kind: 'make-questions' }, then: { kind: 'decide' } });
+    s = { ...s, questions: { createdAt: '', labels: [], items: [] } };
+    expect(tryNext(s).next).toEqual({ kind: 'decide' });
+    s = { ...s, decisions: [decision('첫 출시 지역을 어디로 할 것인가?')] };
+    expect(tryNext(s).next).toEqual({ kind: 'check-stale', doc: 'plan' });
+    s = applyDraft(generate(s, 'plan', fixture), 'plan');
+    expect(tryNext(s)).toEqual({ task: 5, next: { kind: 'review-prd' }, then: { kind: 'collect-voc' } });
+    expect(tryNext({ ...s, reviews: 2, vocRan: true })).toEqual({ task: -1, next: { kind: 'done' }, then: null });
+  });
+});
+
+describe('tryNext 경계', () => {
+  it('제안만 있으면 결정부터, 손으로 고쳐 정한 것이 빠졌으면 바뀜이 아니라 다시 만들기', () => {
+    let s: TryState = { ...START, idea, context: { ...START.context, goal: 'g' } };
+    s = { ...generate(s, 'plan', fixture), questions: { createdAt: '', labels: [], items: [] } };
+    expect(tryNext({ ...s, decisions: [{ ...decision('첫 출시 지역을 어디로 할 것인가?'), status: 'proposed' }] }).next).toEqual({ kind: 'decide' });
+    s = { ...s, decisions: [decision('첫 출시 지역을 어디로 할 것인가?')] };
+    s = applyDraft(generate(s, 'plan', fixture), 'plan', '# 기획안\n정한 것 없음');
+    expect(tryNext(s).next).toEqual({ kind: 'make-doc', doc: 'plan' });
   });
 });

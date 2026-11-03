@@ -1,6 +1,7 @@
 // 흐름 체험(/try) 상태. 서버에 쓰지 않고 브라우저 메모리에서만 바뀐다 (spec 2026-11-02-try §4)
 // 화면 컴포넌트와 같은 모양(Doc, Decision, QuestionSet)으로 만들어 실제 상세 화면을 그대로 쓴다
 import { norm } from '../summary/parse';
+import type { NextAction } from '../summary';
 import { docInputs, sourceOfInput } from '../storage/doc-inputs';
 import { DOC_STEPS, EMPTY_CONTEXT, type Decision, type Doc, type DocChange, type DocKey, type Evidence, type IdeaContext, type QuestionSet } from '../storage/types';
 
@@ -144,4 +145,40 @@ export function tasksDone(s: TryState): boolean[] {
     s.reviews >= 2,
     s.vocRan,
   ];
+}
+
+/** 과제 i의 주 행동 (TASKS 순서). 과제 목록의 "지금", 상세의 "다음 할 일", "그다음"이 모두 이 값을 쓴다 (spec 2026-11-03 §6) */
+// 과제 0(아이디어 남기기)은 상세 화면이 뜨기 전 단계라 주 행동이 없다 (화면은 입력 폼만 보인다) → done
+function actionOf(s: TryState, task: number): NextAction {
+  switch (task) {
+    case 1:
+      return { kind: 'write-context' };
+    case 2:
+      return { kind: 'make-doc', doc: 'plan' };
+    case 3:
+      return { kind: 'make-questions' };
+    case 4: {
+      // 결정을 남겼으면 기획안을 다시 만들어 반영, 아니면 결정부터. "바뀜"은 실제로 바뀌었거나 새 판이 있을 때만
+      if (settled(s.decisions).length === 0) return { kind: 'decide' };
+      const plan = docsOf(s).find((d) => d.key === 'plan');
+      return plan && (plan.stale || plan.draft) ? { kind: 'check-stale', doc: 'plan' } : { kind: 'make-doc', doc: 'plan' };
+    }
+    case 5:
+      return { kind: 'review-prd' };
+    case 6:
+      return { kind: 'collect-voc' };
+    default:
+      return { kind: 'done' };
+  }
+}
+
+export type TryNext = { task: number; next: NextAction; then: NextAction | null };
+
+/** 지금 과제(-1 = 모두 마침)와 그 주 행동, 그다음 과제의 주 행동 */
+export function tryNext(s: TryState): TryNext {
+  const done = tasksDone(s);
+  const task = done.indexOf(false);
+  if (task === -1) return { task, next: { kind: 'done' }, then: null };
+  const following = done.findIndex((d, i) => i > task && !d);
+  return { task, next: actionOf(s, task), then: following === -1 ? null : actionOf(s, following) };
 }

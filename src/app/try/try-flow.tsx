@@ -16,7 +16,8 @@ import { collectUnknowns } from '@/lib/questions/collect';
 import { CONTEXT_FIELDS, DOC_STEPS, EVIDENCE_MAX, EVIDENCE_SOURCES, type Decision, type DocKey, type Evidence, type IdeaContext } from '@/lib/storage/types';
 import { questionView, summarize, vocEvidence } from '@/lib/summary';
 import { TASKS } from '@/lib/survey/questions';
-import { applyDraft, docsOf, editDoc, generate, keepCurrent, START, tasksDone, type TryFixture, type TryState } from '@/lib/try/flow';
+import { thenLabel } from '../ideas/[id]/next-band';
+import { applyDraft, docsOf, editDoc, generate, keepCurrent, START, tasksDone, tryNext, type TryFixture, type TryState } from '@/lib/try/flow';
 import type { ContextState, DecisionState, DocActionState, EvidenceState, FormState, QuestionsState } from '../actions';
 import { decisionValues, evidenceValues } from '../_components/form-values';
 import TryTool from './try-tool';
@@ -29,8 +30,8 @@ const ALL_KEYS = DOC_STEPS.map((d) => d.key);
 
 const box = (theme: Theme) => ({ border: `1px solid ${theme.semantic.line.neutral.primary}`, borderRadius: '12px', padding: '16px' });
 
-function TaskList({ done }: { done: boolean[] }) {
-  const current = done.indexOf(false);
+// current는 tryNext의 지금 과제 — 상세의 "다음 할 일"과 같은 값
+function TaskList({ done, current }: { done: boolean[]; current: number }) {
   return (
     <Box as="ol" sx={(t: Theme) => ({ ...box(t), listStyle: 'none', margin: 0, display: 'flex', flexDirection: 'column', gap: '8px' })} aria-label="체험 과제">
       {TASKS.map((task, i) => (
@@ -160,7 +161,9 @@ export default function TryFlow({ fixture }: { fixture: TryFixture }) {
     setRound((r) => r + 1);
   };
 
-  const summary = state.idea
+  // 체험은 과제 순서가 다음 할 일을 정한다 (위 과제 목록 · 상세 "다음 할 일" · "그다음"이 한 값)
+  const now = tryNext(state);
+  const base = state.idea
     ? summarize({
         idea: state.idea,
         docs,
@@ -172,7 +175,15 @@ export default function TryFlow({ fixture }: { fixture: TryFixture }) {
         questionsMade: state.questions !== null,
       })
     : null;
+  const summary = base && { ...base, next: now.next, then: now.then };
   const { prdReview, voc } = fixture.tools;
+  // 입력 칸의 줄 수와 결과의 건수가 다르면 그 이유를 그대로 밝힌다 (지어낸 수 없이, 결과 파일의 total만 씀)
+  const vocShown = fixture.voc.input.split('\n').filter(Boolean).length;
+  const vocTotal = vocEvidence(fixture.voc.data)?.total ?? null;
+  const vocNote =
+    vocTotal === null || vocTotal === vocShown
+      ? `예시 고객 의견 ${vocShown}줄이 채워져 있어요. 고쳐도 결과는 예시 그대로예요.`
+      : `예시 결과는 고객 의견 ${vocTotal}줄로 만들었는데 원문 전체는 남아 있지 않아요. 여기에는 결과에 대표로 나온 ${vocShown}줄만 채웠어요. 고쳐도 결과는 예시 그대로예요.`;
 
   return (
     // 데모에서도 체험 화면의 버튼은 보이게 한다. 서버로는 아무것도 보내지 않는다
@@ -182,7 +193,7 @@ export default function TryFlow({ fixture }: { fixture: TryFixture }) {
         <SectionMessage variant="info">
           체험 모드예요. 결과는 미리 만든 예시이고, 아무것도 저장하지 않아요. 실제 생성은 1~2분 걸려요.
         </SectionMessage>
-        <TaskList done={done} />
+        <TaskList done={done} current={now.task} />
 
         {!state.idea || !summary ? (
           <Box sx={box}>
@@ -226,6 +237,22 @@ export default function TryFlow({ fixture }: { fixture: TryFixture }) {
                 goTool={setView}
               />
             </Box>
+
+            {/* 도구 화면에서도 지금 과제의 주 행동은 하나 (tryNext). 이 도구가 지금 과제가 아니면 그리로 안내 */}
+            {view !== 'detail' && now.task !== -1 && now.next.kind !== (view === 'prd-review' ? 'review-prd' : 'collect-voc') && (
+              <FlexBox alignItems="center" justifyContent="space-between" gap="12px" sx={(t: Theme) => ({ ...box(t), flexWrap: 'wrap' })}>
+                <Typography variant="body2">지금 과제: {TASKS[now.task]}</Typography>
+                <Button
+                  size="small"
+                  onClick={() => setView(now.next.kind === 'review-prd' ? 'prd-review' : now.next.kind === 'collect-voc' ? 'voc' : 'detail')}
+                >
+                  {/* 도구 과제가 아니면 상세로 옮기기만 한다. 실제 행동은 상세의 "다음 할 일" 버튼이 한다 */}
+                  {now.next.kind === 'review-prd' || now.next.kind === 'collect-voc'
+                    ? thenLabel(now.next, (k) => DOC_STEPS.find((d) => d.key === k)?.label ?? k)
+                    : '아이디어 상세로'}
+                </Button>
+              </FlexBox>
+            )}
 
             {view === 'prd-review' && (
               <TryTool
@@ -277,7 +304,7 @@ export default function TryFlow({ fixture }: { fixture: TryFixture }) {
                   <FlexBox flexDirection="column" gap="4px">
                     <TextArea defaultValue={fixture.voc.input} minRows={8} maxRows={14} width="100%" aria-label="VOC" />
                     <Typography variant="caption1" color="semantic.foreground.neutral.tertiary">
-                      예시 고객 의견이 채워져 있어요. 고쳐도 결과는 예시 그대로예요.
+                      {vocNote}
                     </Typography>
                   </FlexBox>
                 }

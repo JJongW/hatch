@@ -212,3 +212,13 @@ describe('vocSummary', () => {
     expect(vocSummary(computeVoc({ topics: [], items: [] }, { lines: ['a'] }))).toBeNull();
   });
 });
+
+describe('VOC 입력 원문 (spec 2026-11-03 §5)', () => {
+  it('결과에 분석한 줄을 그대로 남기고, 예전 결과는 null', async () => {
+    const { computeVoc, vocLines } = await import('./compute');
+    const r = computeVoc({ topics: [{ name: '가격', description: 'd' }], items: [{ line: 1, topic: '가격', severity: 3 }] }, { lines: ['비싸요', '느려요'] });
+    expect(r.lines).toEqual(['비싸요', '느려요']);
+    expect(vocLines(r)).toEqual(['비싸요', '느려요']);
+    expect(vocLines({ total: 24, topics: [] })).toBeNull();
+  });
+});

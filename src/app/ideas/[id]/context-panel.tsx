@@ -16,6 +16,9 @@ type Props = {
   action: (prev: ContextState, formData: FormData) => Promise<ContextState>;
   /** 문서 생성 중이면 저장을 막는다 */
   disabled: boolean;
+  /** 밖에서 여닫기 ("다음 할 일"의 맥락 적기). 없으면 안에서만 */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 };
 
 const PLACEHOLDER: Record<keyof IdeaContext, string> = {
@@ -64,9 +67,11 @@ function ContextForm({ context, fields, action, disabled, onClose }: Props & { o
 }
 
 /** 머리 아래 맥락 줄 (spec detail-dashboard §2-1). 이름과 값을 한 줄씩, 수정은 끝에 글자 버튼 */
-export default function ContextPanel({ context, fields, action, disabled }: Props) {
+export default function ContextPanel({ context, fields, action, disabled, open, onOpenChange }: Props) {
   const demo = useDemo();
-  const [editing, setEditing] = useState(false);
+  const [inner, setInner] = useState(false);
+  const editing = open ?? inner;
+  const setEditing = (v: boolean) => (onOpenChange ? onOpenChange(v) : setInner(v));
   const filled = fields.filter((f) => context[f.key]);
 
   if (editing) {
