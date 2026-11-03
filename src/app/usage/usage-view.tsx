@@ -21,6 +21,7 @@ import PageHeader from '../_components/page-header';
 import SectionTitle from '../_components/section-title';
 import Panel from '@/components/panel';
 
+import { PILOT, pilotRows } from '@/lib/usage/pilot';
 import { formatCost, formatTokens, type Signal, type UsageSummary } from '@/lib/usage/summary';
 import { highlightSx } from '@/lib/theme/tokens';
 
@@ -46,6 +47,39 @@ function Stat({ label, value }: { label: string; value: string }) {
       <Typography variant="caption1" color="semantic.foreground.neutral.secondary">{label}</Typography>
       <Typography as="p" variant="title3" weight="bold" sx={{ margin: '4px 0 0' }}>{value}</Typography>
     </Panel>
+  );
+}
+
+// 채팅 vs Hatch (#123). 앱이 채팅 쪽을 잴 수 없어 파일럿 고정 값. 한 아이디어만 볼 때는 다른 아이디어 값이라 숨긴다
+function PilotCompare() {
+  return (
+    <section>
+      <SectionTitle flush>채팅과 비교</SectionTitle>
+      <Typography as="p" variant="label1" color="semantic.foreground.neutral.secondary" sx={{ margin: '4px 0 12px' }}>
+        {`같은 아이디어("${PILOT.idea}")를 같은 모델로 채팅 방식과 Hatch에 한 번씩 돌린 결과예요.`}
+      </Typography>
+      <Box sx={{ overflowX: 'auto' }}>
+        <Table>
+          <TableHead sx={HEAD}>
+            <TableRow>
+              {['항목', '채팅', 'Hatch'].map((h) => <TableHeadCell key={h} sx={NOWRAP}>{h}</TableHeadCell>)}
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {pilotRows().map((r) => (
+              <TableRow key={r.label}>
+                <TableCell sx={NAME}>{r.label}</TableCell>
+                <TableCell sx={NOWRAP}>{r.chat}</TableCell>
+                <TableCell sx={NAME}>{r.hatch}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </Box>
+      <Typography as="p" variant="caption1" color="semantic.foreground.neutral.secondary" sx={{ margin: '12px 0 0' }}>
+        {`${PILOT.date}, ${PILOT.model}, 기계로 1회 돌린 값이에요. 사람 테스트 전이라 다시 돌리면 숫자가 달라져요. 시간 차이는 대부분 글 길이 차이고, 단정한 수치는 근거가 없다는 뜻이지 틀렸다는 뜻은 아니에요. 채팅에 "모르면 [확인 필요]로 남겨 줘"라고 부탁하면 차이는 줄 수 있어요.`}
+      </Typography>
+    </section>
   );
 }
 
@@ -140,6 +174,7 @@ export default function UsageView({ summary, labels, titles, ideaFilter, unreada
           )}
         </>
       )}
+      {!ideaFilter && <PilotCompare />}
     </FlexBox>
   );
 }
