@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Box, FlexBox, Loading, Typography, type Theme } from '@montage-ui/core';
+import { Box, FlexBox, Typography, type Theme } from '@montage-ui/core';
 
 import { formatElapsed, visibleSteps } from './running-steps';
 
@@ -42,8 +42,8 @@ export default function RunningNote({ label, steps = [] }: Props) {
     // 스크린리더에는 문구와 새 단계만 알린다 (지난 시간은 매초 바뀌어 aria-hidden)
     <FlexBox flexDirection="column" gap="10px" role="status">
       <FlexBox alignItems="center" gap="8px">
-        {/* size는 단위까지 문자열로 (숫자면 CSS가 깨진다). Loading 기본 margin: 0 auto를 지워 왼쪽에 붙인다 */}
-        <Loading variant="circular" size="20px" sx={{ margin: 0, flexShrink: 0 }} />
+        {/* Hatch 아이콘 로딩 (globals.css .hatch-loader, 16px). 글자색을 따른다 */}
+        <span className="hatch-loader" aria-hidden />
         <Typography variant="body2" weight="medium" sx={shimmer}>
           {label}
         </Typography>
