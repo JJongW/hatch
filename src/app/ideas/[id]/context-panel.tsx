@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, useActionState, useState } from 'react';
+import { Fragment, useActionState, useEffect, useState } from 'react';
 import { Box, Button, FlexBox, SectionMessage, TextArea, TextButton, Typography } from '@montage-ui/core';
 
 import { useDemo } from '../../_components/demo';
@@ -30,6 +30,13 @@ const PLACEHOLDER: Record<keyof IdeaContext, string> = {
 
 /** 수정 중에만 마운트된다 — 열 때마다 useActionState가 새로 시작해 저장본 · 빈 오류로 돌아온다 */
 function ContextForm({ context, fields, action, disabled, onClose }: Props & { onClose: () => void }) {
+  // 열리면 첫 칸으로 (다음 할 일의 "맥락 적기"로 열어도 어디를 쓰는지 바로 보이게)
+  const firstKey = fields[0]?.key;
+  useEffect(() => {
+    const first = document.getElementById(`ctx-${firstKey}`);
+    first?.scrollIntoView({ block: 'center' });
+    first?.focus({ preventScroll: true });
+  }, [firstKey]);
   // 저장에 성공하면 읽기로 돌아간다
   const save = async (prev: ContextState, fd: FormData) => {
     const next = await action(prev, fd);

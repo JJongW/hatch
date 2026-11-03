@@ -14,10 +14,12 @@ import ContextPanel from './context-panel';
 import DecisionsPanel from './decisions-panel';
 import { detailStats } from './detail-stats';
 import DocCard from './doc-card';
+import { freshInputs } from './doc-changes';
 import DocTabs from './doc-tabs';
 import EvidencePanel from './evidence-panel';
 import { firstTab } from './first-tab';
-import NextBand, { type ToolLink } from './next-band';
+import NextBand from './next-band';
+import type { ToolLink } from './next-step';
 import QuestionsPanel from './questions-panel';
 import StatusCards, { type DetailTab } from './status-cards';
 
@@ -239,6 +241,7 @@ export default function IdeaDetail({
                   resolve={resolveDraftAction}
                   readVersion={readVersionAction}
                   docs={docs}
+                  fresh={doc.draft ? freshInputs(doc, summary.decisions.recorded, summary.evidence.items) : undefined}
                 />
               )}
             />

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { DOC_STEPS, type Doc, type DocChange, type DocKey } from '@/lib/storage';
 
-import { changeBadge, changeSentence, madeWithLine, upstreamHint } from './doc-changes';
+import { changeBadge, changeSentence, freshInputs, madeWithLine, upstreamHint } from './doc-changes';
 import { formatKst } from './format-kst';
 import { summaryLine } from './diff-view';
 
@@ -61,5 +61,26 @@ describe('madeWithLine', () => {
     expect(madeWithLine({ madeWithout: ['plan'] })).toBe('기획안 없이 만들었어요.');
     expect(madeWithLine({})).toBeNull();
     expect(changeSentence({ from: 'prd', madeWithout: ['prd'] }, 'doc:prd')).toBe('빠졌던 PRD가 생겼어요');
+  });
+});
+
+describe('freshInputs', () => {
+  const dec = (q: string, at: string, status: 'decided' | 'deferred' | 'proposed' = 'decided') => ({ id: 'a', question: q, status, answer: status === 'decided' ? '성수' : '', reason: '', from: 'manual' as const, decidedAt: at });
+  const ev = (t: string, at: string) => ({ id: 'b', text: t, source: 'interview' as const, sourceNote: '', question: '', collectedAt: at });
+  it('바뀐 조각만, 지금 판 뒤에 적은 것만, 제안은 빼고', () => {
+    const doc = { changes: ['decisions', 'evidence'] as DocChange[], generatedAt: '2026-11-03T01:00:00Z' };
+    const r = freshInputs(doc, [dec('지역', '2026-11-03T02:00:00Z'), dec('옛', '2026-11-02T00:00:00Z'), dec('제안', '2026-11-03T03:00:00Z', 'proposed'), dec('미룸', '2026-11-03T03:00:00Z', 'deferred')], [ev('비싸요', '2026-11-03T02:00:00Z')]);
+    expect(r).toEqual({ decisions: ['지역 → 성수', '미룸 → 보류'], evidence: ['비싸요'] });
+    expect(freshInputs({ ...doc, changes: ['idea'] }, [dec('지역', '2026-11-03T02:00:00Z')], [ev('x', '2026-11-03T02:00:00Z')])).toEqual({ decisions: [], evidence: [] });
+  });
+  it('새 판 시각 뒤에 적은 것은 새 판에 없으니 뺀다 (시각 경계만)', () => {
+    const doc = { changes: ['decisions'] as DocChange[], generatedAt: '2026-11-03T01:00:00Z', draft: { content: '', generatedAt: '2026-11-03T02:00:00Z', changes: [] as DocChange[] } };
+    expect(freshInputs(doc, [dec('지역', '2026-11-03T01:30:00Z'), dec('나중', '2026-11-03T03:00:00Z')], []).decisions).toEqual(['지역 → 성수']);
+  });
+  it('새 판 경고 문장은 지금 판의 "빠졌던 문서" 표시를 쓰지 않는다', () => {
+    expect(changeSentence({ from: 'plan' }, 'doc:plan')).toBe('앞 문서(기획안)가 바뀌었어요');
+  });
+  it('시각을 모르면 지금 들어가는 것 전부', () => {
+    expect(freshInputs({ changes: ['decisions'] }, [dec('지역', '2026-01-01T00:00:00Z')], []).decisions).toEqual(['지역 → 성수']);
   });
 });

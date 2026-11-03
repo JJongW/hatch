@@ -19,7 +19,7 @@ export type TryFixture = {
 };
 
 /** 만든 문서: 본문, 만들 때의 입력 조각(실제 저장의 inputs와 같은 키), 다시 만든 판(적용 전), 손으로 고쳤나 */
-type Made = { content: string; inputs: Record<string, string>; without?: DocKey[]; from?: DocKey | 'idea'; draft?: { content: string; inputs: Record<string, string>; at: string }; edited?: boolean };
+type Made = { content: string; inputs: Record<string, string>; /** 만든(적용한) 시각 — 비교 화면이 "그 뒤에 적은 것"을 가린다 */ at?: string; without?: DocKey[]; from?: DocKey | 'idea'; draft?: { content: string; inputs: Record<string, string>; at: string }; edited?: boolean };
 
 export type TryState = {
   idea: { title: string; memo: string; folder: string } | null;
@@ -74,8 +74,9 @@ export function docsOf(s: TryState): Doc[] {
       content: made?.content ?? null,
       stale: changes.length > 0,
       changes,
+      generatedAt: made?.at,
       editedAt: made?.edited ? new Date(0).toISOString() : undefined, // 체험은 시각을 안 남긴다. 고쳤는지만 본다
-      draft: made?.draft ? { content: made.draft.content, generatedAt: made.draft.at } : null,
+      draft: made?.draft ? { content: made.draft.content, generatedAt: made.draft.at, changes: changesOf(s, step.key, { content: made.draft.content, inputs: made.draft.inputs }) } : null,
       versions: [],
       ...(made?.without?.length ? { madeWithout: made.without, ...(made.from ? { madeFrom: made.from } : {}) } : {}),
     };
@@ -108,7 +109,8 @@ export function generate(s: TryState, key: DocKey, fixture: TryFixture): TryStat
   const plan = docInputs(key, (k) => !!s.made[k]);
   const inputs = inputsFor(s, [plan.from, ...plan.extra]);
   const missing = plan.missing.length ? { without: plan.missing, from: plan.missing.includes(DOC_STEPS.find((d) => d.key === key)!.from as DocKey) ? plan.from : undefined } : {};
-  const next: Made = made ? { ...made, draft: { content, inputs, at: new Date().toISOString() } } : { content, inputs, ...missing };
+  const at = new Date().toISOString();
+  const next: Made = made ? { ...made, draft: { content, inputs, at } } : { content, inputs, at, ...missing };
   return { ...s, made: { ...s.made, [key]: next } };
 }
 
@@ -117,7 +119,7 @@ export function applyDraft(s: TryState, key: DocKey, body?: string): TryState {
   const made = s.made[key];
   if (!made?.draft) return s;
   const edited = body !== undefined && body.trim() !== made.draft.content.trim();
-  return { ...s, made: { ...s.made, [key]: { content: edited ? body : made.draft.content, inputs: made.draft.inputs, edited } } };
+  return { ...s, made: { ...s.made, [key]: { content: edited ? body : made.draft.content, inputs: made.draft.inputs, at: made.draft.at, edited } } };
 }
 
 export function keepCurrent(s: TryState, key: DocKey): TryState {

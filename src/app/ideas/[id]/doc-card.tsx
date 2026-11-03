@@ -42,9 +42,11 @@ type Props = {
   readVersion?: (key: DocKey, name: string) => Promise<{ content?: string; error?: string }>;
   /** 모든 문서 — 앞 문서가 예전 기준인지 알리려고 */
   docs: Doc[];
+  /** 새 판에 새로 들어간 결정 · 근거 (비교 화면에 보인다) */
+  fresh?: { decisions: string[]; evidence: string[] };
 };
 
-export default function DocCard({ doc, ready, running, onBusy, locked, generate, update, resolve, readVersion, docs }: Props) {
+export default function DocCard({ doc, ready, running, onBusy, locked, generate, update, resolve, readVersion, docs, fresh }: Props) {
   const demo = useDemo();
   const [editing, setEditing] = useState(false);
 
@@ -211,7 +213,7 @@ export default function DocCard({ doc, ready, running, onBusy, locked, generate,
         </form>
       ) : (
         <>
-          {doc.draft && !demo && <DraftReview doc={{ ...doc, content: doc.content, draft: doc.draft }} resolve={(prev, fd) => resolve(doc.key, prev, fd)} disabled={blocked} keepsVersions={!!readVersion} />}
+          {doc.draft && !demo && <DraftReview doc={{ ...doc, content: doc.content, draft: doc.draft }} resolve={(prev, fd) => resolve(doc.key, prev, fd)} disabled={blocked} keepsVersions={!!readVersion} fresh={fresh} />}
           <Typography as="div" variant="body2">
             <DocMarkdown>{doc.content}</DocMarkdown>
           </Typography>

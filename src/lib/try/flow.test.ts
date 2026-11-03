@@ -136,3 +136,23 @@ describe('tryNext 경계', () => {
     expect(tryNext(s).next).toEqual({ kind: 'make-doc', doc: 'plan' });
   });
 });
+
+describe('체험 새 판의 바뀜', () => {
+  it('새 판을 만든 뒤 결정을 고치면 새 판 changes에 남는다', () => {
+    let s: TryState = { ...START, idea };
+    s = generate(generate(s, 'plan', fixture), 'plan', fixture);
+    expect(docsOf(s)[0].draft?.changes).toEqual([]);
+    s = { ...s, decisions: [decision('첫 출시 지역을 어디로 할 것인가?')] };
+    expect(docsOf(s)[0].draft?.changes).toEqual(['decisions']);
+  });
+});
+
+describe('체험 문서 시각', () => {
+  it('만들고 적용한 시각이 generatedAt으로 나와 비교 화면이 그 뒤 것만 고른다', () => {
+    let s: TryState = { ...START, idea };
+    s = generate(s, 'plan', fixture);
+    expect(docsOf(s)[0].generatedAt).toMatch(/^\d{4}-/);
+    s = applyDraft(generate(s, 'plan', fixture), 'plan');
+    expect(docsOf(s)[0].generatedAt).toBe(s.made.plan?.at);
+  });
+});

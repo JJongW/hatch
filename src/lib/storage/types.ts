@@ -33,7 +33,8 @@ export type DocStep = { key: DocKey; label: string; file: string; from: DocKey |
 export type DocChange = `doc:${DocKey}` | 'idea' | 'decisions' | 'evidence' | 'unknown';
 
 /** 다시 만든 판 (적용 전). 지금 판을 덮지 않고 따로 둔다 */
-export type DocDraft = { content: string; generatedAt: string };
+/** changes: 새 판을 만든 뒤에도 또 바뀐 입력 (비면 최신, inputs 없는 예전 초안은 늘 빈 값) */
+export type DocDraft = { content: string; generatedAt: string; changes: DocChange[] };
 
 /** 이전 버전 하나 (`.history`). name은 파일 이름 — 읽을 때 그대로 넘긴다 */
 export type DocVersion = { name: string; at: string };

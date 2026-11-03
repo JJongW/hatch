@@ -73,7 +73,9 @@ export default function ToolFrame({ tool, ideas, ideaId, none, results, current,
 
   const idea = ideas.find((i) => i.id === ideaId) ?? null;
   // 아이디어가 바뀌면 고른 문서가 목록에 없을 수 있다 → 첫 번째(도구 기본)로
-  const selectedDoc = idea?.docs.some((d) => d.key === docKey) ? docKey : (idea?.docs[0]?.key ?? '');
+  // 데모는 실행을 못 하니 고르는 칸 대신 지금 보는 결과가 받은 문서를 보인다 (spec 2026-11-03 §5)
+  const docOf = (key: string) => (idea?.docs.some((d) => d.key === key) ? key : null);
+  const selectedDoc = (demo && current ? docOf(current.source) : null) ?? docOf(docKey) ?? idea?.docs[0]?.key ?? '';
 
   // 어느 버튼으로 보냈는지: 이어 실행(name=prevId)이면 진행 · 오류를 그 버튼 옆에 보인다
   const [continued, setContinued] = useState(false);
@@ -168,7 +170,7 @@ export default function ToolFrame({ tool, ideas, ideaId, none, results, current,
                   </Button>
                 </FlexBox>
               ) : (
-                <Select value={selectedDoc} onChange={(k) => k && setDocKey(k)} disabled={blocked} width="100%" aria-label="문서">
+                <Select value={selectedDoc} onChange={(k) => k && setDocKey(k)} disabled={blocked || demo} width="100%" aria-label="문서">
                   {idea.docs.map((d) => (
                     <Option key={d.key} value={d.key}>
                       {d.label}

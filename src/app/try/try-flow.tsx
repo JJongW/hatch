@@ -16,7 +16,7 @@ import { collectUnknowns } from '@/lib/questions/collect';
 import { CONTEXT_FIELDS, DOC_STEPS, EVIDENCE_MAX, EVIDENCE_SOURCES, type Decision, type DocKey, type Evidence, type IdeaContext } from '@/lib/storage/types';
 import { questionView, summarize, vocEvidence } from '@/lib/summary';
 import { TASKS } from '@/lib/survey/questions';
-import { thenLabel } from '../ideas/[id]/next-band';
+import { thenLabel } from '../ideas/[id]/next-step';
 import { applyDraft, docsOf, editDoc, generate, keepCurrent, START, tasksDone, tryNext, type TryFixture, type TryState } from '@/lib/try/flow';
 import type { ContextState, DecisionState, DocActionState, EvidenceState, FormState, QuestionsState } from '../actions';
 import { decisionValues, evidenceValues } from '../_components/form-values';

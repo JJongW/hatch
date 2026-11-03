@@ -216,7 +216,8 @@ export async function getDocs(id: string): Promise<Doc[]> {
     const generatedAt = isoOf(doc.data.generatedAt);
     const editedAt = isoOf(doc.data.editedAt);
     const draftAt = isoOf(draft.data.generatedAt);
-    const d: DocDraft | null = doc.body !== null && draft.body !== null ? { content: draft.body, generatedAt: draftAt ?? '' } : null;
+    // 새 판도 같은 규칙으로 본다: 만든 뒤 또 바뀌었으면 적용해도 최신이 아니다
+    const d: DocDraft | null = doc.body !== null && draft.body !== null ? { content: draft.body, generatedAt: draftAt ?? '', changes: changesOf(step.key, draft, ctx, null) } : null;
     return { ...step, content: doc.body, stale: changes.length > 0, changes, generatedAt, editedAt, draft: d, versions: versions[step.key], ...madeWith(step, doc) };
   });
 }

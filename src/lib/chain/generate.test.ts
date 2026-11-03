@@ -50,6 +50,26 @@ describe('generateDoc', () => {
     const raw = await fs.readFile(path.join(dir, 'ideas', idea.id, 'docs', 'plan.md'), 'utf8');
     expect(raw).toMatch(/inputs:\n\s+idea: \w+\n\s+decisions: \w+\n\s+evidence: \w+/);
   });
+  it('성공 경로: 실제로 쓴 입력만 inputs에 남고, 빠진 문서와 대신 쓴 입력이 화면 값으로 나온다', async () => {
+    process.env.FAKE_CLAUDE = 'roadmap';
+    const idea = await createIdea({ title: '동네 클래스', memo: '' });
+    // 기획안 없이 로드맵 → 아이디어로 만든다
+    await generateDoc(idea.id, 'roadmap');
+    let roadmap = (await getDocs(idea.id)).find((d) => d.key === 'roadmap')!;
+    expect(roadmap.content).toContain('MVP');
+    expect(roadmap).toMatchObject({ stale: false, madeWithout: ['plan'], madeFrom: 'idea' });
+    const raw = await fs.readFile(path.join(dir, 'ideas', idea.id, 'docs', 'roadmap.md'), 'utf8');
+    expect(raw).toMatch(/inputs:\n\s+idea: \w+\n\s+decisions: \w+\n\s+evidence: \w+/);
+    expect(raw).not.toContain('doc:plan');
+    // 빠졌던 기획안이 생기면 그것이 원인으로 나온다
+    await saveDoc(idea.id, 'plan', '## 한 줄 요약\n기획', { sourceHash: hashOf('x') });
+    roadmap = (await getDocs(idea.id)).find((d) => d.key === 'roadmap')!;
+    expect(roadmap.changes).toEqual(['doc:plan']);
+    // 다시 만들면 새 판은 기획안으로 만들었고 최신이다
+    await generateDoc(idea.id, 'roadmap');
+    roadmap = (await getDocs(idea.id)).find((d) => d.key === 'roadmap')!;
+    expect(roadmap.draft?.changes).toEqual([]);
+  });
   it('GENERATABLE은 DOC_STEPS의 7개 key와 같다', () => {
     expect(GENERATABLE).toEqual(DOC_STEPS.map((s) => s.key));
     expect(GENERATABLE).toHaveLength(7);

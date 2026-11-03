@@ -1,5 +1,7 @@
 import { connection } from 'next/server';
 
+import { isDemo } from '@/lib/demo';
+
 import { runToolAction } from '../../actions';
 import { loadToolPage } from '../_frame/load';
 import ToolFrame from '../_frame/tool-frame';
@@ -12,5 +14,6 @@ export const instant = false;
 export default async function MetricsPage({ searchParams }: { searchParams: Promise<{ idea?: string; result?: string }> }) {
   await connection();
   const data = await loadToolPage('metrics', searchParams);
-  return <ToolFrame {...data} inputFields={<MetricsInputs />} run={runToolAction.bind(null, 'metrics')} />;
+  const saved = (data.current?.data as { input?: Record<string, number | null> } | null)?.input;
+  return <ToolFrame {...data} inputFields={<MetricsInputs shown={isDemo() && saved ? saved : undefined} />} run={runToolAction.bind(null, 'metrics')} />;
 }

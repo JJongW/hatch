@@ -333,6 +333,18 @@ describe('바뀐 원인 · 초안 · 이전 버전 (spec 2026-11-03 §2)', () =>
     await expect(applyDraft(idea.id, 'plan')).rejects.toThrow('적용할 새 판이 없어요');
   });
 
+  it('새 판도 만든 뒤 바뀌면 changes가 남는다 (예전 초안은 빈 값)', async () => {
+    const { saveDraft } = await import('.');
+    const idea = await createIdea({ title: 'x', memo: '' });
+    await saveDoc(idea.id, 'plan', '첫 판', { sourceHash: 'a', inputs: await planInputs(idea.id) });
+    await saveDraft(idea.id, 'plan', '새 판', { sourceHash: 'b', inputs: await planInputs(idea.id) });
+    expect((await getDocs(idea.id))[0].draft?.changes).toEqual([]);
+    await saveDecision(idea.id, { question: '지역', status: 'decided', answer: '성수', reason: '많다', from: 'manual' });
+    expect((await getDocs(idea.id))[0].draft?.changes).toEqual(['decisions']);
+    await saveDraft(idea.id, 'plan', '예전 초안', { sourceHash: 'c' });
+    expect((await getDocs(idea.id))[0].draft?.changes).toEqual([]);
+  });
+
   it('이전 버전 이름은 목록 모양만 받는다', async () => {
     const { readVersion } = await import('.');
     const idea = await createIdea({ title: 'x', memo: '' });
