@@ -28,7 +28,7 @@ export function detailStats(
     docs: { done: progress.done, total: progress.total, stale: Object.values(progress.status).filter((s) => s === 'stale').length },
     questions: {
       made: questions.made,
-      open: questions.customer.length + questions.decision.length + questions.owner.reduce((n, g) => n + g.items.length, 0),
+      open: questions.openTotal,
       answered: questions.answered,
       unknownTotal: questions.unknownTotal,
     },

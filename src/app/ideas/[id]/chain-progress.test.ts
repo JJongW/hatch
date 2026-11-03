@@ -30,7 +30,7 @@ describe('chainProgress', () => {
     expect(p.status['design-prompt']).toBe('wait');
   });
 
-  it('앞 문서가 바뀐 문서는 완료 수에 넣고 상태는 바뀜', () => {
+  it('앞 문서가 바뀐 문서는 생성된 수에 넣고 상태는 바뀜', () => {
     const p = chainProgress(stale(docsWith('plan', 'roadmap'), 'roadmap'), null);
     expect(p.status.roadmap).toBe('stale');
     expect(p.done).toBe(2);
@@ -63,22 +63,22 @@ describe('chainProgress 경계', () => {
 describe('summaryLine', () => {
   const line = (docs: Doc[], running: DocKey | null = null) => summaryLine(chainProgress(docs, running), docs, running);
 
-  it('기본: 완료 수와 다음 차례', () => {
-    expect(line(docsWith('plan', 'roadmap'))).toBe('7개 중 2개 완료, 다음 차례는 PRD');
+  it('기본: 생성된 수와 다음 차례', () => {
+    expect(line(docsWith('plan', 'roadmap'))).toBe('7개 중 2개 생성됨, 다음 차례는 PRD');
   });
 
   it('생성 중이면 지금 만드는 문서', () => {
-    expect(line(docsWith('plan'), 'roadmap')).toBe('7개 중 1개 완료, 지금 개발 로드맵 만드는 중');
+    expect(line(docsWith('plan'), 'roadmap')).toBe('7개 중 1개 생성됨, 지금 개발 로드맵 만드는 중');
   });
 
-  it('모두 있으면 모두 완료', () => {
-    expect(line(docsWith(...DOC_STEPS.map((s) => s.key)))).toBe('7개 모두 완료');
+  it('모두 있으면 모두 생성됨', () => {
+    expect(line(docsWith(...DOC_STEPS.map((s) => s.key)))).toBe('7개 모두 생성됨');
   });
 
   it('중간이 비면 비어 있는 첫 문서가 다음 차례', () => {
     const docs = docsWith('plan', 'roadmap', 'prd', 'spec', 'data', 'dev-prompt', 'design-prompt').map((d) =>
       d.key === 'spec' ? { ...d, content: null } : d,
     );
-    expect(line(docs)).toBe('7개 중 6개 완료, 다음 차례는 기능명세');
+    expect(line(docs)).toBe('7개 중 6개 생성됨, 다음 차례는 기능명세');
   });
 });

@@ -161,14 +161,25 @@ describe('listIdeasWithProgress', () => {
     await fs.writeFile(path.join(dir, 'ideas', idea.id, 'plan.md'), '# 기획안');
 
     const { items } = await listIdeasWithProgress();
-    expect(items).toEqual([{ idea, progress: '기획안', done: 1, total: 7 }]);
+    expect(items).toEqual([{ idea, progress: '기획안', done: 1, total: 7, evidence: 0, decided: 0, prdReviewed: false }]);
+  });
+
+  it('근거 · 정한 결정 · PRD 리뷰 수는 실제 파일에서 (보류 · 제안은 결정 수에 안 넣음)', async () => {
+    const { saveEvidence, saveDecision } = await import('.');
+    const idea = await createIdea({ title: 'x', memo: '' });
+    await saveEvidence(idea.id, { text: '연다', source: 'voc', sourceNote: '', question: '' });
+    await saveDecision(idea.id, { question: 'a', status: 'decided', answer: 'y', reason: 'r', from: 'manual' });
+    await saveDecision(idea.id, { question: 'b', status: 'deferred', answer: '', reason: 'r', from: 'manual' });
+    await saveDecision(idea.id, { question: 'c', status: 'proposed', answer: 'y', reason: 'r', from: 'manual' });
+    const { items } = await listIdeasWithProgress();
+    expect(items[0]).toMatchObject({ evidence: 1, decided: 1, prdReviewed: false });
   });
 
   it('문서가 없으면 0개', async () => {
     const idea = await createIdea({ title: '빈', memo: '' });
 
     const { items } = await listIdeasWithProgress();
-    expect(items).toEqual([{ idea, progress: '아이디어', done: 0, total: 7 }]);
+    expect(items).toEqual([{ idea, progress: '아이디어', done: 0, total: 7, evidence: 0, decided: 0, prdReviewed: false }]);
   });
 });
 

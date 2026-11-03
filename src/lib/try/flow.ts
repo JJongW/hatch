@@ -1,6 +1,7 @@
 // 흐름 체험(/try) 상태. 서버에 쓰지 않고 브라우저 메모리에서만 바뀐다 (spec 2026-11-02-try §4)
 // 화면 컴포넌트와 같은 모양(Doc, Decision, QuestionSet)으로 만들어 실제 상세 화면을 그대로 쓴다
 import { norm } from '../summary/parse';
+import { docInputs, sourceOfInput } from '../storage/doc-inputs';
 import { DOC_STEPS, EMPTY_CONTEXT, type Decision, type Doc, type DocChange, type DocKey, type Evidence, type IdeaContext, type QuestionSet } from '../storage/types';
 
 export type ToolInfo = { label: string; description: string; continueLabel?: string };
@@ -17,7 +18,7 @@ export type TryFixture = {
 };
 
 /** 만든 문서: 본문, 만들 때의 입력 조각(실제 저장의 inputs와 같은 키), 다시 만든 판(적용 전), 손으로 고쳤나 */
-type Made = { content: string; inputs: Record<string, string>; draft?: { content: string; inputs: Record<string, string>; at: string }; edited?: boolean };
+type Made = { content: string; inputs: Record<string, string>; without?: DocKey[]; from?: DocKey | 'idea'; draft?: { content: string; inputs: Record<string, string>; at: string }; edited?: boolean };
 
 export type TryState = {
   idea: { title: string; memo: string; folder: string } | null;
@@ -39,22 +40,28 @@ const DECIDED = '정한 것';
 /** 기획안에 들어가는 결정: 정함 · 보류. 제안은 팀이 확정하기 전이라 넣지 않는다 (storage/docs.ts projectBlock과 같은 규칙) */
 const settled = (decisions: Decision[]) => decisions.filter((d) => d.status !== 'proposed');
 
-/** 입력 조각: 기획안은 아이디어 · 결정 · 근거, 나머지는 앞 문서 · extra (storage/docs.ts inputHashes와 같은 키) */
-function inputsOf(s: TryState, key: DocKey): Record<string, string> {
-  const step = DOC_STEPS.find((d) => d.key === key)!;
-  if (step.from === 'idea') {
-    return {
-      idea: JSON.stringify([s.idea, s.context]),
-      decisions: JSON.stringify(settled(s.decisions).map((d) => [d.question, d.status, d.answer])),
-      evidence: JSON.stringify(s.evidence.map((e) => [e.text, e.source, e.sourceNote])),
-    };
+/** 입력 조각 (storage/docs.ts hashesFor와 같은 키). 'idea'는 아이디어 · 결정 · 근거 세 조각 */
+function inputsFor(s: TryState, sources: (DocKey | 'idea')[]): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const src of new Set(sources)) {
+    if (src === 'idea') {
+      out.idea = JSON.stringify([s.idea, s.context]);
+      out.decisions = JSON.stringify(settled(s.decisions).map((d) => [d.question, d.status, d.answer]));
+      out.evidence = JSON.stringify(s.evidence.map((e) => [e.text, e.source, e.sourceNote]));
+    } else out[`doc:${src}`] = s.made[src]?.content ?? '';
   }
-  return Object.fromEntries([step.from, ...(step.extra ?? [])].map((k) => [`doc:${k}`, s.made[k]?.content ?? '']));
+  return out;
 }
 
+const recommended = (key: DocKey) => {
+  const step = DOC_STEPS.find((d) => d.key === key)!;
+  return [step.from, ...(step.extra ?? [])];
+};
+
+/** 실제와 같은 규칙: 권장 입력과 실제로 쓴 입력을 모두 본다 (빠졌던 문서가 생겨도, 대신 쓴 문서가 바뀌어도 알림) */
 const changesOf = (s: TryState, key: DocKey, made: Made): DocChange[] => {
-  const now = inputsOf(s, key);
-  return Object.keys(now).filter((k) => made.inputs[k] !== now[k]) as DocChange[];
+  const now = inputsFor(s, [...recommended(key), ...Object.keys(made.inputs).map(sourceOfInput)]);
+  return Object.keys(now).filter((k) => (made.inputs[k] ?? '') !== now[k]) as DocChange[];
 };
 
 export function docsOf(s: TryState): Doc[] {
@@ -69,6 +76,7 @@ export function docsOf(s: TryState): Doc[] {
       editedAt: made?.edited ? new Date(0).toISOString() : undefined, // 체험은 시각을 안 남긴다. 고쳤는지만 본다
       draft: made?.draft ? { content: made.draft.content, generatedAt: made.draft.at } : null,
       versions: [],
+      ...(made?.without?.length ? { madeWithout: made.without, ...(made.from ? { madeFrom: made.from } : {}) } : {}),
     };
   });
 }
@@ -94,9 +102,12 @@ export function reflectDecisions(plan: string, all: Decision[]): string {
 /** 처음 만들면 바로 문서, 이미 있으면 초안으로 (실제 생성과 같은 규칙: 지금 판을 덮지 않는다) */
 export function generate(s: TryState, key: DocKey, fixture: TryFixture): TryState {
   const content = key === 'plan' ? reflectDecisions(fixture.docs.plan, s.decisions) : fixture.docs[key];
-  const inputs = inputsOf(s, key);
   const made = s.made[key];
-  const next: Made = made ? { ...made, draft: { content, inputs, at: new Date().toISOString() } } : { content, inputs };
+  // 앞 문서가 없어도 만든다 (실제와 같은 규칙). 실제로 쓴 입력만 남기고, 빠진 것은 "○○ 없이 만들었어요"로 보인다
+  const plan = docInputs(key, (k) => !!s.made[k]);
+  const inputs = inputsFor(s, [plan.from, ...plan.extra]);
+  const missing = plan.missing.length ? { without: plan.missing, from: plan.missing.includes(DOC_STEPS.find((d) => d.key === key)!.from as DocKey) ? plan.from : undefined } : {};
+  const next: Made = made ? { ...made, draft: { content, inputs, at: new Date().toISOString() } } : { content, inputs, ...missing };
   return { ...s, made: { ...s.made, [key]: next } };
 }
 

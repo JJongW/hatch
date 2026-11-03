@@ -253,6 +253,44 @@ describe('바뀐 원인 · 초안 · 이전 버전 (spec 2026-11-03 §2)', () =>
     expect((await getDocs(idea.id)).find((d) => d.key === 'roadmap')?.changes).toEqual(['doc:plan']);
   });
 
+  it('앞 문서 없이 만든 문서: 빠진 것과 대신 쓴 것, 빠졌던 문서가 생기면 바뀜으로', async () => {
+    const idea = await createIdea({ title: 'x', memo: '' });
+    await saveDoc(idea.id, 'plan', '기획', { sourceHash: hashOf(ideaSource(idea)) });
+    // spec을 PRD 없이 기획안으로 만들었다
+    await saveDoc(idea.id, 'spec', '명세', { sourceHash: hashOf('기획'), inputs: { 'doc:plan': hashOf('기획') } });
+    let spec = (await getDocs(idea.id)).find((d) => d.key === 'spec')!;
+    expect([spec.madeWithout, spec.madeFrom, spec.changes]).toEqual([['prd'], 'plan', []]);
+    await saveDoc(idea.id, 'prd', 'PRD', { sourceHash: 'z' });
+    spec = (await getDocs(idea.id)).find((d) => d.key === 'spec')!;
+    expect(spec.changes).toEqual(['doc:prd']);
+    await updateDocBody(idea.id, 'plan', '고친 기획');
+    expect((await getDocs(idea.id)).find((d) => d.key === 'spec')!.changes).toEqual(['doc:prd', 'doc:plan']);
+  });
+
+  it('대신 쓴 문서가 함께 보는 문서이기도 해도 무엇으로 만들었는지 남는다 (prd ← plan, design-prompt ← spec)', async () => {
+    const idea = await createIdea({ title: 'x', memo: '' });
+    await saveDoc(idea.id, 'plan', '기획', { sourceHash: hashOf(ideaSource(idea)) });
+    await saveDoc(idea.id, 'spec', '명세', { sourceHash: 'z' });
+    await saveDoc(idea.id, 'prd', 'PRD', { sourceHash: hashOf('기획'), inputs: { 'doc:plan': hashOf('기획') } });
+    await saveDoc(idea.id, 'design-prompt', '디자인', { sourceHash: hashOf('명세'), inputs: { 'doc:spec': hashOf('명세') } });
+    const docs = await getDocs(idea.id);
+    expect(docs.find((d) => d.key === 'prd')).toMatchObject({ madeWithout: ['roadmap'], madeFrom: 'plan', changes: [] });
+    expect(docs.find((d) => d.key === 'design-prompt')).toMatchObject({ madeWithout: ['data'], madeFrom: 'spec', changes: [] });
+  });
+
+  it('권장 입력을 다 써서 만든 문서는 바뀜도 빠짐도 없다 (회귀)', async () => {
+    const idea = await createIdea({ title: 'x', memo: '' });
+    await saveDoc(idea.id, 'plan', '기획', { sourceHash: hashOf(ideaSource(idea)), inputs: await planInputs(idea.id) });
+    await saveDoc(idea.id, 'roadmap', '로드맵', { sourceHash: hashOf('기획'), inputs: { 'doc:plan': hashOf('기획') } });
+    await saveDoc(idea.id, 'prd', 'PRD', { sourceHash: hashOf('로드맵'), inputs: { 'doc:roadmap': hashOf('로드맵'), 'doc:plan': hashOf('기획') } });
+    const docs = await getDocs(idea.id);
+    expect(docs.filter((d) => d.content !== null).map((d) => [d.key, d.changes, d.madeWithout])).toEqual([
+      ['plan', [], undefined],
+      ['roadmap', [], undefined],
+      ['prd', [], undefined],
+    ]);
+  });
+
   it('PRD는 extra(기획안)가 바뀌어도 알린다', async () => {
     const idea = await createIdea({ title: 'x', memo: '' });
     await saveDoc(idea.id, 'plan', '기획', { sourceHash: hashOf(ideaSource(idea)) });

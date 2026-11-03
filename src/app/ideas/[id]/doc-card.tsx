@@ -11,7 +11,10 @@ import RunningNote from '../../_components/running-note';
 import { DOC_RUNNING_STEPS, formatElapsed } from '../../_components/running-steps';
 import { useConfirmSubmit } from '../../_components/use-confirm-submit';
 
-import { changeBadge, changeSentence, upstreamHint } from './doc-changes';
+import { docInputs } from '@/lib/storage/doc-inputs';
+import { DOC_STEPS } from '@/lib/storage/types';
+
+import { changeBadge, changeSentence, madeWithLine, upstreamHint } from './doc-changes';
 import DraftReview from './draft-review';
 import VersionList from './version-list';
 
@@ -25,8 +28,6 @@ type Props = {
   doc: Doc;
   /** 이 단계를 만들 수 있나 (GENERATABLE) */
   ready: boolean;
-  /** 앞 문서(또는 아이디어)가 있나 */
-  hasSource: boolean;
   /** 지금 생성 중인 문서 (서버 값 또는 이 화면에서 시작한 생성) */
   running: DocKey | null;
   /** 이 카드가 시작/끝날 때 알린다 — 다른 탭의 버튼을 막기 위해 */
@@ -43,7 +44,7 @@ type Props = {
   docs: Doc[];
 };
 
-export default function DocCard({ doc, ready, hasSource, running, onBusy, locked, generate, update, resolve, readVersion, docs }: Props) {
+export default function DocCard({ doc, ready, running, onBusy, locked, generate, update, resolve, readVersion, docs }: Props) {
   const demo = useDemo();
   const [editing, setEditing] = useState(false);
 
@@ -80,6 +81,17 @@ export default function DocCard({ doc, ready, hasSource, running, onBusy, locked
     confirm: '새 판 만들기',
   });
   const hint = upstreamHint(doc, docs);
+
+  // 권장 순서는 앞 문서부터지만 막지 않는다: 빠진 것을 보이고 확인받은 뒤 있는 자료로 만든다 (spec 2026-11-03 §4)
+  const has = (k: DocKey) => docs.some((d) => d.key === k && d.content !== null);
+  const plan = docInputs(doc.key, has);
+  const labelOf = (k: DocKey | 'idea') => (k === 'idea' ? '아이디어' : (DOC_STEPS.find((s) => s.key === k)?.label ?? k));
+  const missingText = plan.missing.map(labelOf).join(', ');
+  const confirmPartial = ask({
+    title: '지금 자료로 만들까요?',
+    content: `빠진 문서: ${missingText}. 대신 쓰는 자료: ${[plan.from, ...plan.extra].map(labelOf).join(', ')}. 빠진 내용은 [확인 필요]로 남고, 빠진 문서를 나중에 만들면 다시 만들라고 알려 줘요.`,
+    confirm: '지금 자료로 만들기',
+  });
 
   const generateForm = (label: string, variant: 'solid' | 'outlined', onSubmit?: (e: React.FormEvent<HTMLFormElement>) => void) => (
     <form
@@ -125,6 +137,11 @@ export default function DocCard({ doc, ready, hasSource, running, onBusy, locked
           {doc.changes.map((c) => changeSentence(doc, c)).join(' · ')}. 다시 만들면 지금 판과 비교해 고를 수 있어요.
         </Typography>
       )}
+      {doc.content !== null && madeWithLine(doc) && (
+        <Typography variant="caption1" color="semantic.foreground.neutral.secondary" sx={{ display: 'block', marginBottom: '8px' }}>
+          {madeWithLine(doc)}
+        </Typography>
+      )}
       {hint && (
         <Typography variant="caption1" color="semantic.foreground.neutral.secondary" sx={{ display: 'block', marginBottom: '8px' }}>
           {hint}
@@ -168,8 +185,13 @@ export default function DocCard({ doc, ready, hasSource, running, onBusy, locked
           <UseLocallyButton size="small" />
         ) : !ready ? (
           disabledButton('준비 중')
-        ) : !hasSource ? (
-          disabledButton('앞 문서 먼저')
+        ) : plan.missing.length > 0 ? (
+          <FlexBox flexDirection="column" gap="8px" alignItems="flex-start">
+            <Typography variant="body2">
+              권장 순서는 {labelOf(plan.missing[0])} 먼저예요. 아직 없는 문서: {missingText}.
+            </Typography>
+            {generateForm('지금 자료로 만들기', 'outlined', confirmPartial)}
+          </FlexBox>
         ) : (
           generateForm(`${doc.label} 만들기`, 'solid')
         )

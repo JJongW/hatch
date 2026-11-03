@@ -15,6 +15,8 @@ export type IdeaCardData = {
   docs: { done: number; total: number } | null;
   /** '' = 미분류 (배지 없음) */
   folder: string;
+  /** 실제로 있는 것만: "근거 3" · "결정 2" · "PRD 리뷰함" */
+  facts?: string[];
 };
 
 // 마우스를 올리면 배경이 0.2초에 걸쳐 바뀌고, 누르는 순간 살짝 줄어든다 (spec motion §3).
@@ -30,7 +32,7 @@ const hoverable = (t: Theme) => ({
   '&:active': { transform: 'scale(0.99)' },
 });
 
-export default function IdeaCard({ id, title, summary, date, progress, docs, folder }: IdeaCardData) {
+export default function IdeaCard({ id, title, summary, date, progress, docs, folder, facts = [] }: IdeaCardData) {
   return (
     <Card as={Link} href={`/ideas/${id}`} sx={hoverable}>
       <CardBody>
@@ -43,14 +45,19 @@ export default function IdeaCard({ id, title, summary, date, progress, docs, fol
               <Typography
                 as="span"
                 role="img"
-                aria-label={`문서 ${docs.total}개 중 ${docs.done}개 완료`}
+                aria-label={`문서 ${docs.total}개 중 ${docs.done}개 생성됨`}
                 variant="caption2"
                 color="semantic.foreground.neutral.secondary"
                 sx={{ fontVariantNumeric: 'tabular-nums' }}
               >
-                {`${docs.done}/${docs.total}`}
+                {`${docs.done}/${docs.total} 생성됨`}
               </Typography>
             )}
+            {facts.map((f) => (
+              <ContentBadge key={f} size="xsmall" variant="outlined" color="neutral">
+                {f}
+              </ContentBadge>
+            ))}
             {folder && (
               <ContentBadge size="xsmall" variant="outlined" color="neutral">
                 {folder}

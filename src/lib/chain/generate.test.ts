@@ -58,15 +58,15 @@ describe('generateDoc', () => {
     const idea = await createIdea({ title: 'x', memo: '' });
     await expect(generateDoc(idea.id, 'nope' as DocKey)).rejects.toThrow('아직 만들 수 없는 문서');
   });
-  it('prd: roadmap만 있고 plan이 없으면 앞 문서를 먼저 만들라고 한다', async () => {
+  it('앞 문서가 없어도 막지 않고 있는 자료로 claude까지 간다 (prd ← roadmap만, design-prompt ← spec만, roadmap ← 아이디어)', async () => {
+    process.env.FAKE_CLAUDE = 'ok';
     const idea = await createIdea({ title: 'x', memo: '' });
+    await expect(generateDoc(idea.id, 'roadmap')).rejects.toThrow('결과 형식이 맞지 않아요');
     await saveDoc(idea.id, 'roadmap', '## 개요\n로드맵', { sourceHash: hashOf('x') });
-    await expect(generateDoc(idea.id, 'prd')).rejects.toThrow('앞 문서를 먼저 만들어 주세요.');
-  });
-  it('design-prompt: spec만 있고 데이터 구성이 없으면 앞 문서를 먼저 만들라고 한다', async () => {
-    const idea = await createIdea({ title: 'x', memo: '' });
+    await expect(generateDoc(idea.id, 'prd')).rejects.toThrow('결과 형식이 맞지 않아요');
     await saveDoc(idea.id, 'spec', '## 화면\n명세', { sourceHash: hashOf('x') });
-    await expect(generateDoc(idea.id, 'design-prompt')).rejects.toThrow('앞 문서를 먼저 만들어 주세요.');
+    await expect(generateDoc(idea.id, 'design-prompt')).rejects.toThrow('결과 형식이 맞지 않아요');
+    expect(await getRunning(idea.id)).toBeNull();
   });
   it('prd: plan · roadmap이 모두 있으면 claude까지 가서 형식 검사에서 끝난다', async () => {
     process.env.FAKE_CLAUDE = 'ok';

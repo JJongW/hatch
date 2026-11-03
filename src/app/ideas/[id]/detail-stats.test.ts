@@ -15,6 +15,8 @@ const view = (over: Partial<QuestionView> = {}): QuestionView => ({
   customer: [],
   owner: [],
   decision: [],
+  first: [],
+  openTotal: 0,
   answered: 0,
   byEvidence: 0,
   byDecision: 0,
@@ -33,7 +35,7 @@ const decision = (status: Decision['status']): Decision =>
 const decisions = (open: string[], openMore: number, recorded: Decision[]): Summary['decisions'] => ({ open, openMore, recorded });
 
 describe('detailStats', () => {
-  it('문서: 완료 수와 앞 문서가 바뀐 수', () => {
+  it('문서: 생성된 수와 바뀐 수', () => {
     const docs = docsWith('plan', 'roadmap', 'prd').map((d) => (d.key === 'roadmap' ? { ...d, stale: true } : d));
     expect(detailStats(docs, null, view(), decisions([], 0, [])).docs).toEqual({ done: 3, total: 7, stale: 1 });
   });
@@ -43,8 +45,8 @@ describe('detailStats', () => {
     expect(detailStats(docs, 'roadmap', view(), decisions([], 0, [])).docs.stale).toBe(0);
   });
 
-  it('확인 질문: 고객과 담당자 질문을 더해 남은 수', () => {
-    const v = view({ customer: [line('a'), line('b')], owner: [{ role: '기획', items: [line('c')] }, { role: '개발', items: [line('d'), line('e')] }], answered: 1 });
+  it('확인 질문: 남은 수는 openTotal', () => {
+    const v = view({ customer: [line('a'), line('b')], owner: [{ role: '기획', items: [line('c')] }, { role: '개발', items: [line('d'), line('e')] }], answered: 1, openTotal: 5 });
     expect(detailStats(docsWith(), null, v, decisions([], 0, [])).questions).toEqual({ made: true, open: 5, answered: 1, unknownTotal: 0 });
   });
 
@@ -71,7 +73,7 @@ describe('detailStats', () => {
     expect(s.decisions.decided).toBe(1);
   });
 
-  it('팀이 정할 질문도 남은 질문에 센다', () => {
-    expect(detailStats(docsWith(), null, view({ decision: [line('x')] }), decisions([], 0, [])).questions.open).toBe(1);
+  it('먼저 볼 것도 남은 질문에 센다 (openTotal)', () => {
+    expect(detailStats(docsWith(), null, view({ first: [line('x')], openTotal: 1 }), decisions([], 0, [])).questions.open).toBe(1);
   });
 });

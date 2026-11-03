@@ -51,6 +51,9 @@ export type Doc = DocStep & {
   draft: DocDraft | null;
   /** 새것부터 */
   versions: DocVersion[];
+  /** 권장 입력이 없어 빠진 채 만들었으면 그 문서들 · 앞 문서 대신 쓴 것 (spec 2026-11-03 §4) */
+  madeWithout?: DocKey[];
+  madeFrom?: DocKey | 'idea';
 };
 
 /** 문서 체인 순서. 각 단계는 from(앞 단계)을 입력으로 만든다. */

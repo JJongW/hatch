@@ -1,5 +1,5 @@
 // 문서 바뀜 알림 문구 (순수). 실제로 바뀐 입력만 말한다 — 원인을 모르면 모른다고 (spec 2026-11-03 §2)
-import { DOC_STEPS, type Doc, type DocChange } from '@/lib/storage/types';
+import { DOC_STEPS, type Doc, type DocChange, type DocKey } from '@/lib/storage/types';
 
 const labelOf = (key: string) => DOC_STEPS.find((d) => d.key === key)?.label ?? key;
 
@@ -10,12 +10,13 @@ const iGa = (word: string) => {
 };
 
 /** 원인 하나 → 한 문장 */
-export function changeSentence(doc: Pick<Doc, 'from'>, c: DocChange): string {
+export function changeSentence(doc: Pick<Doc, 'from' | 'madeWithout'>, c: DocChange): string {
   if (c === 'evidence') return '확인한 근거가 추가되거나 바뀌었어요';
   if (c === 'decisions') return '결정이 바뀌었어요';
   if (c === 'idea') return '아이디어나 맥락이 바뀌었어요';
   if (c === 'unknown') return '만든 뒤 입력이 바뀌었어요';
   const key = c.slice(4);
+  if (doc.madeWithout?.includes(key as DocKey)) return `빠졌던 ${labelOf(key)}${iGa(labelOf(key))} 생겼어요`;
   return key === doc.from ? `앞 문서(${labelOf(key)})가 바뀌었어요` : `함께 보는 ${labelOf(key)} 문서가 바뀌었어요`;
 }
 
@@ -33,4 +34,20 @@ export function upstreamHint(doc: Doc, docs: Doc[]): string | null {
   if (doc.content === null || doc.stale || doc.from === 'idea') return null;
   const from = docs.find((d) => d.key === doc.from);
   return from?.content != null && from.stale ? `${from.label}${iGa(from.label)} 예전 기준이에요. ${from.label}부터 검토하세요.` : null;
+}
+
+/** "개발 로드맵 없이 기획안으로 만들었어요" — 저장된 inputs 기준 (없으면 null) */
+export function madeWithLine(doc: Pick<Doc, 'madeWithout' | 'madeFrom'>): string | null {
+  if (!doc.madeWithout?.length) return null;
+  const without = doc.madeWithout.map(labelOf).join(', ');
+  const from = doc.madeFrom === 'idea' ? '아이디어' : doc.madeFrom ? labelOf(doc.madeFrom) : null;
+  return from ? `${without} 없이 ${from}${roEuro(from)} 만들었어요.` : `${without} 없이 만들었어요.`;
+}
+
+/** 받침 없거나 ㄹ 받침이면 '로', 아니면 '으로' (영문 이름은 '로') */
+function roEuro(word: string) {
+  const c = word.charCodeAt(word.length - 1);
+  if (c < 0xac00 || c > 0xd7a3) return '로';
+  const jong = (c - 0xac00) % 28;
+  return jong === 0 || jong === 8 ? '로' : '으로';
 }

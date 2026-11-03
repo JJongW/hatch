@@ -15,7 +15,7 @@ const decision = (question: string): Decision => ({
 describe('questionView', () => {
   it('안 만들었으면 수만', () => {
     expect(questionView(null, { groups: [G('a', 3), G('b', 1)], unnamed: 2 }, [])).toEqual({
-      made: false, customer: [], owner: [], decision: [], answered: 0, byEvidence: 0, byDecision: 0, newLabels: 0, unknownTotal: 6, labelTotal: 2, unnamed: 2, cut: 0, limit: 30,
+      made: false, customer: [], owner: [], decision: [], first: [], openTotal: 0, answered: 0, byEvidence: 0, byDecision: 0, newLabels: 0, unknownTotal: 6, labelTotal: 2, unnamed: 2, cut: 0, limit: 30,
     });
   });
   it('고객 · 역할 순서로 묶고 지금 수를 붙이며, 문서에서 사라진 라벨은 숨긴다', () => {
@@ -23,9 +23,18 @@ describe('questionView', () => {
       groups: [G('a', 1), G('b', 2), G('c', 3)],
       unnamed: 0,
     }, []);
-    expect(v.customer).toEqual([{ ...c('b', 'qb'), count: 2 }]);
-    expect(v.owner.map((g) => [g.role, g.items.map((q) => q.question)])).toEqual([['개발', ['qc']], ['법무', ['qa']]]);
+    // 5개 이하면 모두 '먼저 볼 것'으로, 묶음은 비고 전체 수는 남는다
+    expect(v.first.map((q) => q.question)).toEqual(['qc', 'qb', 'qa']);
+    expect([v.customer, v.owner, v.openTotal]).toEqual([[], [], 3]);
     expect(v.newLabels).toBe(0);
+  });
+  it('먼저 볼 것: 팀이 정할 것 먼저, 그다음 걸린 곳 많은 순, 5개를 넘으면 나머지는 묶음으로', () => {
+    const items = [c('a', 'qa'), o('b', '개발', 'qb'), { label: 'd', kind: 'decision', role: '', question: 'qd' } as QuestionItem, c('e', 'qe'), c('f', 'qf'), c('g', 'qg'), o('h', '법무', 'qh')];
+    const v = questionView(set(items), { groups: [G('a', 1), G('b', 9), G('d', 1), G('e', 5), G('f', 5), G('g', 2), G('h', 3)], unnamed: 0 }, []);
+    expect(v.first.map((q) => q.question)).toEqual(['qd', 'qb', 'qe', 'qf', 'qh']);
+    expect(v.customer.map((q) => q.question)).toEqual(['qa', 'qg']);
+    expect(v.owner).toEqual([]);
+    expect(v.openTotal).toBe(7);
   });
   it('같은 질문(공백 무시)의 결정이 있으면 답한 것으로 뺀다', () => {
     const v = questionView(set([c('b', '첫 출시 지역은?')]), { groups: [G('b', 2)], unnamed: 0 }, [decision(' 첫  출시 지역은? ')]);
@@ -41,7 +50,7 @@ describe('questionView', () => {
   it('팀이 정할 것은 따로 묶는다', () => {
     const d: QuestionItem = { label: 'a', kind: 'decision', role: '', question: '범위는?' };
     const v = questionView(set([d]), { groups: [G('a', 1)], unnamed: 0 }, []);
-    expect(v.decision.map((q) => q.question)).toEqual(['범위는?']);
+    expect(v.first.map((q) => q.question)).toEqual(['범위는?']);
     expect(v.customer).toEqual([]);
   });
   it('새 라벨은 30개 안에서만 세고, 31번째부터는 빠진 수', () => {

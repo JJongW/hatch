@@ -7,7 +7,7 @@
 
 ## 공통 틀 (완성됨 — 도구는 이 틀만 씀)
 - `_frame/load.ts` `loadToolPage(key, searchParams)` — 서버 전용. 아이디어 · 결과 목록 · 현재 결과를 읽어 `ToolFrameData`로
-- `_frame/tool-frame.tsx` `ToolFrame` — 입력 문서 고르기 → 도구 입력 → 실행 → 결과 · 지난 결과 (`sourceOptional` 도구는 도구 입력이 먼저). 도구별 입력 칸은 `inputFields`(제목 `inputLabel`), 결과를 본 뒤에야 의미 있는 입력(협상 내 답)은 결과 상자 안 `continueFields`로 넘긴다
+- `_frame/tool-frame.tsx` `ToolFrame` — 입력 문서 고르기(받는 문서가 없으면 이유 + `붙여넣기로 계속`) → 도구 입력 → 실행 → 결과 · 지난 결과 (`sourceOptional` 도구는 도구 입력이 먼저). 도구별 입력 칸은 `inputFields`(제목 `inputLabel`), 결과를 본 뒤에야 의미 있는 입력(협상 내 답)은 결과 상자 안 `continueFields`로 넘긴다
 - 결과 상자 맨 위 요약 화면(막대, 칩)은 `ToolFrame`의 `resultSummary`. 페이지가 `data.current?.data`로 만들어 넘긴다 (모양이 다르면 안 그림)
 - `actions.ts` `runToolAction(key, …)` — 프레임 칸(`mode` · `ideaId` · `docKey` · `pasted` · `prevId`) 밖의 폼 필드는 전부 도구 입력
 - 도구 정의(`ToolDef`) · 계산 · 렌더는 `src/lib/tools/<도구>/`. 실행 순서는 `src/lib/tools/run.ts`
