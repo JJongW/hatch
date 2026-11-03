@@ -8,8 +8,9 @@ const serveHost = process.env.HATCH_SERVE_HOST?.trim()
   .replace(/^https?:\/\//, '')
   .replace(/[:/].*$/, '');
 
-// 공유 링크 화면 보안 헤더 (spec 2026-11-03-hosted-po §3-4). nonce는 Cache Components 정적 셸에 못 넣어 쓰지 않는다:
-// 대신 connect-src · img-src · form-action을 막아 스크립트가 들어와도 밖으로 못 보낸다. 글꼴 CSS만 jsdelivr
+// 공유 링크 화면 보안 헤더 (spec 2026-11-03-hosted-po §3-4). nonce는 Cache Components 정적 셸에 못 넣어 쓰지 않는다 ('unsafe-inline').
+// 대신 connect-src · img-src · form-action을 막아 스크립트가 들어와도 fetch · 이미지 · 폼으로는 못 보낸다.
+// 페이지 이동(location=)으로 내보내는 건 CSP로 못 막는다 — 공유 내용은 원래 링크를 아는 사람에게 공개라 받아들인다. 글꼴 CSS만 jsdelivr
 const SHARE_CSP = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ''}`,

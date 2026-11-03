@@ -58,8 +58,8 @@ export default function ShareView({ payload }: { payload: SharePayload | null })
         </FlexBox>
         {payload.context.length > 0 && (
           <Box as="dl" sx={{ display: 'grid', gridTemplateColumns: 'max-content 1fr', gap: '4px 12px', margin: 0 }}>
-            {payload.context.map((c) => (
-              <Box key={c.label} sx={{ display: 'contents' }}>
+            {payload.context.map((c, i) => (
+              <Box key={i} sx={{ display: 'contents' }}>
                 <Typography as="dt" variant="label1" color="semantic.foreground.neutral.secondary">
                   {c.label}
                 </Typography>
@@ -80,8 +80,8 @@ export default function ShareView({ payload }: { payload: SharePayload | null })
           <TabPanel value="docs" sx={PANEL}>
             {payload.docs.length === 0 && <Typography variant="body1">공유한 문서가 없어요.</Typography>}
             <FlexBox flexDirection="column" gap="40px">
-              {payload.docs.map((d) => (
-                <Box as="section" key={d.label} aria-label={d.label}>
+              {payload.docs.map((d, i) => (
+                <Box as="section" key={i} aria-label={d.label}>
                   <Box sx={{ marginBottom: '12px' }}>{label(d.label)}</Box>
                   <DocMarkdown images="hide">{d.content}</DocMarkdown>
                 </Box>

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { isValidId } from '@/lib/storage/ids';
+import { isValidId } from '@/lib/storage';
 
 import { PAYLOAD_MAX_BYTES, sharePayloadSchema } from './payload';
 import { verifyPublish } from './sign';
@@ -14,13 +14,19 @@ const requestSchema = z.discriminatedUnion('op', [
 ]);
 
 export type PublishResult = { status: number; body: { ok: boolean; error?: string } };
+/** 발행 토큰이 이보다 짧으면 쓰지 않는다 (짧은 비밀은 HMAC을 추측할 수 있다). `openssl rand -base64 32`로 만든다 */
+export const PUBLISH_SECRET_MIN = 32;
 type Deps = { secret: string | undefined; now?: number; fetch?: typeof fetch };
 
 export async function handlePublish(raw: string, timeHeader: string | null, signature: string | null, deps: Deps): Promise<PublishResult> {
   const fail = (status: number, error: string): PublishResult => ({ status, body: { ok: false, error } });
-  const secret = deps.secret?.trim();
+  const secret = deps.secret?.trim() ?? '';
   const config = shareConfig();
-  if (!secret || !config) return fail(503, 'not-configured');
+  // 설정이 빠졌어도 밖에는 서명 실패와 같은 답 (배포 상태를 알리지 않는다). 이유는 서버 로그에만
+  if (secret.length < PUBLISH_SECRET_MIN || !config) {
+    console.error('[share] 발행 토큰(32자 이상) 또는 Supabase 설정이 없음');
+    return fail(401, 'unauthorized');
+  }
   if (Buffer.byteLength(raw) > PAYLOAD_MAX_BYTES) return fail(413, 'too-large');
 
   const signed = verifyPublish(secret, timeHeader, signature, raw, deps.now);

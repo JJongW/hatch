@@ -37,24 +37,25 @@
 - 맥은 FileVault 켬. 회사 기기면 회사 정책 우선
 ### 3-2. 올리기 (`/api/publish`)
 - 맥은 Supabase 키를 갖지 않는다. 갖는 건 `HATCH_PUBLISH_TOKEN` 하나 — 공유 사본을 올리고 지우는 것만 할 수 있다
-- 요청마다 `HMAC-SHA256(본문 + 시각)` 서명, 시각이 5분 넘게 차이 나면 거절 (가로챈 요청 다시 보내기 막기)
+- 요청마다 `HMAC-SHA256(발행 토큰, '시각.본문')` 서명, 시각이 5분 넘게 차이 나면 거절. 발행 토큰은 32자 이상
+- 다시 보내기: 끈 토큰에는 묘비(해시 + 끈 시각)가 남아 다시 못 올린다. 저장된 판보다 오래된 시각의 요청도 거절. 맥 시계 기준이라 맥 시계가 앞서 있다가 고쳐지면 그 토큰은 잠시 못 올린다 → 맥 화면은 "새 링크"를 권한다
 - Vercel이 받은 본문을 zod로 검사: 허용한 칸만, 문서 하나 200KB · 전체 1MB 넘으면 거절
 - 토큰이 새면: Vercel env에서 바꾸고 재배포 → 옛 토큰 즉시 무효
 ### 3-3. 무엇을 올리나 (허용 목록)
-- 올림: 제목, 메모, 맥락 4칸, 생성 문서 본문(머리말 뺌), 확인 질문과 답, 결정 · 보류
+- 올림: 제목, 메모, 맥락 칸, 생성 문서 본문(머리말 뺌), 확인 질문, 결정 · 보류 (질문에 단 답은 결정으로 들어 있다)
 - **안 올림:** 이전 판(`.history`), 사용량, 생성 중 표시, PO 도구 결과, 휴지통, 다른 아이디어, 폴더 이름
 - 올리기 전 PO에게 보여 주기: "이 아이디어의 문서 N개, 질문 N개, 결정 N개를 공유해요" → 확인 후 올림
 - 다시 올리기는 PO가 `공유 새로고침`을 누를 때만. 맥에서 고쳐도 저절로 올라가지 않는다
 ### 3-4. 공유 화면 (`/s/<토큰>`)
 - 토큰: 24바이트 난수(192비트) base64url. DB에는 **SHA-256 해시만** 저장 → DB가 새어도 링크를 못 만든다
 - 형식이 틀린 토큰은 DB를 묻지 않고 바로 "공유가 끝난 링크예요." (없는 링크와 같은 답 → 있는지 알 수 없음)
-- 읽기만: 버튼, 폼, Server Action 없음. 네비 없음
-- 헤더: `Referrer-Policy: no-referrer`(문서 안 링크를 눌러도 토큰이 바깥으로 안 샘) · `X-Robots-Tag: noindex, nofollow` · `Cache-Control: private, no-store`(공유를 끄면 바로 안 보이게) · `Content-Security-Policy`(스크립트는 우리 것만, `img-src 'self' data:`, `frame-ancestors 'none'`)
-- 문서 안 바깥 이미지는 그리지 않고 "바깥 이미지 (공유 화면에서는 숨김)"로
+- 읽기만: 버튼, 폼, Server Action 없음. 네비는 안 보임 (공용 틀이라 정적 링크는 HTML에 남는다, 데이터 없음)
+- 헤더: `Referrer-Policy: no-referrer`(문서 안 링크를 눌러도 토큰이 바깥으로 안 샘) · `X-Robots-Tag: noindex, nofollow` · `Cache-Control: private, no-store`(공유를 끄면 바로 안 보이게) · `X-Content-Type-Options: nosniff` · `Content-Security-Policy`(`connect-src 'self'` · `img-src 'self' data:` · `form-action 'none'` · `frame-ancestors 'none'`, 글꼴만 jsdelivr). nonce는 Cache Components 정적 셸에 못 넣어 `script-src 'unsafe-inline'` — 들어온 스크립트도 fetch · 이미지로는 못 내보내지만 페이지 이동은 못 막는다
+- 문서 안 이미지는 그리지 않고 "[이미지: 설명 (공유 화면에서는 숨김)]"으로
 - 공유 화면에 `'use cache'` 쓰지 않음. 매번 DB에서 읽는다
 ### 3-5. 저장 (Supabase)
-- 표 `hatch_shares(token_hash text pk, idea_id text, payload jsonb, created_at, updated_at)` 하나. RLS 켜고 정책 없음 → 비밀 키(Vercel 서버 env)만 읽고 쓴다. 브라우저는 Supabase에 직접 닿지 않는다
-- 공유 끄기 · 새 링크 · 맥에서 휴지통 이동 → 그 줄을 **바로 지운다** (사본이라 지워도 원본은 맥에 있음)
+- 표 `hatch_shares(token_hash pk, idea_id, payload, published_at, deleted_at, updated_at)` 하나. RLS 켜고 정책 없음, anon · authenticated 권한도 걷음 → 비밀 키(Vercel 서버 env)만 읽고 쓴다. 쓰기는 `security definer` 함수 2개(`search_path ''`)로만. 브라우저는 Supabase에 직접 닿지 않는다
+- 공유 끄기 · 새 링크 · 맥에서 휴지통 이동 → 그 줄의 **내용을 바로 지운다**. 해시와 끈 시각만 묘비로 남긴다 (같은 토큰 다시 올리기 막기). 원본은 맥에 있음
 - 맥은 `~/Hatch/ideas/<id>/share.json`에 `{ createdAt, publishedAt }`만 남긴다. 토큰 원문은 PO 화면에 한 번 보여 주고 맥 파일에도 남긴다(다시 복사용). 해시만 밖에 있다
 ### 3-6. 남는 위험 (받아들임)
 - 링크를 아는 사람은 누구나 본다. 링크를 다시 전달하는 것은 막을 수 없다 → 민감한 아이디어는 공유하지 않는다. 화면 위에 "링크가 있는 사람은 누구나 볼 수 있어요"

@@ -6,7 +6,7 @@ import { MAX_SKEW_MS, signPublish, verifyPublish } from './sign';
 import { getShare } from './store';
 import { hashShareToken, isShareToken, newShareToken } from './token';
 
-const SECRET = 'test-secret';
+const SECRET = 'test-secret-that-is-at-least-32-chars';
 const NOW = 1_762_000_000_000;
 const TOKEN = 'A'.repeat(32);
 const ID = '20261103-1100-abcd';
@@ -133,12 +133,17 @@ describe('올리기 (POST /api/publish)', () => {
     expect(db.calls).toHaveLength(0);
   });
 
-  it('비밀 키나 Supabase가 없으면 503', async () => {
-    vi.stubEnv('SUPABASE_URL', '');
+  it('Supabase나 발행 토큰이 없거나 32자보다 짧으면 서명 실패와 같은 401 (배포 상태를 알리지 않음)', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
     const db = fakeSupabase();
-    expect((await send(db, { op: 'delete', token: TOKEN })).status).toBe(503);
-    const r = await handlePublish('{}', String(NOW), 'x', { secret: undefined, now: NOW, fetch: db.f });
-    expect(r.status).toBe(503);
+    const raw = JSON.stringify({ op: 'delete', token: TOKEN });
+    for (const secret of [undefined, '', 'short-secret']) {
+      const r = await handlePublish(raw, String(NOW), signPublish(secret ?? '', NOW, raw), { secret, now: NOW, fetch: db.f });
+      expect(r).toEqual({ status: 401, body: { ok: false, error: 'unauthorized' } });
+    }
+    vi.stubEnv('SUPABASE_URL', '');
+    expect((await send(db, { op: 'delete', token: TOKEN })).status).toBe(401);
+    expect(db.calls).toHaveLength(0);
   });
 });
 
