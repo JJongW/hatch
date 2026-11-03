@@ -11,6 +11,7 @@
 `$HATCH_DATA_DIR`(기본 `~/Hatch`)`/ideas/<id>/idea.md` (머리말 + 메모, 머리말 `context` = 맥락 4칸 · `folder` = 폴더 이름(빈 값 = 미분류) · 3판) · 생성 문서는 `<id>/docs/plan.md` 등 (예전 자리 `<id>/plan.md`도 읽음, 쓸 때 `docs/`로) · 삭제는 `.trash/`로 이동 · `$HATCH_DATA_DIR/목록.md` — 폴더별 아이디어 목록 (만들기 · 고치기 · 휴지통 때 다시 씀)
 문서 머리말 `generatedAt · sourceHash · version`(머리말 없는 손글 문서는 stale 아님) · 덮어쓰기 전 이전 판은 `<id>/.history/<key>-<시각>.md` · 생성 중 표시 `<id>/.running.json`(10분 넘으면 무시)
 결정 `<id>/decisions.md` (머리말 `items` = 결정 목록, `from` = plan · manual · question, 고치기 전 판은 `.history/decisions-<시각>.md`)
+공유 상태 `<id>/share.json` (`{ token, createdAt, publishedAt }` · 끄면 `{ token: null, closedAt }`, 토큰 원문은 맥에만)
 확인 질문 `<id>/questions.md` (머리말 `labels` · `items`, 다시 만들기 전 판은 `.history/questions-<시각>.md`)
 도구 결과 `<id>/tools/<도구>-<시각>-<rand>.md` (붙여넣기는 `$HATCH_DATA_DIR/tools/`) · 머리말 `data` = 계산 결과 JSON
 사용량 `$HATCH_DATA_DIR/usage.jsonl` (호출 한 번 = JSON 한 줄, `v: 1`, `turns` = 모델 호출 수 · `usage.iterations` 길이 (`num_turns` 아님), 프롬프트 내용은 남기지 않음, 쓰기 실패는 생성을 막지 않음)

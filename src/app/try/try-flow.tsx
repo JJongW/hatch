@@ -193,7 +193,7 @@ export default function TryFlow({ fixture }: { fixture: TryFixture }) {
                 generateAction={generateDoc}
                 updateDocAction={updateDoc}
                 updateAction={async () => ({})}
-                trashAction={async () => {}}
+                trashAction={async () => ({})}
                 usage={null}
                 editable={false}
                 goTool={setView}

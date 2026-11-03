@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useCallback, useRef, useState } from 'react';
-import { Box, Button, ContentBadge, FlexBox, Tab, TabList, TabListItem, TabPanel, TextButton } from '@montage-ui/core';
+import { useActionState, useCallback, useRef, useState } from 'react';
+import { Box, Button, ContentBadge, FlexBox, SectionMessage, Tab, TabList, TabListItem, TabPanel, TextButton } from '@montage-ui/core';
 
 import { useDemo } from '../../_components/demo';
 import IdeaForm from '../../_components/idea-form';
@@ -24,7 +24,8 @@ import StatusCards, { type DetailTab } from './status-cards';
 import type { Doc, DocKey, IdeaContext } from '@/lib/storage';
 import type { QuestionView, Summary } from '@/lib/summary';
 import { formatCost, formatTokens } from '@/lib/usage/summary';
-import type { ContextState, DecisionState, DocActionState, FormState, QuestionsState } from '../../actions';
+import type { ContextState, DecisionState, DocActionState, FormState, QuestionsState, ShareActionState, ShareOp } from '../../actions';
+import SharePanel, { type ShareInfo } from './share-panel';
 
 // 탭 안 위 여백. 숨은 탭은 Montage가 감춘다
 const PANEL = { paddingTop: '20px' };
@@ -48,13 +49,16 @@ type Props = {
   generateAction: (key: DocKey, prev: DocActionState) => Promise<DocActionState>;
   updateDocAction: (key: DocKey, prev: DocActionState, formData: FormData) => Promise<DocActionState>;
   updateAction: (prev: FormState, formData: FormData) => Promise<FormState>;
-  trashAction: () => Promise<void>;
+  /** 성공하면 목록으로 이동. 공유를 못 끄면 error (휴지통으로 안 옮김) */
+  trashAction: () => Promise<{ error?: string }>;
   /** 이 아이디어에 쓴 사용량 합계. 기록이 없으면 null (줄을 숨김) */
   usage: { calls: number; tokens: number; cost: number } | null;
   /** false면 수정 버튼을 숨긴다 (흐름 체험) */
   editable?: boolean;
   /** 있으면 도구 버튼이 주소 이동 대신 이 함수를 부른다 (흐름 체험) */
   goTool?: (tool: ToolLink) => void;
+  /** 공유 설정(HATCH_PUBLISH_*)이 있을 때만. 없으면 공유 버튼이 없다 */
+  share?: ShareInfo & { action: (op: ShareOp) => Promise<ShareActionState> };
 };
 
 export default function IdeaDetail({
@@ -78,6 +82,7 @@ export default function IdeaDetail({
   trashAction,
   usage,
   editable = true,
+  share,
   goTool,
 }: Props) {
   // 이 화면에서 시작한 생성 (서버 running이 갱신되기 전에도 다른 카드를 막는다)
@@ -92,6 +97,8 @@ export default function IdeaDetail({
   const confirmTrash = ask({ title: '휴지통으로 옮길까요?', content: '~/Hatch/.trash로 옮겨요. 파일은 지워지지 않아요.', confirm: '휴지통으로' });
 
   const [editing, setEditing] = useState(false);
+  const [sharing, setSharing] = useState(false);
+  const [trashState, trashFormAction] = useActionState<{ error?: string }>(() => trashAction(), {});
   const [tab, setTab] = useState<DocKey>(() => firstTab(docs, summary.next));
   // 본문 탭. 처음은 문서 (spec detail-dashboard §2-4)
   const [section, setSection] = useState<DetailTab>('docs');
@@ -148,18 +155,31 @@ export default function IdeaDetail({
             />
           </Box>
           {!demo && editable && (
-            <Button size="small" variant="outlined" color="assistive" onClick={() => setEditing(true)} disabled={generating}>
-              수정
-            </Button>
+            <FlexBox gap="8px" sx={{ flexShrink: 0 }}>
+              {share && (
+                <Button size="small" variant="outlined" color="assistive" onClick={() => setSharing((v) => !v)} aria-expanded={sharing}>
+                  {share.active ? '공유 중' : '공유'}
+                </Button>
+              )}
+              <Button size="small" variant="outlined" color="assistive" onClick={() => setEditing(true)} disabled={generating}>
+                수정
+              </Button>
+            </FlexBox>
           )}
         </FlexBox>
       )}
 
+      {sharing && share && !editing && (
+        // 아래 맥락 칸이 -12px로 당겨 붙으므로 한 칸 더 띄운다
+        <Box sx={{ marginBottom: '24px' }}>
+          <SharePanel active={share.active} counts={share.counts} action={share.action} disabled={generating} onClose={() => setSharing(false)} />
+        </Box>
+      )}
       {editing && (
         <Box sx={{ marginBottom: '24px' }}>
           <IdeaForm action={saveIdea} submitLabel="수정 저장" primary={false} initial={idea} folders={folders} disabled={generating} />
           <FlexBox justifyContent="space-between" sx={{ marginTop: '8px' }}>
-            <form action={trashAction} onSubmit={confirmTrash}>
+            <form action={trashFormAction} onSubmit={confirmTrash}>
               <Button type="submit" variant="outlined" color="assistive" size="small" disabled={generating}>
                 휴지통으로
               </Button>
@@ -168,6 +188,11 @@ export default function IdeaDetail({
               취소
             </Button>
           </FlexBox>
+          {trashState.error && (
+            <Box sx={{ marginTop: '8px' }}>
+              <SectionMessage variant="negative">{trashState.error}</SectionMessage>
+            </Box>
+          )}
         </Box>
       )}
       {/* 아이디어 수정 중에도 마운트해 둔다 (열어 둔 맥락 폼이 사라지지 않게).

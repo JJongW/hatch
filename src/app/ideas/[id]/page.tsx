@@ -3,11 +3,14 @@ import { connection } from 'next/server';
 
 import { GENERATABLE } from '@/lib/chain';
 import { collectUnknowns } from '@/lib/questions';
-import { CONTEXT_FIELDS, folderNames, getDocs, getIdea, getQuestions, getRunning, groupFolders, isValidId, listDecisions, listIdeas, listToolResults, listUsage } from '@/lib/storage';
+import { isDemo } from '@/lib/demo';
+import { buildSharePayload, shareCounts } from '@/lib/share/build';
+import { isShareReady, shareLink } from '@/lib/share/client';
+import { CONTEXT_FIELDS, folderNames, getDocs, getIdea, getQuestions, getRunning, getShareState, groupFolders, isValidId, listDecisions, listIdeas, listToolResults, listUsage } from '@/lib/storage';
 import { questionView, summarize, vocEvidence } from '@/lib/summary';
 import { summarizeUsage } from '@/lib/usage/summary';
 
-import { generateDocAction, makeQuestionsAction, removeDecisionAction, saveContextAction, saveDecisionAction, trashIdeaAction, updateDocAction, updateIdeaAction } from '../../actions';
+import { generateDocAction, makeQuestionsAction, shareAction, removeDecisionAction, saveContextAction, saveDecisionAction, trashIdeaAction, updateDocAction, updateIdeaAction } from '../../actions';
 import WidePage from '../../_components/wide-page';
 import IdeaDetail from './idea-detail';
 
@@ -45,6 +48,18 @@ export default async function IdeaPage({ params }: { params: Promise<{ id: strin
   const questions = questionView(questionSet, collectUnknowns(docs), decisions);
   const used = summarizeUsage(usageLog.entries, id);
   const usage = used.calls > 0 ? { calls: used.calls, tokens: used.tokens, cost: used.cost } : null;
+  // 데모에선 버튼이 없으니 계산하지 않는다
+  const shareOn = isShareReady() && !isDemo();
+  const shareState = shareOn ? await getShareState(id).catch(() => null) : null;
+  const share = shareOn
+    ? {
+        active: shareState?.token
+          ? { link: shareLink(shareState.token), publishedAt: new Date(shareState.publishedAt).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }) }
+          : null,
+        counts: shareCounts(buildSharePayload({ idea, docs, questions: questionSet, decisions })),
+        action: shareAction.bind(null, id),
+      }
+    : undefined;
 
   return (
     <>
@@ -69,6 +84,7 @@ export default async function IdeaPage({ params }: { params: Promise<{ id: strin
         updateAction={updateIdeaAction.bind(null, id)}
         trashAction={trashIdeaAction.bind(null, id)}
         usage={usage}
+        share={share}
       />
     </>
   );
