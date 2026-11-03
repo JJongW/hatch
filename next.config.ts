@@ -8,8 +8,37 @@ const serveHost = process.env.HATCH_SERVE_HOST?.trim()
   .replace(/^https?:\/\//, '')
   .replace(/[:/].*$/, '');
 
+// 공유 링크 화면 보안 헤더 (spec 2026-11-03-hosted-po §3-4). nonce는 Cache Components 정적 셸에 못 넣어 쓰지 않는다 ('unsafe-inline').
+// 대신 connect-src · img-src · form-action을 막아 스크립트가 들어와도 fetch · 이미지 · 폼으로는 못 보낸다.
+// 페이지 이동(location=)으로 내보내는 건 CSP로 못 막는다 — 공유 내용은 원래 링크를 아는 사람에게 공개라 받아들인다. 글꼴 CSS만 jsdelivr
+const SHARE_CSP = [
+  "default-src 'self'",
+  `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ''}`,
+  "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
+  "font-src 'self' https://cdn.jsdelivr.net",
+  "img-src 'self' data:",
+  "connect-src 'self'",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'none'",
+  "frame-ancestors 'none'",
+].join('; ');
+
 const nextConfig: NextConfig = {
-  /* config options here */
+  async headers() {
+    return [
+      {
+        source: '/s/:token*',
+        headers: [
+          { key: 'Content-Security-Policy', value: SHARE_CSP },
+          { key: 'Referrer-Policy', value: 'no-referrer' },
+          { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Cache-Control', value: 'private, no-store' },
+        ],
+      },
+    ];
+  },
   cacheComponents: true,
   partialPrefetching: true,
   // 읽기 전용 데모(HATCH_DEMO=1, HATCH_DATA_DIR=demo-data)가 샘플 md를 읽도록 서버 번들에 넣는다
