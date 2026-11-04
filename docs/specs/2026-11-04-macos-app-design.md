@@ -29,7 +29,7 @@ Hatch.app/Contents
 - 창을 닫아도 서버는 메뉴 막대와 함께 산다. ⌘Q면 서버에 SIGTERM, 3초 뒤 SIGKILL
 - 데이터: 지금처럼 `~/Hatch` md 파일. 웹 버전과 같은 폴더라 쓰던 데이터가 그대로 보인다. 저장 형식은 바꾸지 않는다
 - 서버는 `127.0.0.1`에만 연다. 같은 와이파이의 다른 기기는 못 들어온다
-- Next 쪽 변경: `next.config.ts`에 `output: 'standalone'`. 웹, Vercel 빌드에는 영향 없음 (E1에서 데모 배포로 확인)
+- Next 쪽 변경: `next.config.ts`에 `HATCH_STANDALONE=1`일 때만 `output: 'standalone'`. 웹과 Vercel 빌드는 설정이 그대로 (E1에서 데모 배포로 확인)
 - 코드 위치: `macos/` (Xcode 프로젝트, 빌드 스크립트, `macos/CLAUDE.md` 30줄 이하)
 
 ### 1-1. 서버에 넘기는 환경 변수
@@ -90,13 +90,13 @@ Hatch.app/Contents
 
 ### 3-2. 앱 전용 주소 (Next, E1)
 `HATCH_APP_TOKEN`이 없으면 404. 요청 머리 `x-hatch-app-token`이 다르면 401 (상수 시간 비교).
-- `GET /api/app/status` → `{ ok: true, claudeBusy, running: [{ ideaId, ideaTitle, kind: 'doc' | 'tool', key, label, startedAt }], finished: [{ id, ideaId, ideaTitle, label, ok, message?, path, at }] }`
-  - `running`은 storage의 생성 중 표시(`getRunning`, 도구 쪽 같은 표시)에서 읽는다
+- `GET /api/app/status` → `{ ok: true, claudeBusy, running: [{ id, ideaId, title, doing, startedAt }], finished: [{ id, ideaId, title, body, ok, path, at }] }`
+  - `running`은 서버 메모리의 생성 중 작업이다 (`.running.json`을 읽지 않는다). 알림 제목(`title`)과 본문(`body`)은 서버가 만들고, Swift는 그대로 보여 준다
   - `finished`는 서버 메모리의 최근 20개 (생성, 도구 실행이 끝날 때 한 줄 넣는다). 서버를 다시 켜면 비어도 된다. `path`는 알림을 누르면 열 화면
-- `POST /api/app/ideas` `{ text }` → storage의 아이디어 저장 함수 그대로 → `{ id }`. 빈 글, 너무 긴 글은 400 (기존 아이디어 쓰기 규칙과 같게)
+- `POST /api/app/ideas` `{ text }` → storage의 아이디어 저장 함수 그대로 → `{ ok, id, path }`. 첫 줄은 제목, 나머지는 메모, 2,000자까지. 빈 글, 너무 긴 글은 400, 본문이 16KB를 넘으면 413
 
 ### 3-3. 알림
-- 앱이 맨 앞이 아닐 때 끝난 작업마다 알림: "PT 예약 앱, PRD를 만들었어요" / 실패 "PRD를 만들지 못했어요. 눌러서 이유 보기". 누르면 그 `path`를 연다
+- 앱이 맨 앞이 아닐 때 끝난 작업마다 알림: "PT 예약 앱, PRD를 만들었어요" / 실패 "PRD를 만들지 못했어요. <이유>". 누르면 그 `path`를 연다
 - Swift는 `running`이 있을 때만 2초마다, 없으면 30초마다 `status`를 묻는다. 본 `finished.id`는 기억해 두 번 알리지 않는다
 - 알림 권한은 첫 생성이 끝날 때 묻는다 (첫 실행에 몰아 묻지 않는다)
 
