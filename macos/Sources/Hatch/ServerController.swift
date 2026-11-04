@@ -32,6 +32,7 @@ final class ServerController: ObservableObject {
   }
 
   func start() {
+    stop() // 예전 서버가 남아 있으면 먼저 끈다
     state = .starting
     guard let log else { return fail("로그 폴더(~/Library/Logs/Hatch)를 만들지 못했어요.") }
     guard let resources = Bundle.main.resourceURL else { return fail("앱 파일을 읽지 못했어요. 앱을 다시 설치해 주세요.") }
@@ -50,8 +51,11 @@ final class ServerController: ObservableObject {
       return fail("빈 포트를 찾지 못했어요. 맥을 다시 시작해 보세요.")
     }
     let server = ServerProcess(log: log)
-    server.onUnexpectedExit = { [weak self] _ in
-      Task { @MainActor in self?.serverDied() }
+    server.onUnexpectedExit = { [weak self, weak server] _ in
+      Task { @MainActor in
+        guard let server else { return }
+        self?.serverDied(server)
+      }
     }
     do {
       try server.start(config)
@@ -90,7 +94,8 @@ final class ServerController: ObservableObject {
     }
   }
 
-  private func serverDied() {
+  private func serverDied(_ dead: ServerProcess) {
+    guard server === dead else { return } // 그사이 다시 켰으면 예전 서버의 알림은 버린다
     server = nil
     switch policy.onCrash(at: Date()) {
     case .restartQuietly: start()
