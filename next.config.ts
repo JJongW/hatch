@@ -43,6 +43,11 @@ const nextConfig: NextConfig = {
   partialPrefetching: true,
   // 읽기 전용 데모(HATCH_DEMO=1, HATCH_DATA_DIR=demo-data)가 샘플 md를 읽도록 서버 번들에 넣는다
   outputFileTracingIncludes: { '/**': ['./demo-data/**/*'] },
+  // 맥 앱 번들용 (spec 2026-11-04-macos-app §1). macos/scripts/build.sh만 켠다. 웹, Vercel 빌드는 그대로
+  ...(process.env.HATCH_STANDALONE === '1' && {
+    output: 'standalone' as const,
+    outputFileTracingRoot: process.cwd(), // 상위 폴더 lockfile을 뿌리로 잡아 server.js가 깊이 숨지 않게
+  }),
   ...(serveHost && {
     allowedDevOrigins: [serveHost],
     experimental: { serverActions: { allowedOrigins: [serveHost] } },
