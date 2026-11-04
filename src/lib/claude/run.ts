@@ -18,8 +18,10 @@ const LOGIN_HINT = 'Claude 실행에 실패했어요. 터미널에서 `claude`�
 /** 동시 실행 거부 문구 (generate.ts도 같은 문구를 쓴다) */
 export const BUSY_MESSAGE = '다른 문서를 만드는 중이에요. 끝난 뒤 다시 눌러 주세요.';
 
-let busy = false;
-export const isClaudeBusy = () => busy;
+// globalThis에 두는 건 Server Action과 Route Handler가 모듈을 따로 읽어도 같은 잠금을 보게 하려고 (jobs.ts와 같은 이유)
+type WithBusy = typeof globalThis & { __hatchClaudeBusy?: boolean };
+const setBusy = (v: boolean) => ((globalThis as WithBusy).__hatchClaudeBusy = v);
+export const isClaudeBusy = () => (globalThis as WithBusy).__hatchClaudeBusy === true;
 
 export async function runClaude({
   prompt,
@@ -36,8 +38,8 @@ export async function runClaude({
   /** 시간 초과 시 SIGTERM 뒤 SIGKILL까지 기다리는 시간 */
   killGraceMs?: number;
 }): Promise<unknown> {
-  if (busy) throw new ChainError(BUSY_MESSAGE); // claude를 부르지 않았으니 기록하지 않는다
-  busy = true;
+  if (isClaudeBusy()) throw new ChainError(BUSY_MESSAGE); // claude를 부르지 않았으니 기록하지 않는다
+  setBusy(true);
   const started = Date.now();
   let stdout: string | null = null;
   let ok = false;
@@ -62,7 +64,7 @@ export async function runClaude({
     ok = true;
     return res.structured_output;
   } finally {
-    busy = false;
+    setBusy(false);
     if (cwd) await fs.rm(cwd, { recursive: true, force: true }).catch(() => {}); // 방금 만든 빈 임시 폴더 (실패해도 장부는 남긴다)
     // 형식 검사(schema.safeParse)는 호출하는 쪽에 있어, 여기서 ok는 "결과 JSON을 받았나"까지다 (spec §3)
     await appendUsage({ ...tag, at: new Date().toISOString(), ok, ms: Date.now() - started, promptChars: prompt.length, ...statsOf(stdout) });

@@ -1,35 +1,36 @@
 # Hatch
 
-아이디어 한 줄 → 기획안 · 개발 로드맵 · PRD · 기능명세 · 개발/디자인 프롬프트로 이어 주는 PO용 아이디어 뱅크.
-Next.js(App Router) · Montage(원티드 디자인 시스템) · 생성은 로컬 `claude -p`(`src/lib/claude/`).
+아이디어 한 줄 → 기획안, 개발 로드맵, PRD, 기능명세, 개발/디자인 프롬프트로 이어 주는 PO용 아이디어 뱅크.
+Next.js(App Router), Montage(원티드 디자인 시스템), 생성은 로컬 `claude -p`(`src/lib/claude/`).
 
 ## 지금 단계
-**A · B 완료** — 아이디어 → 기획안 → 로드맵 → PRD → 기능명세 → 개발/디자인 프롬프트 생성.
-**C-1 진행: 공통 틀 + PRD 리뷰 위원회.** 다음: VOC · 지표 · 협상 도구 (`new-po-tool`).
-실행: `cp .env.example .env.local` → `npm run dev`. 앱은 내 컴퓨터(macOS · Linux · Windows)에서 돌린다 (생성은 로컬 `claude -p`, 개발과 확인은 맥). 다른 기기는 Tailscale Serve (README). `bridge/`는 보류 (spec §1).
+**A, B 완료** — 아이디어 → 기획안 → 로드맵 → PRD → 기능명세 → 개발/디자인 프롬프트 생성.
+**C-1 진행: 공통 틀 + PRD 리뷰 위원회.** 다음: VOC, 지표, 협상 도구 (`new-po-tool`).
+실행: `cp .env.example .env.local` → `npm run dev`. 앱은 내 컴퓨터(macOS, Linux, Windows)에서 돌린다 (생성은 로컬 `claude -p`, 개발과 확인은 맥). 다른 기기는 Tailscale Serve (README). `bridge/`는 보류 (spec §1).
 
 ## 폴더 지도 — 일할 폴더의 CLAUDE.md를 먼저 읽는다
 | 경로 | 역할 | 단계 | 에이전트 |
 | --- | --- | --- | --- |
-| `docs/` | spec · plan · Git 규칙 | 전체 | — |
-| `src/app/` | 라우트 · 레이아웃 · 좌측 네비바 | A | `ui-builder` |
-| `src/app/tools/` · `src/lib/tools/` | PO 도구 공통 틀 + 도구 4종 | C | `tool-builder` |
+| `docs/` | spec, plan, Git 규칙 | 전체 | — |
+| `src/app/` | 라우트, 레이아웃, 좌측 네비바 | A | `ui-builder` |
+| `src/app/tools/`, `src/lib/tools/` | PO 도구 공통 틀 + 도구 4종 | C | `tool-builder` |
 | `src/components/` | 공용 UI (Montage 기반) | D | `ui-builder` |
-| `src/lib/storage/` | 아이디어 · 문서 저장 | A | `ui-builder` |
-| `src/lib/share/` | 공유 링크: 사본 모양 · 서명 · 토큰 · Supabase (`supabase/shares.sql`) | C | `ui-builder` |
-| `src/lib/questions/` | 확인 질문 (모으기 · 검사 · 만들기) | 4b | `ui-builder` |
+| `src/lib/storage/` | 아이디어, 문서 저장 | A | `ui-builder` |
+| `src/lib/share/` | 공유 링크: 사본 모양, 서명, 토큰, Supabase (`supabase/shares.sql`) | C | `ui-builder` |
+| `src/lib/app/` | 맥 앱 전용: 앱 비밀값, 작업 목록, 빠른 아이디어 (`src/app/api/app/*`) | E | `ui-builder` |
+| `src/lib/questions/` | 확인 질문 (모으기, 검사, 만들기) | 4b | `ui-builder` |
 | `src/lib/claude/` | claude -p 실행기 | B | `chain-author` |
-| `src/lib/theme/` | 컬러 토큰 상수 · 대비 계산 (색 값은 `src/app/theme.css`) | D | `ui-builder` |
-| `src/lib/diff/` | 두 판 줄 단위 비교 · 바뀐 절 요약 (순수, 의존성 없음) | B | `ui-builder` |
-| `src/lib/usage/` | 사용량 계산 (기능별 · 아이디어별 · 신호) | B | `chain-author` |
+| `src/lib/theme/` | 컬러 토큰 상수, 대비 계산 (색 값은 `src/app/theme.css`) | D | `ui-builder` |
+| `src/lib/diff/` | 두 판 줄 단위 비교, 바뀐 절 요약 (순수, 의존성 없음) | B | `ui-builder` |
+| `src/lib/usage/` | 사용량 계산 (기능별, 아이디어별, 신호) | B | `chain-author` |
 | `src/lib/chain/` | 문서 생성 체인 단계 | B | `chain-author` |
-| `src/lib/prompts/` | 프롬프트 문자열 (여기에만) | B · C | `chain-author` |
+| `src/lib/prompts/` | 프롬프트 문자열 (여기에만) | B, C | `chain-author` |
 | `bridge/` | 맥 중계 서버 — **보류** | — | `bridge-engineer` |
 
-검사는 `hatch-reviewer`(읽기 전용). 스킬: `montage-ui` · `new-po-tool` · `chain-step` (`.claude/skills/`).
+검사는 `hatch-reviewer`(읽기 전용). 스킬: `montage-ui`, `new-po-tool`, `chain-step` (`.claude/skills/`).
 
 ## 작업 흐름
-spec(`docs/specs`) → plan(`docs/plans`) → 이슈 → 브랜치 → 구현 → `hatch-reviewer` → 검증 → why 기록(`docs/decisions` · `docs/ai-usage`) → PR → **사용자 승인 후** squash 머지.
+spec(`docs/specs`) → plan(`docs/plans`) → 이슈 → 브랜치 → 구현 → `hatch-reviewer` → 검증 → why 기록(`docs/decisions`, `docs/ai-usage`) → PR → **사용자 승인 후** squash 머지.
 Git 규칙 자세히: [docs/CLAUDE.md](docs/CLAUDE.md)
 
 ## 검증 (완료라고 말하기 전에 실제로 돌린다)
@@ -40,10 +41,10 @@ UI를 바꿨으면 dev 서버로 실제 흐름을 눌러 보고 콘솔 오류까
 
 ## 공통 규칙
 - Next.js 코드 쓰기 전 `node_modules/next/dist/docs/`에서 해당 가이드 확인 (AGENTS.md: 학습 데이터와 API가 다름)
-- UI는 Montage 우선 → `montage-ui` 스킬. TDS는 화면 패턴 · 문구만 참고, 토큰 섞지 않음
+- UI는 Montage 우선 → `montage-ui` 스킬. TDS는 화면 패턴과 문구만 참고하고, 토큰은 섞지 않음
 - AI는 판단, 코드는 계산. AI 출력은 JSON 스키마로 받는다
 - 패키지 매니저 npm. `@montage-ui/*` 는 같은 버전 고정
-- 커밋 · PR · 이슈 · 화면 문구는 한국어
+- 커밋, PR, 이슈, 화면 문구는 한국어
 
 ## 문서 분량
 루트 60줄, 폴더 CLAUDE.md 30줄 이하. 넘으면 `docs/`로 빼고 링크만.

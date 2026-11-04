@@ -3,6 +3,8 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
+import { toolResultPath } from '@/lib/app/jobs';
+import { trackDoc, trackQuestions, trackTool } from '@/lib/app/track';
 import { ChainError, generateDoc } from '@/lib/chain';
 import { DEMO_MESSAGE, isDemo } from '@/lib/demo';
 import { makeQuestions } from '@/lib/questions';
@@ -171,12 +173,16 @@ const chainMessage = (e: unknown) =>
 // 1~2분 걸리는 긴 Server Action. 끝날 때까지 클라이언트가 pending 상태로 기다린다
 export async function generateDocAction(id: string, key: DocKey): Promise<DocActionState> {
   if (isDemo()) return { error: DEMO_MESSAGE };
+  const done = await trackDoc(id, key);
   try {
     await generateDoc(id, key);
   } catch (e) {
     if (!(e instanceof ChainError)) console.error('[hatch] generateDoc', e);
-    return { error: chainMessage(e) };
+    const error = chainMessage(e);
+    done?.({ ok: false, message: error });
+    return { error };
   }
+  done?.({ ok: true });
   revalidateIdeas();
   return { savedAt: Date.now() };
 }
@@ -186,14 +192,16 @@ export type QuestionsState = { error?: string; savedAt?: number };
 // 1분쯤 걸리는 긴 Server Action. 문서 생성과 같은 claude 잠금을 쓴다
 export async function makeQuestionsAction(id: string): Promise<QuestionsState> {
   if (isDemo()) return { error: DEMO_MESSAGE };
+  const done = await trackQuestions(id);
   try {
     await makeQuestions(id);
   } catch (e) {
     if (!(e instanceof ChainError)) console.error('[hatch] makeQuestions', e);
-    return {
-      error: e instanceof ChainError || e instanceof StorageError ? e.message : '질문을 만들지 못했어요. 서버 로그를 확인해 주세요.',
-    };
+    const error = e instanceof ChainError || e instanceof StorageError ? e.message : '질문을 만들지 못했어요. 서버 로그를 확인해 주세요.';
+    done?.({ ok: false, message: error });
+    return { error };
   }
+  done?.({ ok: true });
   revalidateIdeas();
   return { savedAt: Date.now() };
 }
@@ -260,16 +268,17 @@ export async function runToolAction(key: ToolKey, _prev: ToolActionState, formDa
   formData.forEach((v, k) => {
     if (!FRAME_FIELDS.has(k) && !k.startsWith('$') && typeof v === 'string') input[k] = v;
   });
+  const done = await trackTool(tool, source);
   try {
     const { resultId, ideaId } = await runTool(tool, { source, input, prevId: get('prevId') || null });
+    done?.({ ok: true, path: toolResultPath(key, ideaId, resultId) });
     revalidatePath(`/tools/${key}`);
     return { resultId, ideaId };
   } catch (e) {
     if (!(e instanceof ToolError)) console.error('[hatch] runTool', e);
-    return {
-      error:
-        e instanceof ToolError || e instanceof StorageError ? e.message : '도구를 실행하지 못했어요. 서버 로그를 확인해 주세요.',
-    };
+    const error = e instanceof ToolError || e instanceof StorageError ? e.message : '도구를 실행하지 못했어요. 서버 로그를 확인해 주세요.';
+    done?.({ ok: false, message: error });
+    return { error };
   }
 }
 
