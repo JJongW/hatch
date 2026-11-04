@@ -52,6 +52,7 @@ const pairs: [string, string, number, number][] = [
   ['semantic-foreground-brand-primary', WHITE, 17.9, AA_TEXT],
   ['semantic-foreground-negative-primary', WHITE, 17.9, AA_TEXT],
   ['highlight-text', 'highlight-bg', 14.53, AA_TEXT],
+  ['highlight-mark', WHITE, 4.87, AA_TEXT],
 ];
 
 describe('contrastRatio', () => {

@@ -29,32 +29,32 @@ describe('isSurveyReady', () => {
 describe('saveResponse', () => {
   it('표에 한 줄을 넣는다: 주소, 머리, 본문', async () => {
     fetchMock.mockResolvedValue(new Response(null, { status: 201 }));
-    await saveResponse('P2', { easy: 4 });
+    await saveResponse({ easy: 4 });
     const [url, init] = fetchMock.mock.calls[0];
     expect(url).toBe('https://abcdefghijklmnopqrst.supabase.co/rest/v1/survey_responses');
     expect(init.method).toBe('POST');
     expect(init.headers).toEqual({ apikey: 'sb_secret_test', 'Content-Type': 'application/json', Prefer: 'return=minimal' });
-    expect(JSON.parse(init.body)).toEqual({ participant: 'P2', version: SURVEY_VERSION, answers: { easy: 4 } });
+    expect(JSON.parse(init.body)).toEqual({ version: SURVEY_VERSION, answers: { easy: 4 } });
   });
 
   it('예전 service_role 키(JWT)면 Authorization도 보낸다', async () => {
     process.env.SUPABASE_SECRET_KEY = 'eyJhbGciOi.payload.sig';
     fetchMock.mockResolvedValue(new Response(null, { status: 201 }));
-    await saveResponse('P1', {});
+    await saveResponse({});
     expect(fetchMock.mock.calls[0][1].headers.Authorization).toBe('Bearer eyJhbGciOi.payload.sig');
   });
 
   it('2xx가 아니거나 네트워크 오류면 SurveyStoreError, 응답 본문은 로그에만', async () => {
     fetchMock.mockResolvedValueOnce(new Response('{"message":"relation does not exist"}', { status: 404 }));
-    await expect(saveResponse('P1', {})).rejects.toBeInstanceOf(SurveyStoreError);
+    await expect(saveResponse({})).rejects.toBeInstanceOf(SurveyStoreError);
     expect(console.error).toHaveBeenCalled();
     fetchMock.mockRejectedValueOnce(new TypeError('fetch failed'));
-    await expect(saveResponse('P1', {})).rejects.toBeInstanceOf(SurveyStoreError);
+    await expect(saveResponse({})).rejects.toBeInstanceOf(SurveyStoreError);
   });
 
   it('연결 정보가 없으면 요청하지 않고 실패', async () => {
     delete process.env.SUPABASE_URL;
-    await expect(saveResponse('P1', {})).rejects.toBeInstanceOf(SurveyStoreError);
+    await expect(saveResponse({})).rejects.toBeInstanceOf(SurveyStoreError);
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });

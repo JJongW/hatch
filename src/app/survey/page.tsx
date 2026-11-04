@@ -17,8 +17,8 @@ export default async function SurveyPage() {
     <>
       <FocusPage />
       <PageHeader
-        title="Hatch 사용 설문"
-        description="오늘 써 본 Hatch에 대한 설문이에요. 5분쯤 걸려요. 정답은 없고, 불편했던 점일수록 큰 도움이 돼요. 이름이나 회사는 묻지 않아요."
+        title="Hatch 데모 설문"
+        description="방금 본 Hatch 데모에 대한 설문이에요. 6문항이고 3분쯤 걸려요. 정답은 없어요. 이름이나 회사는 묻지 않아요."
       />
       <SurveyForm ready={isSurveyReady()} action={submitSurveyAction} />
     </>

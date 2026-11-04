@@ -7,4 +7,6 @@ create table if not exists public.survey_responses (
   answers jsonb not null
 );
 alter table public.survey_responses enable row level security;
+-- v2 (참가자 번호 문항 뺌): v2 응답은 participant 칸이 비어 있다. v1 응답의 값은 그대로 남는다
+alter table public.survey_responses alter column participant drop not null;
 -- 공개 규칙(policy)을 만들지 않는다: anon, authenticated는 읽기도 쓰기도 못 한다. 서버의 비밀 키만 쓴다

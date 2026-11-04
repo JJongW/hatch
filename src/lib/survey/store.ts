@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { SURVEY_VERSION, type Participant } from './questions';
+import { SURVEY_VERSION } from './questions';
 import type { SurveyAnswers } from './schema';
 
 // 설문 응답은 Supabase 표 survey_responses에 쌓는다 (supabase/survey.sql). Hatch의 다른 데이터는 파일이라 여기만 예외다.
@@ -17,7 +17,7 @@ const config = () => {
 /** 연결 정보(주소, 비밀 키)가 둘 다 있나. 없으면 화면이 제출을 막는다 */
 export const isSurveyReady = () => config() !== null;
 
-export async function saveResponse(participant: Participant, answers: SurveyAnswers) {
+export async function saveResponse(answers: SurveyAnswers) {
   const c = config();
   if (!c) throw new SurveyStoreError('설문 저장소가 연결되지 않았어요.');
   // 새 비밀 키(sb_secret_)는 apikey만, 예전 service_role 키(JWT)는 Authorization도 있어야 한다
@@ -29,7 +29,7 @@ export async function saveResponse(participant: Participant, answers: SurveyAnsw
     res = await fetch(`${c.url}/rest/v1/survey_responses`, {
       method: 'POST',
       headers,
-      body: JSON.stringify({ participant, version: SURVEY_VERSION, answers }),
+      body: JSON.stringify({ version: SURVEY_VERSION, answers }), // participant 칸은 v1 응답에만 있다 (supabase/survey.sql)
       cache: 'no-store',
       signal: AbortSignal.timeout(10_000), // 응답이 없으면 제출 버튼이 계속 돌지 않게
     });
