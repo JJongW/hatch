@@ -8,6 +8,7 @@ public final class LogWriter: @unchecked Sendable {
   private let maxBytes: Int
   private let lock = NSLock()
   private var handle: FileHandle?
+  private var closed = false
 
   public init(url: URL, maxBytes: Int = LogWriter.defaultMaxBytes) throws {
     self.url = url
@@ -25,6 +26,14 @@ public final class LogWriter: @unchecked Sendable {
   public func append(_ data: Data) {
     lock.lock()
     defer { lock.unlock() }
+    guard !closed else { return }
+    // 다시 열기에 실패했거나 파일, 폴더가 사라졌으면 다음 쓰기에서 다시 시도한다
+    if handle == nil || !FileManager.default.fileExists(atPath: url.path) {
+      try? handle?.close()
+      handle = nil
+      try? FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+      try? open()
+    }
     rotateIfNeeded(adding: data.count)
     try? handle?.write(contentsOf: data)
   }
@@ -32,6 +41,7 @@ public final class LogWriter: @unchecked Sendable {
   public func close() {
     lock.lock()
     defer { lock.unlock() }
+    closed = true
     try? handle?.close()
     handle = nil
   }
