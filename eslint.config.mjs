@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // 맥 앱 빌드 결과 (macos/scripts/build.sh). 번들 안 Next 빌드 파일이라 검사하지 않는다
+    "macos/dist/**",
+    "macos/.build/**",
   ]),
 ]);
 
