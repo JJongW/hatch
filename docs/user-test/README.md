@@ -55,7 +55,6 @@ mkdir -p ~/HatchTest/p1 && HATCH_DATA_DIR=~/HatchTest/p1 npm run dev
 
 - 과제마다: 혼자 성공 / 힌트 뒤 성공 / 실패, 걸린 시간, 막힌 곳
 - 사후 설문 6문항(`form.md`): 겪어 본 문제(문제 정의 근거), 데모로 이해한 서비스, 써 볼 의향(1~5)
-- 한 문장: "Claude 채팅 대신 Hatch를 쓸 이유"
 
 ## 6. 끝난 뒤
 

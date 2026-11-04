@@ -29,12 +29,12 @@ describe('isSurveyReady', () => {
 describe('saveResponse', () => {
   it('표에 한 줄을 넣는다: 주소, 머리, 본문', async () => {
     fetchMock.mockResolvedValue(new Response(null, { status: 201 }));
-    await saveResponse({ easy: 4 });
+    await saveResponse({ role: '마케터' });
     const [url, init] = fetchMock.mock.calls[0];
     expect(url).toBe('https://abcdefghijklmnopqrst.supabase.co/rest/v1/survey_responses');
     expect(init.method).toBe('POST');
     expect(init.headers).toEqual({ apikey: 'sb_secret_test', 'Content-Type': 'application/json', Prefer: 'return=minimal' });
-    expect(JSON.parse(init.body)).toEqual({ version: SURVEY_VERSION, answers: { easy: 4 } });
+    expect(JSON.parse(init.body)).toEqual({ version: SURVEY_VERSION, answers: { role: '마케터' } });
   });
 
   it('예전 service_role 키(JWT)면 Authorization도 보낸다', async () => {
