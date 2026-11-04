@@ -4,6 +4,7 @@ import { useActionState, useEffect, useState } from 'react';
 import { Box, Button, Chip, FlexBox, SectionMessage, TextArea, TextField, Typography, type Theme } from '@montage-ui/core';
 
 import { MAX_LONG, MAX_SHORT, QUESTIONS, SECTIONS, type Question } from '@/lib/survey/questions';
+import { hatchColor } from '@/lib/theme/tokens';
 
 import SectionTitle from '../_components/section-title';
 
@@ -147,7 +148,7 @@ export default function SurveyForm({ ready, action }: Props) {
                 <Typography id={`q-${q.id}-label`} as="p" variant="body1" weight="bold" sx={{ margin: 0 }}>
                   {q.label}
                   {q.required ? (
-                    <Typography as="span" variant="body1" color="semantic.foreground.brand.primary" aria-label="필수">
+                    <Typography as="span" variant="body1" sx={{ color: hatchColor.highlight.mark }} aria-label="필수">
                       {' '}*
                     </Typography>
                   ) : (

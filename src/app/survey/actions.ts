@@ -26,7 +26,7 @@ export async function submitSurveyAction(_prev: SurveyState, formData: FormData)
   if (!parsed.ok) return { error: '답하지 않은 문항이 있어요.', fieldErrors: parsed.errors };
 
   try {
-    await saveResponse(parsed.participant, parsed.answers);
+    await saveResponse(parsed.answers);
   } catch (e) {
     if (e instanceof SurveyStoreError) return { error: '저장하지 못했어요. 잠시 뒤 다시 제출해 주세요.' };
     throw e;

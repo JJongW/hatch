@@ -1,10 +1,10 @@
 import { z } from 'zod';
 
-import { MAX_LONG, MAX_SHORT, QUESTIONS, type Participant, type Question } from './questions';
+import { MAX_LONG, MAX_SHORT, QUESTIONS, type Question } from './questions';
 
 export type SurveyAnswers = Record<string, string | string[] | number | Record<string, string>>;
 export type ParseResult =
-  | { ok: true; participant: Participant; answers: SurveyAnswers }
+  | { ok: true; answers: SurveyAnswers }
   | { ok: false; errors: Record<string, string> };
 
 const REQUIRED = '답해 주세요.';
@@ -55,6 +55,5 @@ export function parseResponse(raw: unknown): ParseResult {
   }
 
   if (Object.keys(errors).length > 0) return { ok: false, errors };
-  const { participant, ...rest } = answers;
-  return { ok: true, participant: participant as Participant, answers: rest };
+  return { ok: true, answers };
 }

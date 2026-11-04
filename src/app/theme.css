@@ -16,6 +16,8 @@
   --text-tertiary: #67696F; --text-tertiary-rgb: 103, 105, 111;
   --highlight-bg: #E7E5FF; --highlight-bg-rgb: 231, 229, 255;
   --highlight-text: #171719; --highlight-text-rgb: 23, 23, 25;
+  /* 진한 라벤더: 흰 바탕 위 작은 글자 표시(설문 필수 *)에만. 바탕으로 쓰지 않는다 */
+  --highlight-mark: #6B5CE7; --highlight-mark-rgb: 107, 92, 231;
 }
 
 :root {
