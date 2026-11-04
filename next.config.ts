@@ -47,6 +47,13 @@ const nextConfig: NextConfig = {
   ...(process.env.HATCH_STANDALONE === '1' && {
     output: 'standalone' as const,
     outputFileTracingRoot: process.cwd(), // 상위 폴더 lockfile을 뿌리로 잡아 server.js가 깊이 숨지 않게
+    // 소스, 문서, 테스트 설정은 번들에 넣지 않는다. docs.ts의 동적 fs 읽기 때문에 추적이 프로젝트 전체로 번지는데, 여기서 뺀다
+    outputFileTracingExcludes: {
+      '/**': [
+        './src/**', './docs/**', './bridge/**', './supabase/**', './.anatomy/**', './.superpowers/**', './macos/**',
+        './*.md', './tsconfig*', './eslint.config.mjs', './vitest.config.ts',
+      ],
+    },
   }),
   ...(serveHost && {
     allowedDevOrigins: [serveHost],

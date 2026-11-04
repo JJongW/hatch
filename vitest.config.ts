@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { defineConfig } from 'vitest/config';
+import { configDefaults, defineConfig } from 'vitest/config';
 
 export default defineConfig({
   resolve: {
@@ -9,5 +9,6 @@ export default defineConfig({
       'server-only': path.resolve(__dirname, 'src/test/empty.ts'),
     },
   },
-  test: { environment: 'node' },
+  // 빌드 결과(.next/standalone 사본)의 테스트 파일을 줍지 않게 제외한다
+  test: { environment: 'node', exclude: [...configDefaults.exclude, '.next/**'] },
 });
