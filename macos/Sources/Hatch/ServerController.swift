@@ -31,8 +31,9 @@ final class ServerController: ObservableObject {
     ProcessInfo.processInfo.environment["HATCH_APP_CLAUDE_BIN"].flatMap { $0.isEmpty ? nil : $0 }
   }
 
+  /// 예전 서버가 남아 있으면 먼저 끈다. restart와 시간 초과는 takeServer로 먼저 비우므로 여기선 보통 할 일이 없다
   func start() {
-    stop() // 예전 서버가 남아 있으면 먼저 끈다
+    stop()
     state = .starting
     guard let log else { return fail("로그 폴더(~/Library/Logs/Hatch)를 만들지 못했어요.") }
     guard let resources = Bundle.main.resourceURL else { return fail("앱 파일을 읽지 못했어요. 앱을 다시 설치해 주세요.") }
@@ -71,13 +72,24 @@ final class ServerController: ObservableObject {
 
   func restart() {
     policy.reset()
-    stop()
-    start()
+    state = .starting
+    let old = takeServer()
+    Task {
+      await Task.detached { old?.stop() }.value
+      start() // 예전 서버가 완전히 멈춘 뒤에 켠다
+    }
   }
 
+  /// 앱 종료(applicationWillTerminate)용. 끝까지 멈춰야 하므로 이 스레드를 막고 기다린다
   func stop() {
     server?.stop()
     server = nil
+  }
+
+  /// 지금 서버를 떼어 낸다. 끄기(stop)는 grace(3초)까지 걸릴 수 있어 부르는 쪽이 메인 밖에서 한다
+  private func takeServer() -> ServerProcess? {
+    defer { server = nil }
+    return server
   }
 
   func openLog() {
@@ -89,8 +101,9 @@ final class ServerController: ObservableObject {
     if ready {
       state = .ready(url)
     } else {
-      stop()
       fail("서버가 30초 안에 답하지 않았어요.")
+      let old = takeServer()
+      Task.detached { old?.stop() }
     }
   }
 

@@ -35,15 +35,13 @@ import Testing
   @Test func 혼자_죽으면_종료_코드를_알린다() async throws {
     let config = try FakeServer.config()
     let server = ServerProcess(log: try makeLog())
-    let code = await withCheckedContinuation { (done: CheckedContinuation<Int32, Never>) in
-      server.onUnexpectedExit = { done.resume(returning: $0) }
-      do {
-        try server.start(config, base: ProcessInfo.processInfo.environment.merging(["FAKE_SERVER": "crash"]) { $1 })
-      } catch {
-        done.resume(returning: -1)
-      }
-    }
-    #expect(code == 3)
+    let code = Locked<Int32?>(nil)
+    server.onUnexpectedExit = { code.set($0) }
+    try server.start(config, base: ProcessInfo.processInfo.environment.merging(["FAKE_SERVER": "crash"]) { $1 })
+    // 알림이 안 오면 멈춰 있지 않고 10초 뒤 실패한다
+    let deadline = Date().addingTimeInterval(10)
+    while code.get() == nil && Date() < deadline { try await Task.sleep(for: .milliseconds(20)) }
+    #expect(code.get() == 3)
     #expect(server.isRunning == false)
   }
 
@@ -57,6 +55,22 @@ import Testing
     server.stop()
     try await Task.sleep(for: .milliseconds(300))
     #expect(called.get() == false)
+  }
+
+  @Test func 끄고_바로_켜도_예전_서버를_죽음으로_알리지_않는다() async throws {
+    let config = try FakeServer.config()
+    let server = ServerProcess(log: try makeLog())
+    let called = Locked(false)
+    server.onUnexpectedExit = { _ in called.set(true) }
+    try server.start(config)
+    for _ in 0..<20 {
+      server.stop()
+      try server.start(config)
+    }
+    server.stop()
+    try await Task.sleep(for: .milliseconds(300))
+    #expect(called.get() == false)
+    #expect(server.isRunning == false)
   }
 
   @Test func 두_번_켜면_거절() throws {
