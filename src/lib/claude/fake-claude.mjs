@@ -3,7 +3,10 @@ import { spawn } from 'node:child_process';
 // 테스트용 가짜 claude. FAKE_CLAUDE 값으로 동작을 고른다.
 let input = '';
 process.stdin.on('data', (c) => (input += c));
-process.stdin.on('end', () => {
+process.stdin.on('end', async () => {
+  // 진행 중 상태를 볼 수 있게 출력 전에 기다린다 (FAKE_CLAUDE_DELAY_MS, 양의 정수)
+  const delay = Number(process.env.FAKE_CLAUDE_DELAY_MS);
+  if (Number.isInteger(delay) && delay > 0) await new Promise((r) => setTimeout(r, delay));
   const mode = process.env.FAKE_CLAUDE ?? 'ok';
   if (mode === 'ok') {
     const args = process.argv.slice(2);

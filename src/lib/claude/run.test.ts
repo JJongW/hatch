@@ -162,3 +162,19 @@ describe('runClaude 사용량 기록', () => {
     expect((await listUsage()).entries).toHaveLength(1);
   });
 });
+
+describe('isClaudeBusy', () => {
+  it('실행 중에만 true', async () => {
+    process.env.FAKE_CLAUDE = 'ok';
+    process.env.FAKE_CLAUDE_DELAY_MS = '300';
+    try {
+      expect(isClaudeBusy()).toBe(false);
+      const p = runClaude({ prompt: 'x', jsonSchema: {}, tag });
+      expect(isClaudeBusy()).toBe(true);
+      await p;
+      expect(isClaudeBusy()).toBe(false);
+    } finally {
+      delete process.env.FAKE_CLAUDE_DELAY_MS;
+    }
+  });
+});

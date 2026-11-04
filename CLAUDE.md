@@ -41,7 +41,7 @@ UI를 바꿨으면 dev 서버로 실제 흐름을 눌러 보고 콘솔 오류까
 
 ## 공통 규칙
 - Next.js 코드 쓰기 전 `node_modules/next/dist/docs/`에서 해당 가이드 확인 (AGENTS.md: 학습 데이터와 API가 다름)
-- UI는 Montage 우선 → `montage-ui` 스킬. TDS는 화면 패턴, 문구만 참고, 토큰 섞지 않음
+- UI는 Montage 우선 → `montage-ui` 스킬. TDS는 화면 패턴과 문구만 참고하고, 토큰은 섞지 않음
 - AI는 판단, 코드는 계산. AI 출력은 JSON 스키마로 받는다
 - 패키지 매니저 npm. `@montage-ui/*` 는 같은 버전 고정
 - 커밋, PR, 이슈, 화면 문구는 한국어

@@ -96,7 +96,7 @@ Hatch.app/Contents
 - `POST /api/app/ideas` `{ text }` → storage의 아이디어 저장 함수 그대로 → `{ ok, id, path }`. 첫 줄은 제목, 나머지는 메모, 2,000자까지. 빈 글, 너무 긴 글은 400, 본문이 16KB를 넘으면 413
 
 ### 3-3. 알림
-- 앱이 맨 앞이 아닐 때 끝난 작업마다 알림: "PT 예약 앱, PRD를 만들었어요" / 실패 "PRD를 만들지 못했어요. <이유>". 누르면 그 `path`를 연다
+- 앱이 맨 앞이 아닐 때 끝난 작업마다 알림: "PT 예약 앱, PRD를 만들었어요" / 실패 "PRD를 만들지 못했어요. (이유)". 누르면 그 `path`를 연다
 - Swift는 `running`이 있을 때만 2초마다, 없으면 30초마다 `status`를 묻는다. 본 `finished.id`는 기억해 두 번 알리지 않는다
 - 알림 권한은 첫 생성이 끝날 때 묻는다 (첫 실행에 몰아 묻지 않는다)
 
@@ -154,4 +154,5 @@ API 키 생성, Mac App Store, App Sandbox, 앱이 Tailscale을 직접 켜기, �
 - 높음, 서명: Node 같은 번들 실행 파일이 hardened runtime에서 막힐 수 있다. E6 첫날 서명, 공증만 먼저 통과시켜 본다
 - 중간, 크기: Node universal(약 90MB) + standalone. 신호: 150MB가 넘으면 arm64, Intel 판을 나눈다
 - 중간, claude 찾기: 설치 방식마다 경로가 다르다. 못 찾은 사례가 두 번 넘으면 찾는 곳을 늘린다
+- 중간, DNS rebinding: 다른 사이트가 127.0.0.1 포트의 페이지와 Server Action을 부를 수 있다. E2에서 HATCH_APP_TOKEN이 있을 때 proxy.ts로 Host를 127.0.0.1:<포트>, localhost:<포트>만 받게 한다
 - 낮음, 데이터: 웹 버전과 앱을 동시에 켜면 같은 `~/Hatch`에 둘이 쓴다. 생성 중 표시가 파일이라 겹침은 지금과 같다. 앱이 켜질 때 3000 포트에 다른 Hatch가 떠 있으면 "웹 버전이 켜져 있어요"를 알린다
