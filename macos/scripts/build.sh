@@ -16,6 +16,10 @@ HATCH_STANDALONE=1 npm run build
 for d in src docs bridge supabase macos .anatomy .superpowers; do
   [ ! -e "$SA/$d" ] || { echo "standalone에 $d가 들어갔어요. next.config.ts의 outputFileTracingExcludes에 더해 주세요." >&2; exit 1; }
 done
+# .env 파일이 들어가면 데모, 발행 토큰 같은 값이 앱 서버에 섞인다 (spec §1-1)
+for f in "$SA"/.env*; do
+  [ ! -e "$f" ] || { echo "standalone에 $(basename "$f")가 들어갔어요. 빌드 전에 빼 주세요." >&2; exit 1; }
+done
 
 (cd macos && swift build -c release)
 BIN="$(cd macos && swift build -c release --show-bin-path)/Hatch"

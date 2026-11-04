@@ -10,5 +10,5 @@ export default defineConfig({
     },
   },
   // 빌드 결과(.next/standalone 사본)의 테스트 파일을 줍지 않게 제외한다
-  test: { environment: 'node', exclude: [...configDefaults.exclude, '.next/**'] },
+  test: { environment: 'node', exclude: [...configDefaults.exclude, '.next/**', 'macos/dist/**', 'macos/.build/**'] },
 });

@@ -11,8 +11,8 @@ Swift 패키지 하나. spec: `docs/specs/2026-11-04-macos-app-design.md`. Xcode
 
 ## 명령
 - 테스트: `cd macos && swift test`
-- 앱 만들기: `macos/scripts/build.sh` (레포 뿌리의 Next 빌드를 같이 한다)
-- 개발 확인: `open -n --env HATCH_APP_DATA_DIR=<임시 폴더> macos/dist/Hatch.app`. 사용자 `~/Hatch`로 확인하지 않는다
+- 앱 만들기: `macos/scripts/build.sh` (레포 뿌리의 Next 빌드를 같이 한다. `.next`를 다시 쓰니 dev 서버를 끄고 돌린다)
+- 개발 확인: `open -n --env HATCH_APP_DATA_DIR=<임시 폴더> --env HATCH_APP_CLAUDE_BIN=$(which claude) macos/dist/Hatch.app`. Finder로 켜면 PATH에 claude가 없다 (E3에서 찾기). 사용자 `~/Hatch`로 확인하지 않는다
 - 앱의 서버 프로세스는 이름이 `next-server`로 바뀐다. server.js로 grep하지 말고 `pgrep -P <Hatch PID>`로 찾는다
 
 ## 규칙

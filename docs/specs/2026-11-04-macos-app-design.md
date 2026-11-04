@@ -154,5 +154,5 @@ API 키 생성, Mac App Store, App Sandbox, 앱이 Tailscale을 직접 켜기, �
 - 높음, 서명: Node 같은 번들 실행 파일이 hardened runtime에서 막힐 수 있다. E6 첫날 서명, 공증만 먼저 통과시켜 본다
 - 중간, 크기: Node universal(약 90MB) + standalone. 신호: 150MB가 넘으면 arm64, Intel 판을 나눈다
 - 중간, claude 찾기: 설치 방식마다 경로가 다르다. 못 찾은 사례가 두 번 넘으면 찾는 곳을 늘린다
-- 중간, DNS rebinding: 다른 사이트가 127.0.0.1 포트의 페이지와 Server Action을 부를 수 있다. E2에서 HATCH_APP_TOKEN이 있을 때 proxy.ts로 Host를 127.0.0.1:<포트>, localhost:<포트>만 받게 한다
+- 중간, DNS rebinding: 다른 사이트가 127.0.0.1 포트의 페이지와 Server Action을 부를 수 있다. HATCH_APP_TOKEN이 있을 때 proxy.ts로 Host를 127.0.0.1:<포트>, localhost:<포트>만 받게 한다. Next 코드라 E2와 따로 PR (#141), 앱을 다른 사람에게 주는 E6 전에 반드시
 - 낮음, 데이터: 웹 버전과 앱을 동시에 켜면 같은 `~/Hatch`에 둘이 쓴다. 생성 중 표시가 파일이라 겹침은 지금과 같다. 앱이 켜질 때 3000 포트에 다른 Hatch가 떠 있으면 "웹 버전이 켜져 있어요"를 알린다

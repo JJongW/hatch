@@ -37,7 +37,7 @@ final class ServerController: ObservableObject {
     state = .starting
     guard let log else { return fail("로그 폴더(~/Library/Logs/Hatch)를 만들지 못했어요.") }
     guard let resources = Bundle.main.resourceURL else { return fail("앱 파일을 읽지 못했어요. 앱을 다시 설치해 주세요.") }
-    guard let node = NodeLocator.find(resources: resources) else { return fail("Node를 찾지 못했어요. 앱을 다시 설치해 주세요.") }
+    guard let node = NodeLocator.find(resources: resources) else { return fail("Node를 찾지 못했어요. Homebrew로 Node를 설치해 주세요 (brew install node).") }
     let serverJS = resources.appending(path: "hatch/server.js")
     guard FileManager.default.fileExists(atPath: serverJS.path) else { return fail("Hatch 서버 파일이 없어요. 앱을 다시 설치해 주세요.") }
     do {

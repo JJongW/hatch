@@ -28,6 +28,7 @@ spec: [docs/specs/2026-11-04-macos-app-design.md](../specs/2026-11-04-macos-app-
 | §1 "Xcode 프로젝트" | Swift 패키지 + `build.sh`가 `.app`을 묶음 | 프로젝트 파일(pbxproj)은 손으로 고치기 어렵고 리뷰가 안 된다. 패키지는 `swift build`, `swift test`로 터미널에서 다 된다. 서명과 공증(E6)도 스크립트에서 한다 |
 | §2-5 설정은 UserDefaults | E2는 설정이 없다. 개발 확인용 환경 변수 `HATCH_APP_DATA_DIR`, `HATCH_APP_CLAUDE_BIN`만 읽는다 | 설정 화면은 E3. 검증 때 사용자 `~/Hatch`를 건드리지 않으려고 |
 | §5 만드는 중 ⌘Q 확인 | E5로 미룸 | 생성 중인지 알려면 status를 읽어야 하고, 그건 알림(E5)과 같이 만든다 |
+| §9 proxy.ts Host 검사 | 후속 PR (#141) | Global Constraints대로 Next 코드는 이 PR에서 고치지 않는다. 앱 포트가 실행마다 바뀌어 지금 dev 서버(3000)보다 노출이 크지 않다 |
 
 ## 파일 지도
 | 파일 | 할 일 |
