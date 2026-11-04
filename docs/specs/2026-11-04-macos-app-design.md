@@ -22,7 +22,7 @@ Hatch.app/Contents
 ├─ MacOS/Hatch            Swift 겉 (SwiftUI + AppKit)
 │   창(WKWebView), 메뉴, 메뉴 막대, 알림, 첫 실행, 설정, Sparkle
 └─ Resources/
-    ├─ node               Node 실행 파일 (arm64 + x64 lipo)
+    ├─ node               Node 실행 파일 (arm64 + x64 lipo). E6부터, E2는 시스템 node
     └─ hatch/             next build의 standalone 결과 (server.js, .next/static, public)
 ```
 - 실행: 앱이 빈 포트를 고른다 → `node hatch/server.js`를 `HOSTNAME=127.0.0.1 PORT=<포트>`로 띄운다 → `/api/app/status`가 답하면 창에 띄운다
@@ -30,7 +30,7 @@ Hatch.app/Contents
 - 데이터: 지금처럼 `~/Hatch` md 파일. 웹 버전과 같은 폴더라 쓰던 데이터가 그대로 보인다. 저장 형식은 바꾸지 않는다
 - 서버는 `127.0.0.1`에만 연다. 같은 와이파이의 다른 기기는 못 들어온다
 - Next 쪽 변경: `next.config.ts`에 `HATCH_STANDALONE=1`일 때만 `output: 'standalone'`. 웹과 Vercel 빌드는 설정이 그대로 (E1에서 데모 배포로 확인)
-- 코드 위치: `macos/` (Xcode 프로젝트, 빌드 스크립트, `macos/CLAUDE.md` 30줄 이하)
+- 코드 위치: `macos/` Swift 패키지(`HatchCore`, `Hatch`, 테스트) + `scripts/build.sh`가 `.app`을 묶는다. Xcode 프로젝트 파일 없음. `macos/CLAUDE.md` 30줄 이하
 
 ### 1-1. 서버에 넘기는 환경 변수
 | 변수 | 값 |
@@ -123,7 +123,7 @@ Hatch.app/Contents
 | 쓰는 중 서버가 죽음 | 한 번은 조용히 다시 켜고 창을 새로고침. 1분 안에 또 죽으면 위 화면 |
 | 데이터 폴더를 못 씀 (권한, 외장 디스크 빠짐) | 이유 + `다른 폴더 고르기`. 데이터를 지우거나 옮기지 않는다 |
 | claude 없음, 로그인 풀림 | 화면은 지금 오류 문구 그대로, 메뉴 막대 `!` → §2-1 확인 화면 |
-| 만드는 중 ⌘Q | "PRD를 만드는 중이에요. 끝내면 이 문서는 만들어지지 않아요", `기다리기` / `끝내기` |
+| 만드는 중 ⌘Q | "PRD를 만드는 중이에요. 끝내면 이 문서는 만들어지지 않아요", `기다리기` / `끝내기` (E5) |
 | 업데이트 실패 | Sparkle 기본 안내 |
 
 로그: `~/Library/Logs/Hatch/server.log` (서버 stdout, stderr, 5MB 넘으면 `server.1.log`로 넘기고 하나만 남김). 응답 본문, 프롬프트, 토큰은 로그에 쓰지 않는다 (서버 쪽 기존 규칙).
@@ -138,7 +138,7 @@ Hatch.app/Contents
 | PR | 내용 | 끝나면 |
 | --- | --- | --- |
 | E1 | Next: `standalone` 출력, `/api/app/status`, `/api/app/ideas`, `HATCH_APP_TOKEN`, 끝난 작업 기록, 공유 꺼짐 문구 확인 | 웹, 데모 그대로, 앱이 쓸 주소 준비 |
-| E2 | 앱 뼈대: 서버 띄우기, WKWebView 창, 로그, 오류 화면, `build.sh` | 내 맥에서 앱으로 켜짐 (서명 없음, 시스템 Node 사용 가능) |
+| E2 | 앱 뼈대: 서버 띄우기, WKWebView 창, 로그, 오류 화면, `build.sh` | 내 맥에서 앱으로 켜짐 (서명 없음, 시스템 Node). 확인용 `HATCH_APP_DATA_DIR`, `HATCH_APP_CLAUDE_BIN` |
 | E3 | 첫 실행, claude 찾기, 설정(데이터 폴더, claude 경로, 포트, 공유 키체인, Tailscale 주소) | Claude Code 없는 맥에서도 안내가 이어짐 |
 | E4 | 메뉴, 단축키, 바깥 링크, 메뉴 막대, 빠른 아이디어 | 맥 앱처럼 다룸 |
 | E5 | 알림 | 창을 안 봐도 끝난 걸 앎 |
